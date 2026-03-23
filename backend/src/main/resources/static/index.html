@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Jobboard Demo</title>
+</head>
+<body style="font-family: Arial, sans-serif; padding: 20px;">
+<h1>Jobboard Minimal Demo</h1>
+
+<h2>0. 注册</h2>
+<input id="regName" placeholder="name" value="test user">
+<br><br>
+<input id="regEmail" placeholder="email" value="test123@example.com">
+<br><br>
+<input id="regPassword" type="password" placeholder="password" value="123456">
+<br><br>
+
+<select id="regRole">
+    <option value="student">student</option>
+    <option value="employer">employer</option>
+</select>
+<br><br>
+
+<button id="registerBtn">注册</button>
+
+<hr>
+<h2>1. 登录</h2>
+<input id="email" placeholder="email" value="liu@example.com">
+<br><br>
+<input id="password" type="password" placeholder="password" value="123456">
+<br><br>
+<button id="loginBtn">登录</button>
+
+<hr>
+
+<h2>2. 企业发布岗位</h2>
+<button id="createJobBtn">发布岗位</button>
+
+<hr>
+
+<h2>3. 学生投递岗位</h2>
+<input id="jobIdInput" placeholder="jobId" value="1">
+<br><br>
+<button id="applyJobBtn">投递岗位</button>
+
+<hr>
+
+<h2>4. 企业查看岗位申请</h2>
+<input id="viewJobIdInput" placeholder="jobId" value="1">
+<br><br>
+<button id="viewApplicationsBtn">查看申请</button>
+
+<hr>
+
+<h2>5. 企业修改申请状态</h2>
+<input id="applicationIdInput" placeholder="applicationId" value="1">
+<br><br>
+<input id="statusInput" placeholder="status" value="reviewing">
+<br><br>
+<input id="noteInput" placeholder="note" value="checked by employer">
+<br><br>
+<button id="updateStatusBtn">修改状态</button>
+
+
+
+<hr>
+
+<h3>当前 token：</h3>
+<pre id="tokenBox"></pre>
+
+<h3>结果：</h3>
+<pre id="result" style="background:#f4f4f4; padding:12px; min-height:140px;"></pre>
+
+<script>
+    let token = "";
+
+    function show(text) {
+        document.getElementById("result").textContent = text;
+    }
+
+    function showToken() {
+        document.getElementById("tokenBox").textContent = token || "(empty)";
+    }
+async function register() {
+    try {
+        show("正在注册...");
+        const res = await fetch("/auth/register", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                fullName: document.getElementById("regName").value,
+                email: document.getElementById("regEmail").value,
+                password: document.getElementById("regPassword").value,
+                role: document.getElementById("regRole").value
+            })
+        });
+
+        show(await res.text());
+    } catch (e) {
+        show("注册报错: " + e.message);
+        console.error(e);
+    }
+}
+    async function login() {
+        try {
+            show("正在登录...");
+            const res = await fetch("/auth/login", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    email: document.getElementById("email").value,
+                    password: document.getElementById("password").value
+                })
+            });
+
+            const text = await res.text();
+            show(text);
+
+            const json = JSON.parse(text);
+            if (json.data && json.data.token) {
+                token = json.data.token;
+                showToken();
+            } else {
+                alert("登录成功返回里没有 token，请检查后端返回");
+            }
+        } catch (e) {
+            show("登录报错: " + e.message);
+            console.error(e);
+        }
+    }
+
+    async function createJob() {
+        try {
+            show("正在发布岗位...");
+            const res = await fetch("/jobs", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({
+                    title: "Demo Job",
+                    description: "Simple job for demo",
+                    employmentType: "internship",
+                    requirements: "Java basics",
+                    workMode: "hybrid",
+                    location: "Auckland",
+                    fieldOfStudy: "Computer Science",
+                    salaryMin: 25,
+                    salaryMax: 30,
+                    deadline: "2026-05-30T23:59:59"
+                })
+            });
+
+            show(await res.text());
+        } catch (e) {
+            show("发布岗位报错: " + e.message);
+            console.error(e);
+        }
+    }
+
+    async function applyJob() {
+        try {
+            show("正在投递...");
+            const jobId = Number(document.getElementById("jobIdInput").value);
+
+            const res = await fetch("/applications", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({
+                    jobId: jobId,
+                    coverLetterText: "I want this job"
+                })
+            });
+
+            show(await res.text());
+        } catch (e) {
+            show("投递报错: " + e.message);
+            console.error(e);
+        }
+    }
+
+    async function viewApplications() {
+        try {
+            show("正在查看申请...");
+            const jobId = document.getElementById("viewJobIdInput").value;
+
+            const res = await fetch("/applications/job/" + jobId, {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+
+            show(await res.text());
+        } catch (e) {
+            show("查看申请报错: " + e.message);
+            console.error(e);
+        }
+    }
+
+    async function updateStatus() {
+        try {
+            show("正在修改状态...");
+            const applicationId = document.getElementById("applicationIdInput").value;
+            const status = document.getElementById("statusInput").value;
+            const note = document.getElementById("noteInput").value;
+
+            const res = await fetch("/applications/" + applicationId + "/status", {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({
+                    status: status,
+                    note: note
+                })
+            });
+
+            show(await res.text());
+        } catch (e) {
+            show("修改状态报错: " + e.message);
+            console.error(e);
+        }
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", login);
+    document.getElementById("createJobBtn").addEventListener("click", createJob);
+    document.getElementById("applyJobBtn").addEventListener("click", applyJob);
+    document.getElementById("viewApplicationsBtn").addEventListener("click", viewApplications);
+    document.getElementById("updateStatusBtn").addEventListener("click", updateStatus);
+document.getElementById("registerBtn").addEventListener("click", register);
+    show("页面已加载，可以开始测试");
+    showToken();
+</script>
+</body>
+</html>
