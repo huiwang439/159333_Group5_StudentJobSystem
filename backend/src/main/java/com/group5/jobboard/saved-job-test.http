@@ -1,0 +1,17 @@
+### 收藏岗位
+POST http://localhost:8080/saved-jobs?studentProfileId=1&jobId=1
+
+###
+
+### 查看我的收藏
+GET http://localhost:8080/saved-jobs/my?studentProfileId=1
+
+###
+
+### 取消收藏
+DELETE http://localhost:8080/saved-jobs?studentProfileId=1&jobId=1
+
+###
+
+### 再次查看我的收藏
+GET http://localhost:8080/saved-jobs/my?studentProfileId=1
