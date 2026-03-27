@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - User Management</title>
+    <link rel="stylesheet" href="/css/admin-users.css">
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <button id="menuToggleBtn" class="menu-toggle-btn">▶</button>
+        <div class="topbar-title">Job Board System</div>
+    </div>
+</div>
+
+<div class="layout">
+    <aside id="sidebar" class="sidebar hidden">
+        <div class="sidebar-menu">
+            <div class="menu-item">Dashboard</div>
+            <div class="menu-item active">User Management</div>
+            <div class="menu-item">Job Management</div>
+            <div class="menu-item">Company Management</div>
+            <div class="menu-item">Platform Monitoring</div>
+            <div class="menu-item">Analytics</div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="container">
+            <h1>User Management</h1>
+
+            <div class="toolbar">
+                <label for="tokenInput">Admin Token:</label>
+                <input id="tokenInput" type="text" placeholder="Paste Bearer token here">
+                <button id="saveTokenBtn">Save Token</button>
+            </div>
+
+            <div class="toolbar">
+                <label for="roleFilter">Role:</label>
+                <select id="roleFilter">
+                    <option value="">All</option>
+                    <option value="student">Student</option>
+                    <option value="employer">Employer</option>
+                </select>
+                <button id="loadUsersBtn">Load Users</button>
+            </div>
+
+            <div class="toolbar">
+                <label for="searchInput">Search:</label>
+                <input id="searchInput" type="text" placeholder="Search by name or email">
+                <button id="searchBtn">Search</button>
+                <button id="resetBtn">Reset</button>
+            </div>
+
+            <table id="userTable">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Phone</th>
+                    <th>Company</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="userTableBody">
+                </tbody>
+            </table>
+
+            <pre id="messageBox"></pre>
+        </div>
+    </main>
+</div>
+
+<script src="/js/admin-users.js"></script>
+</body>
+</html>
