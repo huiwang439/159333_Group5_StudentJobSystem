@@ -6,7 +6,6 @@ import com.group5.jobboard.dto.RegisterRequest;
 import com.group5.jobboard.entity.User;
 import com.group5.jobboard.repository.UserRepository;
 import com.group5.jobboard.service.AuthService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -16,26 +15,16 @@ import java.util.Map;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     public AuthServiceImpl(UserRepository userRepository,
-                           PasswordEncoder passwordEncoder,
                            JwtUtil jwtUtil) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
 
     @Override
     public Map<String, Object> register(RegisterRequest request) {
-
-        System.out.println("register request: "
-                + request.getFullName() + ", "
-                + request.getEmail() + ", "
-                + request.getPassword() + ", "
-                + request.getRole() + ", "
-                + request.getPhone());
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already exists");
@@ -50,7 +39,9 @@ public class AuthServiceImpl implements AuthService {
         User user = new User();
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+
+        user.setPassword(request.getPassword());
+
         user.setRole(request.getRole());
         user.setPhone(request.getPhone());
         user.setAccountStatus("active");
@@ -66,10 +57,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Map<String, Object> login(LoginRequest request) {
+
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+        if (!user.getPassword().equals(request.getPassword())) {
             throw new RuntimeException("Invalid email or password");
         }
 
@@ -86,7 +78,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Map<String, Object> getCurrentUser(Long userId) {
-
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));

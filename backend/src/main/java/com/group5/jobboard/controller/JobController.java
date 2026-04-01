@@ -45,7 +45,24 @@ public class JobController {
     }
 
     @GetMapping
-    public ApiResponse<List<Map<String, Object>>> getJobs() {
+    public ApiResponse<List<Map<String, Object>>> getJobs(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) String employmentType,
+            @RequestParam(required = false) String fieldOfStudy
+    ) {
+        boolean hasFilter =
+                (keyword != null && !keyword.isBlank()) ||
+                        (location != null && !location.isBlank()) ||
+                        (employmentType != null && !employmentType.isBlank()) ||
+                        (fieldOfStudy != null && !fieldOfStudy.isBlank());
+
+        if (hasFilter) {
+            return ApiResponse.success(
+                    jobService.searchPublicJobs(keyword, location, employmentType, fieldOfStudy)
+            );
+        }
+
         return ApiResponse.success(jobService.getPublicJobs());
     }
 
