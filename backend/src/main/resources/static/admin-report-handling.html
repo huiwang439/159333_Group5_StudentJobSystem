@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin - Dashboard</title>
-    <link rel="stylesheet" href="/css/admin-dashboard.css">
+    <title>Admin - Report Handling</title>
+    <link rel="stylesheet" href="/css/admin-platform.css">
     <link rel="stylesheet" href="/css/admin-common.css">
 </head>
-<body data-page="dashboard">
+<body data-page="report-handling">
 
 <div class="topbar">
     <div class="topbar-left">
@@ -18,7 +18,7 @@
 <div class="layout">
     <aside id="sidebar" class="sidebar hidden">
         <div class="sidebar-menu">
-            <div class="menu-item active" onclick="location.href='/admin-dashboard.html'">Dashboard</div>
+            <div class="menu-item" onclick="location.href='/admin-dashboard.html'">Dashboard</div>
 
             <div class="menu-group open">
                 <div class="menu-item parent" data-href="/admin-users.html">User Management</div>
@@ -39,9 +39,9 @@
             </div>
 
             <div class="menu-group open">
-                <div class="menu-item parent" data-href="/admin-report-handling.html">Platform Monitoring</div>
+                <div class="menu-item parent active" data-href="/admin-report-handling.html">Platform Monitoring</div>
                 <div class="sub-menu">
-                    <div class="sub-menu-item" onclick="location.href='/admin-report-handling.html'">Report Handling</div>
+                    <div class="sub-menu-item active" onclick="location.href='/admin-report-handling.html'">Report Handling</div>
                     <div class="sub-menu-item" onclick="location.href='/admin-abnormal-monitoring.html'">Abnormal Data / Behavior</div>
                     <div class="sub-menu-item" onclick="location.href='/admin-daily-active.html'">Daily Active Users</div>
                 </div>
@@ -52,49 +52,39 @@
     </aside>
 
     <main class="main-content">
-        <div class="page-header">
-            <h1>Dashboard</h1>
-        </div>
+        <div class="container">
+            <h1>Report Handling</h1>
 
-        <div class="dashboard-grid">
-            <div class="dashboard-card large-card">
-                <div class="card-title">Total Users</div>
-                <div class="card-value" id="totalUsers">0</div>
-                <div class="sub-stats">
-                    <span>Students: <strong id="totalStudents">0</strong></span>
-                    <span>Employers: <strong id="totalEmployers">0</strong></span>
-                </div>
+            <div class="toolbar">
+                <label for="statusFilter">Status:</label>
+                <select id="statusFilter">
+                    <option value="">All</option>
+                    <option value="pending">Pending</option>
+                    <option value="resolved">Resolved</option>
+                </select>
+                <button id="loadBtn">Load</button>
             </div>
 
-            <div class="dashboard-card">
-                <div class="card-title">Total Jobs</div>
-                <div class="card-value" id="totalJobs">0</div>
-            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Reported User</th>
+                    <th>Reason</th>
+                    <th>Related Job</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="reportTableBody"></tbody>
+            </table>
 
-            <div class="dashboard-card">
-                <div class="card-title">Total Applications</div>
-                <div class="card-value" id="totalApplications">0</div>
-            </div>
-
-            <div class="dashboard-card">
-                <div class="card-title">New Jobs Today</div>
-                <div class="card-value" id="newJobsToday">0</div>
-            </div>
-
-            <div class="dashboard-card">
-                <div class="card-title">New Applications Today</div>
-                <div class="card-value" id="newApplicationsToday">0</div>
-            </div>
-
-            <div class="dashboard-card">
-                <div class="card-title">Active Users</div>
-                <div class="card-value" id="activeUsers">0</div>
-            </div>
+            <pre id="messageBox"></pre>
         </div>
     </main>
 </div>
 
 <script src="/js/admin-sidebar.js"></script>
-<script src="/js/admin-dashboard.js"></script>
+<script src="/js/admin-report-handling.js"></script>
 </body>
 </html>

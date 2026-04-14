@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recruiter Register</title>
+    <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+<div class="auth-page">
+    <div class="auth-card">
+        <h1 class="auth-title">Recruiter Register</h1>
+        <p class="auth-subtitle">
+            Create your recruiter account to post jobs and manage applicants.
+        </p>
+
+        <form>
+            <div class="form-group">
+                <label class="form-label" for="employer-role">Role</label>
+                <select class="form-select" id="employer-role">
+                    <option>Recruiter</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="employer-register-username">Username</label>
+                <input class="form-input" id="employer-register-username" type="text" placeholder="Create a username">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="employer-register-password">Password</label>
+                <input class="form-input" id="employer-register-password" type="password" placeholder="Create a password">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="employer-confirm-password">Confirm Password</label>
+                <input class="form-input" id="employer-confirm-password" type="password" placeholder="Confirm your password">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="employer-register-email">Email</label>
+                <input class="form-input" id="employer-register-email" type="email" placeholder="Enter your email">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="employer-company-name">Company</label>
+                <input class="form-input" id="employer-company-name" type="text" placeholder="Enter your company name">
+            </div>
+
+            <div class="button-row">
+                <a href="/login-employer.html" class="secondary-btn" style="display:flex;align-items:center;justify-content:center;">Back</a>
+                <button class="primary-btn" type="button">Register Now</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>
