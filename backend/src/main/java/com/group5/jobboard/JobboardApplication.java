@@ -28,7 +28,7 @@ public class JobboardApplication {
 
 				userRepository.save(admin);
 
-				System.out.println("Admin account created");
+				System.out.println("Admin account created!");
 			}
 		};
 	}
