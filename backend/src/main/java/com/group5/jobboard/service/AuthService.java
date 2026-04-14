@@ -12,4 +12,5 @@ public interface AuthService {
     Map<String, Object> login(LoginRequest request);
 
     Map<String, Object> getCurrentUser(Long userId);
+
 }
