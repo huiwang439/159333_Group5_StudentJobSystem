@@ -21,7 +21,6 @@ public class SavedJobController {
         this.jwtUtil = jwtUtil;
     }
 
-    // ⭐ 收藏岗位
     @PostMapping
     public ApiResponse<Map<String, Object>> saveJob(@RequestParam Long jobId,
                                                     HttpServletRequest httpServletRequest) {
@@ -43,7 +42,6 @@ public class SavedJobController {
         return ApiResponse.success("job saved", result);
     }
 
-    // ⭐ 取消收藏
     @DeleteMapping
     public ApiResponse<Map<String, Object>> removeSavedJob(@RequestParam Long jobId,
                                                            HttpServletRequest httpServletRequest) {

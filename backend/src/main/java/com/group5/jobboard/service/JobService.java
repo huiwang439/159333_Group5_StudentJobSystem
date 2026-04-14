@@ -14,4 +14,10 @@ public interface JobService {
     Map<String, Object> getJobDetail(Long jobId);
 
     List<Map<String, Object>> getEmployerJobs(Long employerId);
+
+    List<Map<String, Object>> searchPublicJobs(String keyword,
+                                               String location,
+                                               String employmentType,
+                                               String fieldOfStudy);
+
 }
