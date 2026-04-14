@@ -21,11 +21,6 @@ const mockDashboardData = {
     activeUsers: 64
 };
 
-function toggleSidebar() {
-    sidebar.classList.toggle("hidden");
-    menuToggleBtn.textContent = sidebar.classList.contains("hidden") ? "▶" : "◀";
-}
-
 function renderDashboard() {
     totalUsers.textContent = mockDashboardData.totalUsers;
     totalStudents.textContent = mockDashboardData.totalStudents;
@@ -36,7 +31,5 @@ function renderDashboard() {
     newApplicationsToday.textContent = mockDashboardData.newApplicationsToday;
     activeUsers.textContent = mockDashboardData.activeUsers;
 }
-
-menuToggleBtn.addEventListener("click", toggleSidebar);
 
 renderDashboard();

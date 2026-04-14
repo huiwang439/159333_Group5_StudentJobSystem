@@ -76,11 +76,6 @@ function formatTime(time) {
     return time;
 }
 
-function toggleSidebar() {
-    sidebar.classList.toggle("hidden");
-    menuToggleBtn.textContent = sidebar.classList.contains("hidden") ? "▶" : "◀";
-}
-
 function getFilteredUsers() {
     const role = roleFilter.value;
     const keyword = searchInput.value.trim().toLowerCase();
@@ -175,15 +170,37 @@ function updateUserStatus(userId, accountStatus) {
 function resetFilters() {
     roleFilter.value = "";
     searchInput.value = "";
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete("role");
+    window.history.replaceState({}, "", url);
+
+    applyRoleFromQuery();
     loadUsers();
     showMessage("Filters reset.");
+}
+
+function applyRoleFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const role = params.get("role");
+
+    if (role === "student" || role === "employer") {
+        roleFilter.value = role;
+
+        document.querySelectorAll(".sub-menu-item[data-role]").forEach(item => {
+            item.classList.toggle("active", item.dataset.role === role);
+        });
+    } else {
+        document.querySelectorAll(".sub-menu-item[data-role]").forEach(item => {
+            item.classList.remove("active");
+        });
+    }
 }
 
 saveTokenBtn.addEventListener("click", saveToken);
 loadUsersBtn.addEventListener("click", loadUsers);
 searchBtn.addEventListener("click", loadUsers);
 resetBtn.addEventListener("click", resetFilters);
-menuToggleBtn.addEventListener("click", toggleSidebar);
 
 searchInput.addEventListener("keydown", function (event) {
     if (event.key === "Enter") {
@@ -192,4 +209,5 @@ searchInput.addEventListener("keydown", function (event) {
 });
 
 initToken();
+applyRoleFromQuery();
 loadUsers();
