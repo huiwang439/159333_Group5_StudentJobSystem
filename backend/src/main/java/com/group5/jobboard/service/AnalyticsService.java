@@ -11,4 +11,6 @@ public interface AnalyticsService {
     Map<String, Object> getApplicationStatistics();
 
     Map<String, Object> getUserStatistics();
+
+    Map<String, Object> getAnalyticsOverview(int days);
 }

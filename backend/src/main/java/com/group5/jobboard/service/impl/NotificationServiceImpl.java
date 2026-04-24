@@ -96,4 +96,27 @@ public class NotificationServiceImpl implements NotificationService {
 
         return result;
     }
+
+    @Override
+    public Map<String, Object> createNotification(Long userId, String type, String title, String message) {
+        Notification notification = new Notification();
+        notification.setUserId(userId);
+        notification.setNotificationType(type);
+        notification.setTitle(title);
+        notification.setMessage(message);
+        notification.setIsRead(false);
+
+        notificationRepository.save(notification);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("notificationId", notification.getId());
+        result.put("userId", notification.getUserId());
+        result.put("notificationType", notification.getNotificationType());
+        result.put("title", notification.getTitle());
+        result.put("message", notification.getMessage());
+        result.put("isRead", notification.getIsRead());
+        result.put("createdAt", notification.getCreatedAt());
+
+        return result;
+    }
 }
