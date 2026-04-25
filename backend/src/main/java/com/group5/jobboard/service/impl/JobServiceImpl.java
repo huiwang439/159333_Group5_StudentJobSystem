@@ -2,6 +2,7 @@ package com.group5.jobboard.service.impl;
 
 import com.group5.jobboard.dto.JobCreateRequest;
 import com.group5.jobboard.entity.Job;
+import com.group5.jobboard.repository.ApplicationRepository;
 import com.group5.jobboard.repository.JobRepository;
 import com.group5.jobboard.service.JobService;
 import org.springframework.stereotype.Service;
@@ -15,9 +16,43 @@ import java.util.Map;
 public class JobServiceImpl implements JobService {
 
     private final JobRepository jobRepository;
+    private final ApplicationRepository applicationRepository;
 
-    public JobServiceImpl(JobRepository jobRepository) {
+    public JobServiceImpl(JobRepository jobRepository,
+                          ApplicationRepository applicationRepository) {
         this.jobRepository = jobRepository;
+        this.applicationRepository = applicationRepository;
+    }
+    @Override
+    public Map<String, Object> updateJob(Long employerId, Long jobId, JobCreateRequest request) {
+
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        if (!job.getEmployerId().equals(employerId)) {
+            throw new RuntimeException("You can only update your own job");
+        }
+
+        job.setTitle(request.getTitle());
+        job.setCategoryId(request.getCategoryId());
+        job.setDescription(request.getDescription());
+        job.setRequirements(request.getRequirements());
+        job.setEmploymentType(request.getEmploymentType());
+        job.setWorkMode(request.getWorkMode());
+        job.setLocation(request.getLocation());
+        job.setFieldOfStudy(request.getFieldOfStudy());
+        job.setSalaryMin(request.getSalaryMin());
+        job.setSalaryMax(request.getSalaryMax());
+        job.setDeadline(request.getDeadline());
+
+        Job updatedJob = jobRepository.save(job);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("jobId", updatedJob.getId());
+        result.put("title", updatedJob.getTitle());
+        result.put("status", updatedJob.getStatus());
+
+        return result;
     }
 
     @Override
@@ -94,9 +129,57 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public List<Map<String, Object>> getEmployerJobs(Long employerId) {
-        List<Job> jobs = jobRepository.findByEmployerId(employerId);
+    public List<Map<String, Object>> getEmployerJobs(Long employerId, String status) {
+        List<Job> jobs;
+
+        if (status == null || status.isBlank()) {
+            jobs = jobRepository.findByEmployerId(employerId);
+        } else {
+            jobs = jobRepository.findByEmployerIdAndStatus(employerId, status);
+        }
+
         return buildJobList(jobs);
+    }
+
+    @Override
+    public Map<String, Object> deleteJob(Long employerId, Long jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        if (!job.getEmployerId().equals(employerId)) {
+            throw new RuntimeException("You can only delete your own job");
+        }
+
+        job.setStatus("deleted");
+        Job deletedJob = jobRepository.save(job);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("jobId", deletedJob.getId());
+        result.put("title", deletedJob.getTitle());
+        result.put("status", deletedJob.getStatus());
+
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> closeJob(Long employerId, Long jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        if (!job.getEmployerId().equals(employerId)) {
+            throw new RuntimeException("You can only close your own job");
+        }
+
+        job.setStatus("closed");
+
+        Job closedJob = jobRepository.save(job);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("jobId", closedJob.getId());
+        result.put("title", closedJob.getTitle());
+        result.put("status", closedJob.getStatus());
+
+        return result;
     }
 
     @Override
@@ -136,6 +219,7 @@ public class JobServiceImpl implements JobService {
             item.put("salaryMax", job.getSalaryMax());
             item.put("deadline", job.getDeadline());
             item.put("status", job.getStatus());
+            item.put("applicationCount", applicationRepository.countByJobId(job.getId()));
             result.add(item);
         }
 

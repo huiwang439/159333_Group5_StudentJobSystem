@@ -1,13 +1,14 @@
 package com.group5.jobboard.service.impl;
 
 import com.group5.jobboard.dto.ApplicationCreateRequest;
+import com.group5.jobboard.dto.ApplicationStatusUpdateRequest;
 import com.group5.jobboard.entity.Application;
 import com.group5.jobboard.entity.Job;
 import com.group5.jobboard.repository.ApplicationRepository;
 import com.group5.jobboard.repository.JobRepository;
 import com.group5.jobboard.service.ApplicationService;
 import org.springframework.stereotype.Service;
-import com.group5.jobboard.dto.ApplicationStatusUpdateRequest;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +32,12 @@ public class ApplicationServiceImpl implements ApplicationService {
         Job job = jobRepository.findById(request.getJobId())
                 .orElseThrow(() -> new RuntimeException("Job not found"));
 
+        // 岗位必须是 active 才能投递
+        if (!"active".equals(job.getStatus())) {
+            throw new RuntimeException("This job is not open for application");
+        }
+
+        // 防止重复投递
         applicationRepository.findByJobIdAndStudentId(request.getJobId(), studentId)
                 .ifPresent(a -> {
                     throw new RuntimeException("You have already applied for this job");
@@ -71,7 +78,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
-    public List<Map<String, Object>> getApplicationsByJob(Long employerId, Long jobId) {
+    public List<Map<String, Object>> getApplicationsByJob(Long employerId, Long jobId, String status) {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found"));
 
@@ -79,7 +86,14 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new RuntimeException("You are not allowed to view applications for this job");
         }
 
-        List<Application> applications = applicationRepository.findByJobId(jobId);
+        List<Application> applications;
+
+        if (status == null || status.isBlank()) {
+            applications = applicationRepository.findByJobId(jobId);
+        } else {
+            applications = applicationRepository.findByJobIdAndStatus(jobId, status);
+        }
+
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (Application application : applications) {
@@ -87,14 +101,15 @@ public class ApplicationServiceImpl implements ApplicationService {
             item.put("applicationId", application.getId());
             item.put("jobId", application.getJobId());
             item.put("studentId", application.getStudentId());
+            item.put("coverLetterText", application.getCoverLetterText());
             item.put("status", application.getStatus());
             item.put("appliedAt", application.getAppliedAt());
+            item.put("updatedAt", application.getUpdatedAt());
             result.add(item);
         }
 
         return result;
     }
-
     @Override
     public Map<String, Object> getApplicationDetail(Long userId, String role, Long applicationId) {
         Application application = applicationRepository.findById(applicationId)
@@ -123,6 +138,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         return result;
     }
+
     @Override
     public Map<String, Object> updateApplicationStatus(Long employerId, Long applicationId, ApplicationStatusUpdateRequest request) {
         Application application = applicationRepository.findById(applicationId)

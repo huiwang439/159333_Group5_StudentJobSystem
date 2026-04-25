@@ -1,11 +1,4 @@
-POST http://127.0.0.1:8080/auth/register
-Content-Type: application/json
-
-{
-  "fullName": "Test User",
-  "email": "test123@example.com",
-  "password": "123456",
-  "role": "student"
-}
-
-
+@employerToken = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0Iiwicm9sZSI6ImVtcGxveWVyIiwiZW1haWwiOiJlbXBsb3llcnJAdGVzdC5jb20iLCJpYXQiOjE3NzYxNTgxMDgsImV4cCI6MTc3NjI0NDUwOH0.h_rjGqZh9cjeLinJhMbZkFybPbuj20XXfWE1A-eBLhw
+@studentToken = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwicm9sZSI6InN0dWRlbnQiLCJlbWFpbCI6InN0dWRlbnRAdGVzdC5jb20iLCJpYXQiOjE3NzYxNjEyOTIsImV4cCI6MTc3NjI0NzY5Mn0.ULMnGU1CyHGklpc1vcZoKkJAV13F8-_EDH6SfAP_Q44
+GET http://localhost:8080/employers/dashboard
+Authorization: Bearer {{employerToken}}
