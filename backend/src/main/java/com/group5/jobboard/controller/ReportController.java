@@ -58,7 +58,7 @@ public class ReportController {
     }
 
     @GetMapping("/admin")
-    public ApiResponse<List<Map<String, Object>>> getAllReports(@RequestParam(required = false) String reportStatus,
+    public ApiResponse<List<Map<String, Object>>> getAllReports(@RequestParam(required = false) String status,
                                                                 HttpServletRequest httpServletRequest) {
 
         String authHeader = httpServletRequest.getHeader("Authorization");
@@ -70,16 +70,15 @@ public class ReportController {
         String role = jwtUtil.getRole(token);
 
         if (!"admin".equals(role)) {
-            throw new RuntimeException("Only admin can view all reports");
+            throw new RuntimeException("Only admin can view reports");
         }
 
-        List<Map<String, Object>> result = reportService.getAllReports(reportStatus);
-        return ApiResponse.success(result);
+        return ApiResponse.success(reportService.getAllReports(status));
     }
 
-    @PutMapping("/admin/{reportId}/handle")
+    @PatchMapping("/admin/{reportId}/handle")
     public ApiResponse<Map<String, Object>> handleReport(@PathVariable Long reportId,
-                                                         @RequestParam String reportStatus,
+                                                         @RequestParam String status,
                                                          HttpServletRequest httpServletRequest) {
 
         String authHeader = httpServletRequest.getHeader("Authorization");
@@ -95,7 +94,7 @@ public class ReportController {
             throw new RuntimeException("Only admin can handle reports");
         }
 
-        Map<String, Object> result = reportService.handleReport(reportId, reportStatus, adminId);
+        Map<String, Object> result = reportService.handleReport(reportId, status, adminId);
         return ApiResponse.success("report handled", result);
     }
 }

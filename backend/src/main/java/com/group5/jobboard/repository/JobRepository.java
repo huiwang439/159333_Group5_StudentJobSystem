@@ -3,6 +3,7 @@ package com.group5.jobboard.repository;
 import com.group5.jobboard.entity.Job;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface JobRepository extends JpaRepository<Job, Long> {
@@ -13,20 +14,17 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     List<Job> findByStatus(String status);
 
-    List<Job> findByStatusAndTitleContainingIgnoreCase(String status, String keyword);
+    List<Job> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
-    List<Job> findByStatusAndLocationContainingIgnoreCase(String status, String location);
+    long countByStatus(String status);
 
-    List<Job> findByStatusAndEmploymentTypeContainingIgnoreCase(String status, String employmentType);
+    List<Job> findByTitleContainingIgnoreCaseOrLocationContainingIgnoreCase(String title, String location);
 
-    List<Job> findByStatusAndFieldOfStudyContainingIgnoreCase(String status, String fieldOfStudy);
-
-    List<Job> findByStatusAndTitleContainingIgnoreCaseAndLocationContainingIgnoreCaseAndEmploymentTypeContainingIgnoreCaseAndFieldOfStudyContainingIgnoreCase(
-            String status,
-            String keyword,
-            String location,
-            String employmentType,
-            String fieldOfStudy
+    List<Job> findByStatusAndTitleContainingIgnoreCaseOrStatusAndLocationContainingIgnoreCase(
+            String status1,
+            String title,
+            String status2,
+            String location
     );
 
     long countByEmployerId(Long employerId);

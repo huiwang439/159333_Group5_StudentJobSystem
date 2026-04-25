@@ -1,19 +1,19 @@
 package com.group5.jobboard.service.impl;
 
+import com.group5.jobboard.entity.AnalyticsLog;
 import com.group5.jobboard.entity.Job;
 import com.group5.jobboard.entity.Report;
 import com.group5.jobboard.entity.User;
+import com.group5.jobboard.repository.AnalyticsLogRepository;
 import com.group5.jobboard.repository.JobRepository;
 import com.group5.jobboard.repository.ReportRepository;
 import com.group5.jobboard.repository.UserRepository;
+import com.group5.jobboard.service.NotificationService;
 import com.group5.jobboard.service.ReportService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ReportServiceImpl implements ReportService {
@@ -21,26 +21,30 @@ public class ReportServiceImpl implements ReportService {
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
+    private final NotificationService notificationService;
+    private final AnalyticsLogRepository analyticsLogRepository;
 
     public ReportServiceImpl(ReportRepository reportRepository,
                              UserRepository userRepository,
-                             JobRepository jobRepository) {
+                             JobRepository jobRepository,
+                             NotificationService notificationService,
+                             AnalyticsLogRepository analyticsLogRepository) {
         this.reportRepository = reportRepository;
         this.userRepository = userRepository;
         this.jobRepository = jobRepository;
+        this.notificationService = notificationService;
+        this.analyticsLogRepository = analyticsLogRepository;
     }
 
     @Override
     public Map<String, Object> createReport(Long reporterUserId, Long reportedUserId, Long relatedJobId,
                                             String reason, String description) {
-        User reporter = userRepository.findById(reporterUserId)
+        userRepository.findById(reporterUserId)
                 .orElseThrow(() -> new RuntimeException("Reporter not found"));
 
-        userRepository.findById(reportedUserId)
-                .orElseThrow(() -> new RuntimeException("Reported user not found"));
-
-        if (reporter.getId().equals(reportedUserId)) {
-            throw new RuntimeException("You cannot report yourself");
+        if (reportedUserId != null) {
+            userRepository.findById(reportedUserId)
+                    .orElseThrow(() -> new RuntimeException("Reported user not found"));
         }
 
         if (relatedJobId != null) {
@@ -58,10 +62,10 @@ public class ReportServiceImpl implements ReportService {
 
         reportRepository.save(report);
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("reportId", report.getId());
-        result.put("reportStatus", report.getReportStatus());
-        result.put("reportedUserId", report.getReportedUserId());
+        log(reporterUserId, "CREATE_REPORT", "REPORT", report.getId());
+
+        Map<String, Object> result = reportToMap(report);
+        result.put("created", true);
 
         return result;
     }
@@ -72,16 +76,7 @@ public class ReportServiceImpl implements ReportService {
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (Report report : reports) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("reportId", report.getId());
-            item.put("reporterUserId", report.getReporterUserId());
-            item.put("reportedUserId", report.getReportedUserId());
-            item.put("relatedJobId", report.getRelatedJobId());
-            item.put("reportReason", report.getReportReason());
-            item.put("reportDetails", report.getReportDetails());
-            item.put("reportStatus", report.getReportStatus());
-            item.put("createdAt", report.getCreatedAt());
-            result.add(item);
+            result.add(reportToMap(report));
         }
 
         return result;
@@ -100,18 +95,7 @@ public class ReportServiceImpl implements ReportService {
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (Report report : reports) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("reportId", report.getId());
-            item.put("reporterUserId", report.getReporterUserId());
-            item.put("reportedUserId", report.getReportedUserId());
-            item.put("relatedJobId", report.getRelatedJobId());
-            item.put("reportReason", report.getReportReason());
-            item.put("reportDetails", report.getReportDetails());
-            item.put("reportStatus", report.getReportStatus());
-            item.put("handledBy", report.getHandledBy());
-            item.put("handledAt", report.getHandledAt());
-            item.put("createdAt", report.getCreatedAt());
-            result.add(item);
+            result.add(reportToMap(report));
         }
 
         return result;
@@ -119,15 +103,14 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public Map<String, Object> handleReport(Long reportId, String reportStatus, Long adminId) {
-        Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new RuntimeException("Report not found"));
-
-        if (!reportStatus.equals("pending")
-                && !reportStatus.equals("reviewed")
-                && !reportStatus.equals("resolved")
-                && !reportStatus.equals("rejected")) {
+        if (!"resolved".equals(reportStatus)
+                && !"rejected".equals(reportStatus)
+                && !"pending".equals(reportStatus)) {
             throw new RuntimeException("Invalid report status");
         }
+
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
 
         report.setReportStatus(reportStatus);
         report.setHandledBy(adminId);
@@ -135,11 +118,77 @@ public class ReportServiceImpl implements ReportService {
 
         reportRepository.save(report);
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("reportId", report.getId());
-        result.put("reportStatus", report.getReportStatus());
-        result.put("updated", true);
+        log(adminId, "HANDLE_REPORT", "REPORT", reportId);
+
+        notificationService.createNotification(
+                report.getReporterUserId(),
+                "REPORT_RESULT",
+                "Report handled",
+                "Your report has been handled. Status: " + reportStatus
+        );
+
+        if (report.getReportedUserId() != null && "resolved".equals(reportStatus)) {
+            notificationService.createNotification(
+                    report.getReportedUserId(),
+                    "REPORT_WARNING",
+                    "You have been reported",
+                    "A report related to your account has been handled by admin."
+            );
+        }
+
+        Map<String, Object> result = reportToMap(report);
+        result.put("handled", true);
 
         return result;
+    }
+
+    private Map<String, Object> reportToMap(Report report) {
+        Map<String, Object> item = new HashMap<>();
+
+        item.put("reportId", report.getId());
+        item.put("reporterUserId", report.getReporterUserId());
+        item.put("reportedUserId", report.getReportedUserId());
+        item.put("relatedJobId", report.getRelatedJobId());
+        item.put("reportReason", report.getReportReason());
+        item.put("reportDetails", report.getReportDetails());
+        item.put("reportStatus", report.getReportStatus());
+        item.put("handledBy", report.getHandledBy());
+        item.put("createdAt", report.getCreatedAt());
+        item.put("handledAt", report.getHandledAt());
+
+        userRepository.findById(report.getReporterUserId())
+                .ifPresent(user -> item.put("reporterName", user.getFullName()));
+
+        if (report.getReportedUserId() != null) {
+            userRepository.findById(report.getReportedUserId())
+                    .ifPresent(user -> item.put("reportedUserName", user.getFullName()));
+        } else {
+            item.put("reportedUserName", null);
+        }
+
+        if (report.getRelatedJobId() != null) {
+            jobRepository.findById(report.getRelatedJobId())
+                    .ifPresent(job -> item.put("relatedJobTitle", job.getTitle()));
+        } else {
+            item.put("relatedJobTitle", null);
+        }
+
+        if (report.getHandledBy() != null) {
+            userRepository.findById(report.getHandledBy())
+                    .ifPresent(user -> item.put("handledByName", user.getFullName()));
+        } else {
+            item.put("handledByName", null);
+        }
+
+        return item;
+    }
+
+    private void log(Long userId, String actionType, String targetType, Long targetId) {
+        AnalyticsLog log = new AnalyticsLog();
+        log.setUserId(userId);
+        log.setActionType(actionType);
+        log.setTargetType(targetType);
+        log.setTargetId(targetId);
+        analyticsLogRepository.save(log);
     }
 }

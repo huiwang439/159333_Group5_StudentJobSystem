@@ -12,4 +12,6 @@ public interface NotificationService {
     Map<String, Object> markAsRead(Long notificationId, Long userId);
 
     Map<String, Object> markAllAsRead(Long userId);
+
+    Map<String, Object> createNotification(Long userId, String type, String title, String message);
 }
