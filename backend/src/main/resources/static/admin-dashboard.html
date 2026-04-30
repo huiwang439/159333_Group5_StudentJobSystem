@@ -63,6 +63,7 @@
                 <div class="sub-stats">
                     <span>Students: <strong id="totalStudents">0</strong></span>
                     <span>Employers: <strong id="totalEmployers">0</strong></span>
+                    <span>Admins: <strong id="totalAdmins">0</strong></span>
                 </div>
             </div>
 
@@ -72,28 +73,31 @@
             </div>
 
             <div class="dashboard-card">
+                <div class="card-title">Pending Jobs</div>
+                <div class="card-value" id="pendingJobs">0</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-title">Approved Jobs</div>
+                <div class="card-value" id="approvedJobs">0</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-title">Rejected Jobs</div>
+                <div class="card-value" id="rejectedJobs">0</div>
+            </div>
+
+            <div class="dashboard-card">
                 <div class="card-title">Total Applications</div>
                 <div class="card-value" id="totalApplications">0</div>
             </div>
-
-            <div class="dashboard-card">
-                <div class="card-title">New Jobs Today</div>
-                <div class="card-value" id="newJobsToday">0</div>
-            </div>
-
-            <div class="dashboard-card">
-                <div class="card-title">New Applications Today</div>
-                <div class="card-value" id="newApplicationsToday">0</div>
-            </div>
-
-            <div class="dashboard-card">
-                <div class="card-title">Active Users</div>
-                <div class="card-value" id="activeUsers">0</div>
-            </div>
         </div>
+
+        <p id="dashboardMessage" style="margin-top: 16px;"></p>
     </main>
 </div>
 
+<script src="/js/api-client.js"></script>
 <script src="/js/admin-sidebar.js"></script>
 <script src="/js/admin-dashboard.js"></script>
 </body>

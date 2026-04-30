@@ -1,74 +1,89 @@
-const menuToggleBtn = document.getElementById("menuToggleBtn");
-const sidebar = document.getElementById("sidebar");
-const statusFilter = document.getElementById("statusFilter");
-const loadBtn = document.getElementById("loadBtn");
-const reportTableBody = document.getElementById("reportTableBody");
-const messageBox = document.getElementById("messageBox");
-
-let mockReports = [
-    { id: 1, reportedUser: "Future Tech HR", reason: "Spam posting", relatedJob: "Frontend Intern", status: "pending" },
-    { id: 2, reportedUser: "Blue Sky Ltd", reason: "Fake company info", relatedJob: "Data Analyst", status: "resolved" },
-    { id: 3, reportedUser: "Vision Studio", reason: "Misleading salary", relatedJob: "UI Designer", status: "pending" }
-];
-
-function showMessage(message) {
-    messageBox.textContent = message;
-}
-
-function getStatusClass(status) {
-    return status === "resolved" ? "status-resolved" : "status-pending";
-}
-
-function getFilteredReports() {
-    const status = statusFilter.value;
-    if (!status) return mockReports;
-    return mockReports.filter(report => report.status === status);
-}
-
-function renderReports(reports) {
-    reportTableBody.innerHTML = "";
-
-    if (!reports.length) {
-        reportTableBody.innerHTML = `<tr><td colspan="6">No reports found</td></tr>`;
+document.addEventListener("DOMContentLoaded", () => {
+    if (!requireRole("admin")) {
         return;
     }
 
-    reports.forEach(report => {
-        const tr = document.createElement("tr");
-        const statusClass = getStatusClass(report.status);
-        const isResolved = report.status === "resolved";
+    const statusFilter = document.getElementById("statusFilter");
+    const loadBtn = document.getElementById("loadBtn");
+    const reportTableBody = document.getElementById("reportTableBody");
+    const messageBox = document.getElementById("messageBox");
 
-        tr.innerHTML = `
-            <td>${report.id}</td>
-            <td>${report.reportedUser}</td>
-            <td>${report.reason}</td>
-            <td>${report.relatedJob}</td>
-            <td><span class="${statusClass}">${report.status}</span></td>
-            <td>
-                <button class="action-btn" onclick="handleReport(${report.id})" ${isResolved ? "disabled" : ""}>Resolve</button>
-            </td>
-        `;
+    function showMessage(message, isError = false) {
+        messageBox.textContent = message || "";
+        messageBox.style.color = isError ? "#d93025" : "#2b7a0b";
+    }
 
-        reportTableBody.appendChild(tr);
-    });
-}
+    function getStatusClass(status) {
+        if (status === "resolved") return "status-resolved";
+        if (status === "rejected") return "status-rejected";
+        if (status === "reviewed") return "status-reviewed";
+        return "status-pending";
+    }
 
-function loadReports() {
-    renderReports(getFilteredReports());
-    showMessage("Report list loaded.");
-}
+    function renderReports(reports) {
+        reportTableBody.innerHTML = "";
 
-function handleReport(reportId) {
-    mockReports = mockReports.map(report => {
-        if (report.id === reportId) {
-            return { ...report, status: "resolved" };
+        if (!reports || reports.length === 0) {
+            reportTableBody.innerHTML = `<tr><td colspan="6">No reports found</td></tr>`;
+            return;
         }
-        return report;
-    });
+
+        reports.forEach((report) => {
+            const tr = document.createElement("tr");
+            const status = report.reportStatus || "pending";
+            const statusClass = getStatusClass(status);
+
+            tr.innerHTML = `
+                <td>${report.reportId}</td>
+                <td>User #${report.reportedUserId}</td>
+                <td>${report.reportReason || "-"}</td>
+                <td>${report.relatedJobId ? `Job #${report.relatedJobId}` : "-"}</td>
+                <td><span class="${statusClass}">${status}</span></td>
+                <td>
+                    <button class="action-btn" data-id="${report.reportId}" data-status="resolved" ${status === "resolved" ? "disabled" : ""}>Resolve</button>
+                </td>
+            `;
+
+            reportTableBody.appendChild(tr);
+        });
+
+        reportTableBody.querySelectorAll(".action-btn").forEach((button) => {
+            button.addEventListener("click", async () => {
+                const reportId = button.dataset.id;
+                const newStatus = button.dataset.status;
+
+                try {
+                    showMessage(`Updating report ${reportId}...`);
+                    await apiPutForm(`/reports/admin/${reportId}/handle`, {
+                        reportStatus: newStatus
+                    });
+                    showMessage(`Report ${reportId} updated to ${newStatus}.`);
+                    await loadReports();
+                } catch (error) {
+                    showMessage(error.message, true);
+                }
+            });
+        });
+    }
+
+    async function loadReports() {
+        try {
+            showMessage("Loading reports...");
+            const selectedStatus = statusFilter.value.trim();
+            const path = selectedStatus
+                ? `/reports/admin?reportStatus=${encodeURIComponent(selectedStatus)}`
+                : "/reports/admin";
+
+            const data = await apiGet(path);
+            renderReports(data);
+            showMessage("Reports loaded.");
+        } catch (error) {
+            renderReports([]);
+            showMessage(error.message, true);
+        }
+    }
+
+    loadBtn.addEventListener("click", loadReports);
+
     loadReports();
-    showMessage(`Report ${reportId} resolved.`);
-}
-
-loadBtn.addEventListener("click", loadReports);
-
-loadReports();
+});

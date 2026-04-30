@@ -14,35 +14,30 @@
             Sign in to manage job postings and review applications.
         </p>
 
-        <form>
+        <form id="employerLoginForm">
             <div class="form-group">
-                <label class="form-label" for="employer-username">Username</label>
-                <input class="form-input" id="employer-username" type="text" placeholder="Enter your username">
+                <label class="form-label" for="employer-email">Email</label>
+                <input class="form-input" id="employer-email" type="email" placeholder="Enter your email" required>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="employer-password">Password</label>
-                <input class="form-input" id="employer-password" type="password" placeholder="Enter your password">
+                <input class="form-input" id="employer-password" type="password" placeholder="Enter your password" required>
             </div>
 
-            <div class="form-group">
-                <label class="form-label" for="employer-company">Company</label>
-                <input class="form-input" id="employer-company" type="text" placeholder="Enter your company name">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="employer-email">Email</label>
-                <input class="form-input" id="employer-email" type="email" placeholder="Enter your email">
-            </div>
-
-            <button class="primary-btn" type="button">Log In</button>
+            <button class="primary-btn" type="submit">Log In</button>
         </form>
 
         <div class="auth-footer">
             Do not have an account?
             <a class="auth-link" href="/register-employer.html">Register Now</a>
         </div>
+
+        <p id="authMessage" style="margin-top: 12px;"></p>
     </div>
 </div>
+
+<script src="/js/api-client.js"></script>
+<script src="/js/login-employer.js"></script>
 </body>
 </html>
