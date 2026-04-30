@@ -35,6 +35,20 @@ public class AuthController {
         return ApiResponse.success("login success", result);
     }
 
+    @PostMapping("/logout")
+    public ApiResponse<Map<String, Object>> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+
+        String token = authHeader.substring(7);
+        Long userId = jwtUtil.getUserId(token);
+
+        return ApiResponse.success("logout success", authService.logout(userId));
+    }
+
     @GetMapping("/me")
     public ApiResponse<Map<String, Object>> me(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");

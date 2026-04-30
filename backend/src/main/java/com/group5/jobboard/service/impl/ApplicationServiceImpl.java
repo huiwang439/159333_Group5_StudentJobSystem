@@ -1,13 +1,17 @@
 package com.group5.jobboard.service.impl;
 
 import com.group5.jobboard.dto.ApplicationCreateRequest;
+import com.group5.jobboard.dto.ApplicationStatusUpdateRequest;
+import com.group5.jobboard.entity.AnalyticsLog;
 import com.group5.jobboard.entity.Application;
 import com.group5.jobboard.entity.Job;
+import com.group5.jobboard.repository.AnalyticsLogRepository;
 import com.group5.jobboard.repository.ApplicationRepository;
 import com.group5.jobboard.repository.JobRepository;
 import com.group5.jobboard.service.ApplicationService;
+import com.group5.jobboard.service.NotificationService;
 import org.springframework.stereotype.Service;
-import com.group5.jobboard.dto.ApplicationStatusUpdateRequest;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,18 +22,27 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     private final ApplicationRepository applicationRepository;
     private final JobRepository jobRepository;
+    private final AnalyticsLogRepository analyticsLogRepository;
+    private final NotificationService notificationService;
 
     public ApplicationServiceImpl(ApplicationRepository applicationRepository,
-                                  JobRepository jobRepository) {
+                                  JobRepository jobRepository,
+                                  AnalyticsLogRepository analyticsLogRepository,
+                                  NotificationService notificationService) {
         this.applicationRepository = applicationRepository;
         this.jobRepository = jobRepository;
+        this.analyticsLogRepository = analyticsLogRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
     public Map<String, Object> submitApplication(Long studentId, ApplicationCreateRequest request) {
-
         Job job = jobRepository.findById(request.getJobId())
                 .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        if (!"approved".equals(job.getStatus())) {
+            throw new RuntimeException("You can only apply for approved jobs");
+        }
 
         applicationRepository.findByJobIdAndStudentId(request.getJobId(), studentId)
                 .ifPresent(a -> {
@@ -43,6 +56,15 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setStatus("submitted");
 
         applicationRepository.save(application);
+
+        log(studentId, "SUBMIT_APPLICATION", "APPLICATION", application.getId());
+
+        notificationService.createNotification(
+                job.getEmployerId(),
+                "NEW_APPLICATION",
+                "New application received",
+                "A student has applied for your job: " + job.getTitle()
+        );
 
         Map<String, Object> result = new HashMap<>();
         result.put("applicationId", application.getId());
@@ -123,6 +145,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         return result;
     }
+
     @Override
     public Map<String, Object> updateApplicationStatus(Long employerId, Long applicationId, ApplicationStatusUpdateRequest request) {
         Application application = applicationRepository.findById(applicationId)
@@ -148,11 +171,29 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setStatus(status);
         applicationRepository.save(application);
 
+        log(employerId, "UPDATE_APPLICATION_STATUS", "APPLICATION", application.getId());
+
+        notificationService.createNotification(
+                application.getStudentId(),
+                "APPLICATION_STATUS",
+                "Application status updated",
+                "Your application status has been changed to: " + status
+        );
+
         Map<String, Object> result = new HashMap<>();
         result.put("applicationId", application.getId());
         result.put("status", application.getStatus());
         result.put("updated", true);
 
         return result;
+    }
+
+    private void log(Long userId, String actionType, String targetType, Long targetId) {
+        AnalyticsLog log = new AnalyticsLog();
+        log.setUserId(userId);
+        log.setActionType(actionType);
+        log.setTargetType(targetType);
+        log.setTargetId(targetId);
+        analyticsLogRepository.save(log);
     }
 }

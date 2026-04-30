@@ -11,4 +11,6 @@ public interface VerificationRequestRepository extends JpaRepository<Verificatio
     Optional<VerificationRequest> findByEmployerProfileId(Long employerProfileId);
 
     List<VerificationRequest> findByReviewStatus(String reviewStatus);
+
+    long countByReviewStatus(String reviewStatus);
 }

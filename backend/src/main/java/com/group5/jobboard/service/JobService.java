@@ -1,7 +1,6 @@
 package com.group5.jobboard.service;
 
 import com.group5.jobboard.dto.JobCreateRequest;
-
 import java.util.List;
 import java.util.Map;
 
@@ -15,9 +14,5 @@ public interface JobService {
 
     List<Map<String, Object>> getEmployerJobs(Long employerId);
 
-    List<Map<String, Object>> searchPublicJobs(String keyword,
-                                               String location,
-                                               String employmentType,
-                                               String fieldOfStudy);
-
+    List<Map<String, Object>> searchPublicJobs(String keyword, String location, String employmentType, String fieldOfStudy);
 }
