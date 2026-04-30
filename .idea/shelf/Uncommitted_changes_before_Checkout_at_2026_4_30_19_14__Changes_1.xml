@@ -1,0 +1,54 @@
+<changelist name="Uncommitted_changes_before_Checkout_at_2026_4_30_19_14_[Changes]1" date="1777533301033" recycled="true" deleted="true">
+  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14_[Changes]1/shelved.patch" />
+  <option name="DESCRIPTION" value="Uncommitted changes before Checkout at 2026/4/30 19:14 [Changes]" />
+  <binary>
+    <option name="BEFORE_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/ApplicationDocumentServiceImpl.class" />
+    <option name="AFTER_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/ApplicationDocumentServiceImpl.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14_[Changes]1/ApplicationDocumentServiceImpl.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/ReportServiceImpl.class" />
+    <option name="AFTER_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/ReportServiceImpl.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14_[Changes]1/ReportServiceImpl.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/SavedJobServiceImpl.class" />
+    <option name="AFTER_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/SavedJobServiceImpl.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14_[Changes]1/SavedJobServiceImpl.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/RecommendationServiceImpl.class" />
+    <option name="AFTER_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/RecommendationServiceImpl.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14_[Changes]1/RecommendationServiceImpl.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/JobCategoryServiceImpl.class" />
+    <option name="AFTER_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/JobCategoryServiceImpl.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14_[Changes]1/JobCategoryServiceImpl.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/VerificationRequestServiceImpl.class" />
+    <option name="AFTER_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/VerificationRequestServiceImpl.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14_[Changes]1/VerificationRequestServiceImpl.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/AuthServiceImpl.class" />
+    <option name="AFTER_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/AuthServiceImpl.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14_[Changes]1/AuthServiceImpl.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/JobServiceImpl.class" />
+    <option name="AFTER_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/JobServiceImpl.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14_[Changes]1/JobServiceImpl.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/AdminServiceImpl.class" />
+    <option name="AFTER_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/AdminServiceImpl.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14_[Changes]1/AdminServiceImpl.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/ApplicationServiceImpl.class" />
+    <option name="AFTER_PATH" value="backend/target/classes/com/group5/jobboard/service/impl/ApplicationServiceImpl.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14_[Changes]1/ApplicationServiceImpl.class" />
+  </binary>
+</changelist>
