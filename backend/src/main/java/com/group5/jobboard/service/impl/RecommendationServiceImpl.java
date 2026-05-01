@@ -1,157 +1,229 @@
 package com.group5.jobboard.service.impl;
 
 import com.group5.jobboard.entity.Job;
-import com.group5.jobboard.entity.Recommendation;
+import com.group5.jobboard.entity.SavedJob;
 import com.group5.jobboard.entity.StudentProfile;
+import com.group5.jobboard.repository.EmployerProfileRepository;
+import com.group5.jobboard.repository.JobCategoryRepository;
 import com.group5.jobboard.repository.JobRepository;
-import com.group5.jobboard.repository.RecommendationRepository;
+import com.group5.jobboard.repository.SavedJobRepository;
 import com.group5.jobboard.repository.StudentProfileRepository;
 import com.group5.jobboard.service.RecommendationService;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.*;
 
 @Service
 public class RecommendationServiceImpl implements RecommendationService {
 
-    private final RecommendationRepository recommendationRepository;
     private final StudentProfileRepository studentProfileRepository;
+    private final SavedJobRepository savedJobRepository;
     private final JobRepository jobRepository;
+    private final EmployerProfileRepository employerProfileRepository;
+    private final JobCategoryRepository jobCategoryRepository;
 
-    public RecommendationServiceImpl(RecommendationRepository recommendationRepository,
-                                     StudentProfileRepository studentProfileRepository,
-                                     JobRepository jobRepository) {
-        this.recommendationRepository = recommendationRepository;
+    public RecommendationServiceImpl(StudentProfileRepository studentProfileRepository,
+                                     SavedJobRepository savedJobRepository,
+                                     JobRepository jobRepository,
+                                     EmployerProfileRepository employerProfileRepository,
+                                     JobCategoryRepository jobCategoryRepository) {
         this.studentProfileRepository = studentProfileRepository;
+        this.savedJobRepository = savedJobRepository;
         this.jobRepository = jobRepository;
+        this.employerProfileRepository = employerProfileRepository;
+        this.jobCategoryRepository = jobCategoryRepository;
     }
 
     @Override
     public List<Map<String, Object>> getMyRecommendations(Long userId) {
-        StudentProfile studentProfile = studentProfileRepository.findByUserId(userId)
+        StudentProfile profile = studentProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Student profile not found"));
 
-        List<Recommendation> recommendations =
-                recommendationRepository.findByStudentProfileIdOrderByMatchScoreDesc(studentProfile.getId());
+        List<SavedJob> savedJobs = savedJobRepository.findByStudentProfileId(profile.getId());
+        List<Job> approvedJobs = jobRepository.findByStatus("approved");
+
+        Set<Long> savedJobIds = new HashSet<>();
+        Set<Long> preferredCategoryIds = new HashSet<>();
+        Set<String> preferredEmploymentTypes = new HashSet<>();
+        Set<String> preferredLocations = new HashSet<>();
+        Set<String> preferredFields = new HashSet<>();
+
+        for (SavedJob savedJob : savedJobs) {
+            savedJobIds.add(savedJob.getJobId());
+
+            jobRepository.findById(savedJob.getJobId()).ifPresent(job -> {
+                if (job.getCategoryId() != null) {
+                    preferredCategoryIds.add(job.getCategoryId());
+                }
+                if (job.getEmploymentType() != null) {
+                    preferredEmploymentTypes.add(job.getEmploymentType().toLowerCase());
+                }
+                if (job.getLocation() != null) {
+                    preferredLocations.add(job.getLocation().toLowerCase());
+                }
+                if (job.getFieldOfStudy() != null) {
+                    preferredFields.add(job.getFieldOfStudy().toLowerCase());
+                }
+            });
+        }
 
         List<Map<String, Object>> result = new ArrayList<>();
-        for (Recommendation recommendation : recommendations) {
-            Job job = jobRepository.findById(recommendation.getJobId()).orElse(null);
-            if (job == null) {
+
+        for (Job job : approvedJobs) {
+            if (savedJobIds.contains(job.getId())) {
                 continue;
             }
 
-            Map<String, Object> item = new HashMap<>();
-            item.put("recommendationId", recommendation.getId());
-            item.put("studentProfileId", recommendation.getStudentProfileId());
-            item.put("jobId", job.getId());
-            item.put("title", job.getTitle());
-            item.put("location", job.getLocation());
-            item.put("employmentType", job.getEmploymentType());
-            item.put("workMode", job.getWorkMode());
-            item.put("fieldOfStudy", job.getFieldOfStudy());
-            item.put("matchScore", recommendation.getMatchScore());
-            item.put("recommendationReason", recommendation.getRecommendationReason());
-            item.put("createdAt", recommendation.getCreatedAt());
-            result.add(item);
+            int score = 0;
+            List<String> reasons = new ArrayList<>();
+
+            if (job.getCategoryId() != null && preferredCategoryIds.contains(job.getCategoryId())) {
+                score += 30;
+                reasons.add("Similar to your saved job categories");
+            }
+
+            if (job.getEmploymentType() != null
+                    && preferredEmploymentTypes.contains(job.getEmploymentType().toLowerCase())) {
+                score += 20;
+                reasons.add("Similar employment type to your saved jobs");
+            }
+
+            if (job.getLocation() != null
+                    && preferredLocations.contains(job.getLocation().toLowerCase())) {
+                score += 10;
+                reasons.add("Similar location to your saved jobs");
+            }
+
+            if (profile.getMajor() != null && job.getFieldOfStudy() != null) {
+                String major = profile.getMajor().toLowerCase();
+                String jobField = job.getFieldOfStudy().toLowerCase();
+
+                if (jobField.contains(major) || major.contains(jobField)) {
+                    score += 25;
+                    reasons.add("Matches your major: " + profile.getMajor());
+                }
+            }
+
+            if (profile.getDegreeLevel() != null) {
+                String degree = profile.getDegreeLevel().toLowerCase();
+
+                if (isUndergraduate(degree) && isSuitableForUndergraduate(job)) {
+                    score += 10;
+                    reasons.add("Suitable for undergraduate students");
+                }
+
+                if (isGraduate(degree) && isSuitableForGraduate(job)) {
+                    score += 10;
+                    reasons.add("Suitable for graduate students");
+                }
+            }
+
+            if (profile.getPreferredLocation() != null && job.getLocation() != null) {
+                if (job.getLocation().toLowerCase().contains(profile.getPreferredLocation().toLowerCase())) {
+                    score += 5;
+                    reasons.add("Matches your preferred location");
+                }
+            }
+
+            if (profile.getPreferredJobType() != null && job.getEmploymentType() != null) {
+                if (job.getEmploymentType().equalsIgnoreCase(profile.getPreferredJobType())) {
+                    score += 5;
+                    reasons.add("Matches your preferred job type");
+                }
+            }
+
+            if (score > 0) {
+                Map<String, Object> item = jobToRecommendationMap(job, score, reasons);
+                result.add(item);
+            }
         }
+
+        result.sort((a, b) -> {
+            Integer scoreA = (Integer) a.get("matchScore");
+            Integer scoreB = (Integer) b.get("matchScore");
+            return scoreB.compareTo(scoreA);
+        });
 
         return result;
     }
 
-    @Override
-    public List<Map<String, Object>> refreshMyRecommendations(Long userId) {
-        StudentProfile studentProfile = studentProfileRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Student profile not found"));
-
-        List<Job> jobs = jobRepository.findByStatus("pending");
-        recommendationRepository.deleteByStudentProfileId(studentProfile.getId());
-
-        for (Job job : jobs) {
-            BigDecimal score = calculateMatchScore(studentProfile, job);
-            if (score.compareTo(new BigDecimal("30.00")) < 0) {
-                continue;
-            }
-
-            Recommendation recommendation = new Recommendation();
-            recommendation.setStudentProfileId(studentProfile.getId());
-            recommendation.setJobId(job.getId());
-            recommendation.setMatchScore(score);
-            recommendation.setRecommendationReason(buildReason(studentProfile, job, score));
-            recommendationRepository.save(recommendation);
-        }
-
-        return getMyRecommendations(userId);
+    private boolean isUndergraduate(String degree) {
+        return degree.contains("bachelor")
+                || degree.contains("undergraduate")
+                || degree.contains("ug")
+                || degree.contains("本科");
     }
 
-    private BigDecimal calculateMatchScore(StudentProfile studentProfile, Job job) {
-        double score = 0.0;
-
-        if (containsIgnoreCase(job.getFieldOfStudy(), studentProfile.getMajor())) {
-            score += 40;
-        }
-
-        if (containsIgnoreCase(job.getLocation(), studentProfile.getPreferredLocation())) {
-            score += 20;
-        }
-
-        if (containsIgnoreCase(job.getEmploymentType(), studentProfile.getPreferredJobType())) {
-            score += 20;
-        }
-
-        int skillMatches = countSkillMatches(studentProfile.getSkills(), job.getRequirements());
-        score += Math.min(skillMatches * 10, 20);
-
-        return BigDecimal.valueOf(score).setScale(2, RoundingMode.HALF_UP);
+    private boolean isGraduate(String degree) {
+        return degree.contains("master")
+                || degree.contains("graduate")
+                || degree.contains("postgraduate")
+                || degree.contains("pg")
+                || degree.contains("硕士")
+                || degree.contains("研究生");
     }
 
-    private String buildReason(StudentProfile studentProfile, Job job, BigDecimal score) {
-        List<String> reasons = new ArrayList<>();
-
-        if (containsIgnoreCase(job.getFieldOfStudy(), studentProfile.getMajor())) {
-            reasons.add("major matches field of study");
-        }
-        if (containsIgnoreCase(job.getLocation(), studentProfile.getPreferredLocation())) {
-            reasons.add("location matches preference");
-        }
-        if (containsIgnoreCase(job.getEmploymentType(), studentProfile.getPreferredJobType())) {
-            reasons.add("job type matches preference");
-        }
-        if (countSkillMatches(studentProfile.getSkills(), job.getRequirements()) > 0) {
-            reasons.add("skills match job requirements");
-        }
-
-        if (reasons.isEmpty()) {
-            reasons.add("general profile similarity");
-        }
-
-        return String.join("; ", reasons) + " (score=" + score + ")";
+    private boolean isSuitableForUndergraduate(Job job) {
+        String text = combineJobText(job);
+        return text.contains("intern")
+                || text.contains("internship")
+                || text.contains("junior")
+                || text.contains("assistant")
+                || text.contains("entry");
     }
 
-    private int countSkillMatches(String studentSkills, String jobRequirements) {
-        if (studentSkills == null || studentSkills.isBlank() || jobRequirements == null || jobRequirements.isBlank()) {
-            return 0;
-        }
-
-        String[] skills = studentSkills.split(",");
-        int count = 0;
-
-        for (String skill : skills) {
-            String trimmed = skill.trim();
-            if (!trimmed.isEmpty() && containsIgnoreCase(jobRequirements, trimmed)) {
-                count++;
-            }
-        }
-
-        return count;
+    private boolean isSuitableForGraduate(Job job) {
+        String text = combineJobText(job);
+        return text.contains("graduate")
+                || text.contains("master")
+                || text.contains("analyst")
+                || text.contains("associate")
+                || text.contains("full-time")
+                || text.contains("full time");
     }
 
-    private boolean containsIgnoreCase(String source, String target) {
-        if (source == null || target == null) {
-            return false;
+    private String combineJobText(Job job) {
+        return (
+                safe(job.getTitle()) + " "
+                        + safe(job.getDescription()) + " "
+                        + safe(job.getRequirements()) + " "
+                        + safe(job.getEmploymentType()) + " "
+                        + safe(job.getFieldOfStudy())
+        ).toLowerCase();
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value;
+    }
+
+    private Map<String, Object> jobToRecommendationMap(Job job, int score, List<String> reasons) {
+        Map<String, Object> item = new HashMap<>();
+
+        item.put("jobId", job.getId());
+        item.put("title", job.getTitle());
+        item.put("employerId", job.getEmployerId());
+        item.put("categoryId", job.getCategoryId());
+        item.put("description", job.getDescription());
+        item.put("requirements", job.getRequirements());
+        item.put("employmentType", job.getEmploymentType());
+        item.put("workMode", job.getWorkMode());
+        item.put("location", job.getLocation());
+        item.put("fieldOfStudy", job.getFieldOfStudy());
+        item.put("salaryMin", job.getSalaryMin());
+        item.put("salaryMax", job.getSalaryMax());
+        item.put("deadline", job.getDeadline());
+        item.put("status", job.getStatus());
+        item.put("matchScore", score);
+        item.put("recommendationReasons", reasons);
+
+        employerProfileRepository.findByUserId(job.getEmployerId())
+                .ifPresent(profile -> item.put("companyName", profile.getCompanyName()));
+
+        if (job.getCategoryId() != null) {
+            jobCategoryRepository.findById(job.getCategoryId())
+                    .ifPresent(category -> item.put("categoryName", category.getCategoryName()));
         }
-        return source.toLowerCase().contains(target.toLowerCase());
+
+        return item;
     }
 }

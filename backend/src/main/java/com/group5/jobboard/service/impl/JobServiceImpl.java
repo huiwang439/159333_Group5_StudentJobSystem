@@ -1,7 +1,11 @@
 package com.group5.jobboard.service.impl;
 
 import com.group5.jobboard.dto.JobCreateRequest;
+import com.group5.jobboard.entity.AnalyticsLog;
 import com.group5.jobboard.entity.Job;
+import com.group5.jobboard.repository.AnalyticsLogRepository;
+import com.group5.jobboard.repository.EmployerProfileRepository;
+import com.group5.jobboard.repository.JobCategoryRepository;
 import com.group5.jobboard.repository.JobRepository;
 import com.group5.jobboard.service.JobService;
 import org.springframework.stereotype.Service;
@@ -15,9 +19,18 @@ import java.util.Map;
 public class JobServiceImpl implements JobService {
 
     private final JobRepository jobRepository;
+    private final EmployerProfileRepository employerProfileRepository;
+    private final JobCategoryRepository jobCategoryRepository;
+    private final AnalyticsLogRepository analyticsLogRepository;
 
-    public JobServiceImpl(JobRepository jobRepository) {
+    public JobServiceImpl(JobRepository jobRepository,
+                          EmployerProfileRepository employerProfileRepository,
+                          JobCategoryRepository jobCategoryRepository,
+                          AnalyticsLogRepository analyticsLogRepository) {
         this.jobRepository = jobRepository;
+        this.employerProfileRepository = employerProfileRepository;
+        this.jobCategoryRepository = jobCategoryRepository;
+        this.analyticsLogRepository = analyticsLogRepository;
     }
 
     @Override
@@ -36,67 +49,32 @@ public class JobServiceImpl implements JobService {
         job.setSalaryMax(request.getSalaryMax());
         job.setDeadline(request.getDeadline());
 
-        // 为了测试和演示方便，创建后直接设为 active
-        job.setStatus("active");
+        job.setStatus("pending");
 
-        Job savedJob = jobRepository.save(job);
+        jobRepository.save(job);
+
+        log(employerId, "CREATE_JOB", "JOB", job.getId());
 
         Map<String, Object> result = new HashMap<>();
-        result.put("jobId", savedJob.getId());
-        result.put("employerId", savedJob.getEmployerId());
-        result.put("title", savedJob.getTitle());
-        result.put("categoryId", savedJob.getCategoryId());
-        result.put("description", savedJob.getDescription());
-        result.put("requirements", savedJob.getRequirements());
-        result.put("employmentType", savedJob.getEmploymentType());
-        result.put("workMode", savedJob.getWorkMode());
-        result.put("location", savedJob.getLocation());
-        result.put("fieldOfStudy", savedJob.getFieldOfStudy());
-        result.put("salaryMin", savedJob.getSalaryMin());
-        result.put("salaryMax", savedJob.getSalaryMax());
-        result.put("deadline", savedJob.getDeadline());
-        result.put("status", savedJob.getStatus());
-        result.put("createdAt", savedJob.getCreatedAt());
-        result.put("updatedAt", savedJob.getUpdatedAt());
+        result.put("jobId", job.getId());
+        result.put("title", job.getTitle());
+        result.put("status", job.getStatus());
+        result.put("message", "Job submitted and waiting for admin review");
 
         return result;
     }
 
     @Override
     public List<Map<String, Object>> getPublicJobs() {
-        List<Job> jobs = jobRepository.findByStatus("active");
-        return buildJobList(jobs);
-    }
 
-    @Override
-    public Map<String, Object> getJobDetail(Long jobId) {
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("Job not found"));
+        List<Job> jobs = jobRepository.findByStatus("approved");
+        List<Map<String, Object>> result = new ArrayList<>();
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("jobId", job.getId());
-        result.put("employerId", job.getEmployerId());
-        result.put("title", job.getTitle());
-        result.put("categoryId", job.getCategoryId());
-        result.put("description", job.getDescription());
-        result.put("requirements", job.getRequirements());
-        result.put("employmentType", job.getEmploymentType());
-        result.put("workMode", job.getWorkMode());
-        result.put("location", job.getLocation());
-        result.put("fieldOfStudy", job.getFieldOfStudy());
-        result.put("salaryMin", job.getSalaryMin());
-        result.put("salaryMax", job.getSalaryMax());
-        result.put("deadline", job.getDeadline());
-        result.put("status", job.getStatus());
-        result.put("createdAt", job.getCreatedAt());
-        result.put("updatedAt", job.getUpdatedAt());
+        for (Job job : jobs) {
+            result.add(jobToMap(job));
+        }
+
         return result;
-    }
-
-    @Override
-    public List<Map<String, Object>> getEmployerJobs(Long employerId) {
-        List<Job> jobs = jobRepository.findByEmployerId(employerId);
-        return buildJobList(jobs);
     }
 
     @Override
@@ -104,41 +82,131 @@ public class JobServiceImpl implements JobService {
                                                       String location,
                                                       String employmentType,
                                                       String fieldOfStudy) {
-        String safeKeyword = keyword == null ? "" : keyword.trim();
-        String safeLocation = location == null ? "" : location.trim();
-        String safeEmploymentType = employmentType == null ? "" : employmentType.trim();
-        String safeFieldOfStudy = fieldOfStudy == null ? "" : fieldOfStudy.trim();
-
-        List<Job> jobs = jobRepository
-                .findByStatusAndTitleContainingIgnoreCaseAndLocationContainingIgnoreCaseAndEmploymentTypeContainingIgnoreCaseAndFieldOfStudyContainingIgnoreCase(
-                        "active",
-                        safeKeyword,
-                        safeLocation,
-                        safeEmploymentType,
-                        safeFieldOfStudy
-                );
-
-        return buildJobList(jobs);
-    }
-
-    private List<Map<String, Object>> buildJobList(List<Job> jobs) {
+        List<Job> jobs = jobRepository.findByStatus("approved");
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (Job job : jobs) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("jobId", job.getId());
-            item.put("title", job.getTitle());
-            item.put("location", job.getLocation());
-            item.put("employmentType", job.getEmploymentType());
-            item.put("workMode", job.getWorkMode());
-            item.put("fieldOfStudy", job.getFieldOfStudy());
-            item.put("salaryMin", job.getSalaryMin());
-            item.put("salaryMax", job.getSalaryMax());
-            item.put("deadline", job.getDeadline());
-            item.put("status", job.getStatus());
-            result.add(item);
+            boolean match = true;
+
+            if (keyword != null && !keyword.isBlank()) {
+                String k = keyword.toLowerCase();
+
+                boolean keywordMatch =
+                        containsIgnoreCase(job.getTitle(), k)
+                                || containsIgnoreCase(job.getDescription(), k)
+                                || containsIgnoreCase(job.getRequirements(), k)
+                                || containsIgnoreCase(job.getLocation(), k)
+                                || containsIgnoreCase(job.getFieldOfStudy(), k)
+                                || containsIgnoreCase(job.getEmploymentType(), k)
+                                || containsIgnoreCase(job.getWorkMode(), k);
+
+                if (!keywordMatch) {
+                    match = false;
+                }
+            }
+
+            if (location != null && !location.isBlank()) {
+                if (!containsIgnoreCase(job.getLocation(), location)) {
+                    match = false;
+                }
+            }
+
+            if (employmentType != null && !employmentType.isBlank()) {
+                if (job.getEmploymentType() == null
+                        || !job.getEmploymentType().equalsIgnoreCase(employmentType)) {
+                    match = false;
+                }
+            }
+
+            if (fieldOfStudy != null && !fieldOfStudy.isBlank()) {
+                if (!containsIgnoreCase(job.getFieldOfStudy(), fieldOfStudy)) {
+                    match = false;
+                }
+            }
+
+            if (match) {
+                result.add(jobToMap(job));
+            }
         }
 
         return result;
+    }
+
+    @Override
+    public Map<String, Object> getJobDetail(Long jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        if (!"approved".equals(job.getStatus())) {
+            throw new RuntimeException("This job is not available");
+        }
+
+        return jobToMap(job);
+    }
+
+    @Override
+    public List<Map<String, Object>> getEmployerJobs(Long employerId) {
+
+        List<Job> jobs = jobRepository.findByEmployerId(employerId);
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (Job job : jobs) {
+            result.add(jobToMap(job));
+        }
+
+        return result;
+    }
+
+    private Map<String, Object> jobToMap(Job job) {
+        Map<String, Object> item = new HashMap<>();
+
+        item.put("jobId", job.getId());
+        item.put("employerId", job.getEmployerId());
+        item.put("title", job.getTitle());
+        item.put("categoryId", job.getCategoryId());
+        item.put("description", job.getDescription());
+        item.put("requirements", job.getRequirements());
+        item.put("employmentType", job.getEmploymentType());
+        item.put("workMode", job.getWorkMode());
+        item.put("location", job.getLocation());
+        item.put("fieldOfStudy", job.getFieldOfStudy());
+        item.put("salaryMin", job.getSalaryMin());
+        item.put("salaryMax", job.getSalaryMax());
+        item.put("deadline", job.getDeadline());
+        item.put("status", job.getStatus());
+        item.put("createdAt", job.getCreatedAt());
+        item.put("updatedAt", job.getUpdatedAt());
+
+        employerProfileRepository.findByUserId(job.getEmployerId())
+                .ifPresent(profile -> {
+                    item.put("companyName", profile.getCompanyName());
+                    item.put("industry", profile.getIndustry());
+                    item.put("companyLocation", profile.getLocation());
+                    item.put("verificationStatus", profile.getVerificationStatus());
+                });
+
+        if (job.getCategoryId() != null) {
+            jobCategoryRepository.findById(job.getCategoryId())
+                    .ifPresent(category -> item.put("categoryName", category.getCategoryName()));
+        }
+
+        return item;
+    }
+
+    private boolean containsIgnoreCase(String source, String keyword) {
+        if (source == null || keyword == null) {
+            return false;
+        }
+
+        return source.toLowerCase().contains(keyword.toLowerCase());
+    }
+
+    private void log(Long userId, String actionType, String targetType, Long targetId) {
+        AnalyticsLog log = new AnalyticsLog();
+        log.setUserId(userId);
+        log.setActionType(actionType);
+        log.setTargetType(targetType);
+        log.setTargetId(targetId);
+        analyticsLogRepository.save(log);
     }
 }

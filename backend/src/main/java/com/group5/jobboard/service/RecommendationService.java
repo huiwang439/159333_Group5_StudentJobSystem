@@ -7,5 +7,4 @@ public interface RecommendationService {
 
     List<Map<String, Object>> getMyRecommendations(Long userId);
 
-    List<Map<String, Object>> refreshMyRecommendations(Long userId);
 }
