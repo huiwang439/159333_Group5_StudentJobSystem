@@ -4,7 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b57fd497-c4dc-4cce-8955-059e16b67c5a" name="Changes" comment="add frontend pages" />
+    <list default="true" id="b57fd497-c4dc-4cce-8955-059e16b67c5a" name="Changes" comment="add frontend pages">
+      <change afterPath="$PROJECT_DIR$/assets/css/admin-ai-assistant.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/css/employer-ai-assistant.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/css/student-ai-assistant.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/js/admin-ai-assistant.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/js/employer-ai-assistant.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/js/student-ai-assistant.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14__Changes_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14__Changes_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14__Changes_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_15__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_15__Changes_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_28__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_28__Changes_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_28__Changes_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_28__Changes_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -31,8 +45,10 @@
   "keyToString": {
     "Application.JobboardApplication.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "branch-ZhengZihui",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "D:/cursor"
+    "last_opened_file_path": "D:/cursor",
+    "node.js.selected.package.tslint": "(autodetect)"
   }
 }]]></component>
   <component name="RunManager">
