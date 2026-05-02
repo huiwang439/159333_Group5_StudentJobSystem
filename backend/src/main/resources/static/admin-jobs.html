@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="/css/admin-jobs.css">
     <link rel="stylesheet" href="/css/admin-common.css">
 </head>
-<body data-page="jobs">
+<body data-page="job-management">
 
 <div class="topbar">
     <div class="topbar-left">
@@ -20,13 +20,7 @@
         <div class="sidebar-menu">
             <div class="menu-item" onclick="location.href='/admin-dashboard.html'">Dashboard</div>
 
-            <div class="menu-group open">
-                <div class="menu-item parent" data-href="/admin-users.html">User Management</div>
-                <div class="sub-menu">
-                    <div class="sub-menu-item" onclick="location.href='/admin-users.html?role=student'">Job Seekers</div>
-                    <div class="sub-menu-item" onclick="location.href='/admin-users.html?role=employer'">Recruiters</div>
-                </div>
-            </div>
+            <div class="menu-item" onclick="location.href='/admin-users.html'">User Management</div>
 
             <div class="menu-item active" onclick="location.href='/admin-jobs.html'">Job Management</div>
 
@@ -55,48 +49,58 @@
         <div class="container">
             <h1>Job Management</h1>
 
-            <div class="toolbar">
-                <label for="statusFilter">Status:</label>
-                <select id="statusFilter">
-                    <option value="">All</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="removed">Removed</option>
-                </select>
-                <button id="loadJobsBtn">Load Jobs</button>
+            <div class="toolbar" style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;">
+                <div>
+                    <label for="keyword">Keyword</label><br>
+                    <input id="keyword" type="text" placeholder="Search by title or location">
+                </div>
+
+                <div>
+                    <label for="statusFilter">Status</label><br>
+                    <select id="statusFilter">
+                        <option value="">All</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="removed">Removed</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                </div>
+
+                <div>
+                    <button id="loadJobsBtn">Search</button>
+                </div>
             </div>
 
-            <div class="toolbar">
-                <label for="searchInput">Search:</label>
-                <input id="searchInput" type="text" placeholder="Search by title or company">
-                <button id="searchBtn">Search</button>
-                <button id="resetBtn">Reset</button>
-            </div>
-
-            <table id="jobTable">
+            <table>
                 <thead>
                 <tr>
                     <th>ID</th>
                     <th>Title</th>
                     <th>Company</th>
+                    <th>Category</th>
                     <th>Location</th>
-                    <th>Type</th>
+                    <th>Employment</th>
                     <th>Salary</th>
                     <th>Deadline</th>
                     <th>Status</th>
-                    <th>Created At</th>
                     <th>Actions</th>
                 </tr>
                 </thead>
-                <tbody id="jobTableBody"></tbody>
+                <tbody id="jobsTableBody"></tbody>
             </table>
 
-            <pre id="messageBox"></pre>
+            <div style="margin-top:16px;">
+                <h3>Job Details</h3>
+                <pre id="jobDetailsBox">Select a job to view details.</pre>
+            </div>
+
+            <pre id="jobsMessage"></pre>
         </div>
     </main>
 </div>
 
+<script src="/js/api-client.js"></script>
 <script src="/js/admin-sidebar.js"></script>
 <script src="/js/admin-jobs.js"></script>
 </body>

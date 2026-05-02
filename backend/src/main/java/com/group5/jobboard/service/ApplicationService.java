@@ -14,6 +14,8 @@ public interface ApplicationService {
 
     List<Map<String, Object>> getApplicationsByJob(Long employerId, Long jobId);
 
+    List<Map<String, Object>> getApplicationsByJob(Long employerId, Long jobId, String status);
+
     Map<String, Object> getApplicationDetail(Long userId, String role, Long applicationId);
 
     Map<String, Object> updateApplicationStatus(Long employerId, Long applicationId, ApplicationStatusUpdateRequest request);

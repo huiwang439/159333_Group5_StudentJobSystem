@@ -1,50 +1,50 @@
-const menuToggleBtn = document.getElementById("menuToggleBtn");
-const sidebar = document.getElementById("sidebar");
-const todayActiveUsers = document.getElementById("todayActiveUsers");
-const studentActiveUsers = document.getElementById("studentActiveUsers");
-const employerActiveUsers = document.getElementById("employerActiveUsers");
-const dailyActiveTableBody = document.getElementById("dailyActiveTableBody");
-const messageBox = document.getElementById("messageBox");
+document.addEventListener("DOMContentLoaded", async () => {
+    if (!requireRole("admin")) return;
 
-const mockDailyActiveData = {
-    todayActiveUsers: 126,
-    studentActiveUsers: 84,
-    employerActiveUsers: 42,
-    hourlyStats: [
-        { timeRange: "00:00 - 06:00", activeCount: 12 },
-        { timeRange: "06:00 - 12:00", activeCount: 38 },
-        { timeRange: "12:00 - 18:00", activeCount: 47 },
-        { timeRange: "18:00 - 24:00", activeCount: 29 }
-    ]
-};
+    const todayActiveUsers = document.getElementById("todayActiveUsers");
+    const studentActiveUsers = document.getElementById("studentActiveUsers");
+    const employerActiveUsers = document.getElementById("employerActiveUsers");
+    const dailyActiveTableBody = document.getElementById("dailyActiveTableBody");
+    const messageBox = document.getElementById("messageBox");
 
-function showMessage(message) {
-    messageBox.textContent = message;
-}
+    function showMessage(message, isError = false) {
+        messageBox.textContent = message || "";
+        messageBox.style.color = isError ? "#d93025" : "#2b7a0b";
+    }
 
-function renderCards() {
-    todayActiveUsers.textContent = mockDailyActiveData.todayActiveUsers;
-    studentActiveUsers.textContent = mockDailyActiveData.studentActiveUsers;
-    employerActiveUsers.textContent = mockDailyActiveData.employerActiveUsers;
-}
+    function renderHourly(data) {
+        dailyActiveTableBody.innerHTML = "";
 
-function renderTable() {
-    dailyActiveTableBody.innerHTML = "";
+        if (!data || data.length === 0) {
+            dailyActiveTableBody.innerHTML = `<tr><td colspan="3">No hourly data found</td></tr>`;
+            return;
+        }
 
-    mockDailyActiveData.hourlyStats.forEach(item => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${item.timeRange}</td>
-            <td>${item.activeCount}</td>
-        `;
-        dailyActiveTableBody.appendChild(tr);
-    });
-}
+        data.forEach(item => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${String(item.hour).padStart(2, "0")}:00 - ${String(Number(item.hour) + 1).padStart(2, "0")}:00</td>
+                <td>${item.activeUsers ?? 0}</td>
+                <td>${item.logCount ?? 0}</td>
+            `;
+            dailyActiveTableBody.appendChild(tr);
+        });
+    }
 
-function loadDailyActive() {
-    renderCards();
-    renderTable();
-    showMessage("Daily active data loaded.");
-}
+    try {
+        showMessage("Loading daily active data...");
+        const [activeToday, hourly] = await Promise.all([
+            apiGet("/admin/analytics/active-today"),
+            apiGet("/admin/analytics/hourly-active")
+        ]);
 
-loadDailyActive();
+        todayActiveUsers.textContent = activeToday.activeUsers ?? 0;
+        studentActiveUsers.textContent = activeToday.activeStudents ?? 0;
+        employerActiveUsers.textContent = activeToday.activeEmployers ?? 0;
+
+        renderHourly(hourly);
+        showMessage("Daily active data loaded.");
+    } catch (error) {
+        showMessage(error.message, true);
+    }
+});

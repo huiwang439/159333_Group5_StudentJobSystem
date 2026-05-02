@@ -53,9 +53,23 @@ public class ApplicationController {
     }
 
     @GetMapping("/job/{jobId}")
+<<<<<<< HEAD
     public ApiResponse<List<Map<String, Object>>> getApplicationsByJob(@PathVariable Long jobId,
                                                                        HttpServletRequest httpServletRequest) {
         String token = getToken(httpServletRequest);
+=======
+    public ApiResponse<List<Map<String, Object>>> getApplicationsByJob(
+            @PathVariable Long jobId,
+            @RequestParam(required = false) String status,
+            HttpServletRequest httpServletRequest) {
+
+        String authHeader = httpServletRequest.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+
+        String token = authHeader.substring(7);
+>>>>>>> origin/branch-ZhengZihui
         Long employerId = jwtUtil.getUserId(token);
         String role = jwtUtil.getRole(token);
 
@@ -63,7 +77,7 @@ public class ApplicationController {
             throw new RuntimeException("Only employer can view applications for a job");
         }
 
-        return ApiResponse.success(applicationService.getApplicationsByJob(employerId, jobId));
+        return ApiResponse.success(applicationService.getApplicationsByJob(employerId, jobId, status));
     }
 
     @GetMapping("/{applicationId}")

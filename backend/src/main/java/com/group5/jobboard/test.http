@@ -1,11 +1,4 @@
-POST http://127.0.0.1:8080/auth/register
-Content-Type: application/json
 
-{
-  "fullName": "Test User",
-  "email": "test123@example.com",
-  "password": "123456",
-  "role": "student"
-}
-
-
+### Student view my applications
+GET http://localhost:8080/applications/my
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMCIsInJvbGUiOiJzdHVkZW50IiwiZW1haWwiOiJzdHVkZW50MUB0ZXN0LmNvbSIsImlhdCI6MTc3NzM0OTQ1NiwiZXhwIjoxNzc3NDM1ODU2fQ.UAX8JrGjsljShdg4PpprgCRdGSZYr0RtWEb2nI0exDI

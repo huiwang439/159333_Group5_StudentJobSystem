@@ -9,15 +9,9 @@ function getRole() {
 }
 
 function getAuthHeaders(extraHeaders = {}) {
-    const headers = {
-        ...extraHeaders
-    };
-
+    const headers = { ...extraHeaders };
     const token = getToken();
-    if (token) {
-        headers.Authorization = `Bearer ${token}`;
-    }
-
+    if (token) headers.Authorization = `Bearer ${token}`;
     return headers;
 }
 
@@ -27,7 +21,7 @@ async function apiRequest(path, options = {}) {
     let result;
     try {
         result = await response.json();
-    } catch (error) {
+    } catch {
         throw new Error("Server returned a non-JSON response.");
     }
 
@@ -38,38 +32,47 @@ async function apiRequest(path, options = {}) {
     return result.data;
 }
 
-async function apiGet(path) {
+function apiGet(path) {
     return apiRequest(path, {
         method: "GET",
         headers: getAuthHeaders()
     });
 }
 
-async function apiPost(path, body) {
+function apiPost(path, body) {
     return apiRequest(path, {
         method: "POST",
-        headers: getAuthHeaders({
-            "Content-Type": "application/json"
-        }),
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(body)
     });
 }
 
-async function apiPut(path, body) {
+function apiPut(path, body) {
     return apiRequest(path, {
         method: "PUT",
-        headers: getAuthHeaders({
-            "Content-Type": "application/json"
-        }),
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(body)
     });
 }
 
-async function apiPutForm(path, params = {}) {
-    const search = new URLSearchParams(params).toString();
-    const fullPath = search ? `${path}?${search}` : path;
+function apiPatch(path, body) {
+    return apiRequest(path, {
+        method: "PATCH",
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify(body)
+    });
+}
 
-    return apiRequest(fullPath, {
+function apiDelete(path) {
+    return apiRequest(path, {
+        method: "DELETE",
+        headers: getAuthHeaders()
+    });
+}
+
+function apiPutForm(path, params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return apiRequest(query ? `${path}?${query}` : path, {
         method: "PUT",
         headers: getAuthHeaders()
     });
@@ -89,36 +92,13 @@ function clearAuth() {
     localStorage.removeItem("fullName");
 }
 
-function redirectByRole(role) {
-    if (role === "admin") {
-        window.location.href = "/admin-dashboard.html";
-        return;
-    }
-
-    if (role === "employer") {
-        window.location.href = "/employer-dashboard.html";
-        return;
-    }
-
-    if (role === "student") {
-        window.location.href = "/jobseeker-dashboard.html";
-        return;
-    }
-
-    window.location.href = "/login.html";
-}
-
 function requireRole(requiredRole) {
     const token = getToken();
     const role = getRole();
 
     if (!token || role !== requiredRole) {
         clearAuth();
-        if (requiredRole === "admin") {
-            window.location.href = "/login-admin.html";
-            return false;
-        }
-        window.location.href = "/login.html";
+        window.location.href = requiredRole === "admin" ? "/login-admin.html" : "/login.html";
         return false;
     }
 
