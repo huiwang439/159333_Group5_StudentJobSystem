@@ -5,54 +5,75 @@
     <title>Jobboard Demo</title>
 </head>
 <body style="font-family: Arial, sans-serif; padding: 20px;">
-<h1>Jobboard Minimal Demo</h1>
+<h1>Jobboard Full Demo</h1>
 
-<h2>0. 注册</h2>
-<input id="regName" placeholder="name" value="test user">
+<h2>0. 注册 employer</h2>
+<input id="empRegName" placeholder="name" value="Employer User">
 <br><br>
-<input id="regEmail" placeholder="email" value="test123@example.com">
+<input id="empRegEmail" placeholder="email" value="employer@test.com">
 <br><br>
-<input id="regPassword" type="password" placeholder="password" value="123456">
+<input id="empRegPassword" type="password" placeholder="password" value="123456">
 <br><br>
-
-<select id="regRole">
-    <option value="student">student</option>
-    <option value="employer">employer</option>
-</select>
-<br><br>
-
-<button id="registerBtn">注册</button>
-
-<hr>
-<h2>1. 登录</h2>
-<input id="email" placeholder="email" value="liu@example.com">
-<br><br>
-<input id="password" type="password" placeholder="password" value="123456">
-<br><br>
-<button id="loginBtn">登录</button>
+<button id="registerEmployerBtn">注册 employer</button>
 
 <hr>
 
-<h2>2. 企业发布岗位</h2>
+<h2>1. 注册 student</h2>
+<input id="stuRegName" placeholder="name" value="Student User">
+<br><br>
+<input id="stuRegEmail" placeholder="email" value="student@test.com">
+<br><br>
+<input id="stuRegPassword" type="password" placeholder="password" value="123456">
+<br><br>
+<button id="registerStudentBtn">注册 student</button>
+
+<hr>
+
+<h2>2. employer 登录</h2>
+<input id="empEmail" placeholder="email" value="employer@test.com">
+<br><br>
+<input id="empPassword" type="password" placeholder="password" value="123456">
+<br><br>
+<button id="loginEmployerBtn">登录 employer</button>
+
+<hr>
+
+<h2>3. student 登录</h2>
+<input id="stuEmail" placeholder="email" value="student@test.com">
+<br><br>
+<input id="stuPassword" type="password" placeholder="password" value="123456">
+<br><br>
+<button id="loginStudentBtn">登录 student</button>
+
+<hr>
+
+<h2>4. employer 发布岗位</h2>
 <button id="createJobBtn">发布岗位</button>
 
 <hr>
 
-<h2>3. 学生投递岗位</h2>
-<input id="jobIdInput" placeholder="jobId" value="1">
+<h2>5. employer 修改岗位</h2>
+<input id="updateJobId" placeholder="jobId" value="1">
+<br><br>
+<button id="updateJobBtn">修改岗位</button>
+
+<hr>
+
+<h2>6. student 投递岗位</h2>
+<input id="applyJobIdInput" placeholder="jobId" value="1">
 <br><br>
 <button id="applyJobBtn">投递岗位</button>
 
 <hr>
 
-<h2>4. 企业查看岗位申请</h2>
+<h2>7. employer 查看岗位申请</h2>
 <input id="viewJobIdInput" placeholder="jobId" value="1">
 <br><br>
 <button id="viewApplicationsBtn">查看申请</button>
 
 <hr>
 
-<h2>5. 企业修改申请状态</h2>
+<h2>8. employer 修改申请状态</h2>
 <input id="applicationIdInput" placeholder="applicationId" value="1">
 <br><br>
 <input id="statusInput" placeholder="status" value="reviewing">
@@ -61,85 +82,184 @@
 <br><br>
 <button id="updateStatusBtn">修改状态</button>
 
+<hr>
 
+<h2>9. employer 关闭岗位</h2>
+<input id="closeJobIdInput" placeholder="jobId" value="1">
+<br><br>
+<button id="closeJobBtn">关闭岗位</button>
 
 <hr>
 
-<h3>当前 token：</h3>
-<pre id="tokenBox"></pre>
+<h2>10. employer 删除岗位</h2>
+<input id="deleteJobIdInput" placeholder="jobId" value="1">
+<br><br>
+<button id="deleteJobBtn">删除岗位</button>
+
+<hr>
+
+<h3>Employer token：</h3>
+<pre id="employerTokenBox"></pre>
+
+<h3>Student token：</h3>
+<pre id="studentTokenBox"></pre>
+
+<h3>最近创建的 jobId：</h3>
+<pre id="jobIdBox"></pre>
 
 <h3>结果：</h3>
-<pre id="result" style="background:#f4f4f4; padding:12px; min-height:140px;"></pre>
+<pre id="result" style="background:#f4f4f4; padding:12px; min-height:180px;"></pre>
 
 <script>
-    let token = "";
+    const BASE_URL = "http://localhost:8080";
+
+    let employerToken = "";
+    let studentToken = "";
+    let latestJobId = "";
 
     function show(text) {
         document.getElementById("result").textContent = text;
     }
 
-    function showToken() {
-        document.getElementById("tokenBox").textContent = token || "(empty)";
+    function showJson(obj) {
+        document.getElementById("result").textContent = JSON.stringify(obj, null, 2);
     }
-async function register() {
-    try {
-        show("正在注册...");
-        const res = await fetch("/auth/register", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                fullName: document.getElementById("regName").value,
-                email: document.getElementById("regEmail").value,
-                password: document.getElementById("regPassword").value,
-                role: document.getElementById("regRole").value
-            })
-        });
 
-        show(await res.text());
-    } catch (e) {
-        show("注册报错: " + e.message);
-        console.error(e);
+    function refreshBoxes() {
+        document.getElementById("employerTokenBox").textContent = employerToken || "(empty)";
+        document.getElementById("studentTokenBox").textContent = studentToken || "(empty)";
+        document.getElementById("jobIdBox").textContent = latestJobId || "(empty)";
     }
-}
-    async function login() {
+
+    async function safeReadResponse(res) {
+        const text = await res.text();
         try {
-            show("正在登录...");
-            const res = await fetch("/auth/login", {
+            return {
+                ok: res.ok,
+                status: res.status,
+                text,
+                json: JSON.parse(text)
+            };
+        } catch (e) {
+            return {
+                ok: res.ok,
+                status: res.status,
+                text,
+                json: null
+            };
+        }
+    }
+
+    async function registerEmployer() {
+        try {
+            show("正在注册 employer...");
+            const res = await fetch(BASE_URL + "/auth/register", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({
-                    email: document.getElementById("email").value,
-                    password: document.getElementById("password").value
+                    fullName: document.getElementById("empRegName").value,
+                    email: document.getElementById("empRegEmail").value,
+                    password: document.getElementById("empRegPassword").value,
+                    role: "employer",
+                    phone: "0211234567"
                 })
             });
 
-            const text = await res.text();
-            show(text);
+            const result = await safeReadResponse(res);
+            result.json ? showJson(result.json) : show(result.text);
+        } catch (e) {
+            show("注册 employer 报错: " + e.message);
+        }
+    }
 
-            const json = JSON.parse(text);
-            if (json.data && json.data.token) {
-                token = json.data.token;
-                showToken();
+    async function registerStudent() {
+        try {
+            show("正在注册 student...");
+            const res = await fetch(BASE_URL + "/auth/register", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    fullName: document.getElementById("stuRegName").value,
+                    email: document.getElementById("stuRegEmail").value,
+                    password: document.getElementById("stuRegPassword").value,
+                    role: "student",
+                    phone: "0211234568"
+                })
+            });
+
+            const result = await safeReadResponse(res);
+            result.json ? showJson(result.json) : show(result.text);
+        } catch (e) {
+            show("注册 student 报错: " + e.message);
+        }
+    }
+
+    async function loginEmployer() {
+        try {
+            show("正在登录 employer...");
+            const res = await fetch(BASE_URL + "/auth/login", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    email: document.getElementById("empEmail").value,
+                    password: document.getElementById("empPassword").value
+                })
+            });
+
+            const result = await safeReadResponse(res);
+            if (result.json) {
+                showJson(result.json);
+                if (result.json.data && result.json.data.token) {
+                    employerToken = result.json.data.token;
+                    refreshBoxes();
+                }
             } else {
-                alert("登录成功返回里没有 token，请检查后端返回");
+                show(result.text);
             }
         } catch (e) {
-            show("登录报错: " + e.message);
-            console.error(e);
+            show("employer 登录报错: " + e.message);
+        }
+    }
+
+    async function loginStudent() {
+        try {
+            show("正在登录 student...");
+            const res = await fetch(BASE_URL + "/auth/login", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    email: document.getElementById("stuEmail").value,
+                    password: document.getElementById("stuPassword").value
+                })
+            });
+
+            const result = await safeReadResponse(res);
+            if (result.json) {
+                showJson(result.json);
+                if (result.json.data && result.json.data.token) {
+                    studentToken = result.json.data.token;
+                    refreshBoxes();
+                }
+            } else {
+                show(result.text);
+            }
+        } catch (e) {
+            show("student 登录报错: " + e.message);
         }
     }
 
     async function createJob() {
         try {
             show("正在发布岗位...");
-            const res = await fetch("/jobs", {
+            const res = await fetch(BASE_URL + "/jobs", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": "Bearer " + token
+                    "Authorization": "Bearer " + employerToken
                 },
                 body: JSON.stringify({
                     title: "Demo Job",
+                    categoryId: 1,
                     description: "Simple job for demo",
                     employmentType: "internship",
                     requirements: "Java basics",
@@ -152,23 +272,69 @@ async function register() {
                 })
             });
 
-            show(await res.text());
+            const result = await safeReadResponse(res);
+            if (result.json) {
+                showJson(result.json);
+                if (result.json.data && result.json.data.jobId) {
+                    latestJobId = result.json.data.jobId;
+                    document.getElementById("updateJobId").value = latestJobId;
+                    document.getElementById("applyJobIdInput").value = latestJobId;
+                    document.getElementById("viewJobIdInput").value = latestJobId;
+                    document.getElementById("closeJobIdInput").value = latestJobId;
+                    document.getElementById("deleteJobIdInput").value = latestJobId;
+                    refreshBoxes();
+                }
+            } else {
+                show(result.text);
+            }
         } catch (e) {
             show("发布岗位报错: " + e.message);
-            console.error(e);
+        }
+    }
+
+    async function updateJob() {
+        try {
+            show("正在修改岗位...");
+            const jobId = document.getElementById("updateJobId").value;
+
+            const res = await fetch(BASE_URL + "/jobs/" + jobId, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + employerToken
+                },
+                body: JSON.stringify({
+                    title: "Updated From Frontend",
+                    categoryId: 1,
+                    description: "updated desc",
+                    requirements: "Java + Spring",
+                    employmentType: "full-time",
+                    workMode: "onsite",
+                    location: "Auckland",
+                    fieldOfStudy: "IT",
+                    salaryMin: 60000,
+                    salaryMax: 90000,
+                    deadline: "2026-12-31T23:59:59"
+                })
+            });
+
+            const result = await safeReadResponse(res);
+            result.json ? showJson(result.json) : show(result.text);
+        } catch (e) {
+            show("修改岗位报错: " + e.message);
         }
     }
 
     async function applyJob() {
         try {
-            show("正在投递...");
-            const jobId = Number(document.getElementById("jobIdInput").value);
+            show("正在投递岗位...");
+            const jobId = Number(document.getElementById("applyJobIdInput").value);
 
-            const res = await fetch("/applications", {
+            const res = await fetch(BASE_URL + "/applications", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": "Bearer " + token
+                    "Authorization": "Bearer " + studentToken
                 },
                 body: JSON.stringify({
                     jobId: jobId,
@@ -176,10 +342,17 @@ async function register() {
                 })
             });
 
-            show(await res.text());
+            const result = await safeReadResponse(res);
+            if (result.json) {
+                showJson(result.json);
+                if (result.json.data && result.json.data.applicationId) {
+                    document.getElementById("applicationIdInput").value = result.json.data.applicationId;
+                }
+            } else {
+                show(result.text);
+            }
         } catch (e) {
-            show("投递报错: " + e.message);
-            console.error(e);
+            show("投递岗位报错: " + e.message);
         }
     }
 
@@ -188,32 +361,32 @@ async function register() {
             show("正在查看申请...");
             const jobId = document.getElementById("viewJobIdInput").value;
 
-            const res = await fetch("/applications/job/" + jobId, {
+            const res = await fetch(BASE_URL + "/applications/job/" + jobId, {
                 method: "GET",
                 headers: {
-                    "Authorization": "Bearer " + token
+                    "Authorization": "Bearer " + employerToken
                 }
             });
 
-            show(await res.text());
+            const result = await safeReadResponse(res);
+            result.json ? showJson(result.json) : show(result.text);
         } catch (e) {
             show("查看申请报错: " + e.message);
-            console.error(e);
         }
     }
 
     async function updateStatus() {
         try {
-            show("正在修改状态...");
+            show("正在修改申请状态...");
             const applicationId = document.getElementById("applicationIdInput").value;
             const status = document.getElementById("statusInput").value;
             const note = document.getElementById("noteInput").value;
 
-            const res = await fetch("/applications/" + applicationId + "/status", {
+            const res = await fetch(BASE_URL + "/applications/" + applicationId + "/status", {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": "Bearer " + token
+                    "Authorization": "Bearer " + employerToken
                 },
                 body: JSON.stringify({
                     status: status,
@@ -221,21 +394,66 @@ async function register() {
                 })
             });
 
-            show(await res.text());
+            const result = await safeReadResponse(res);
+            result.json ? showJson(result.json) : show(result.text);
         } catch (e) {
-            show("修改状态报错: " + e.message);
-            console.error(e);
+            show("修改申请状态报错: " + e.message);
         }
     }
 
-    document.getElementById("loginBtn").addEventListener("click", login);
+    async function closeJob() {
+        try {
+            show("正在关闭岗位...");
+            const jobId = document.getElementById("closeJobIdInput").value;
+
+            const res = await fetch(BASE_URL + "/jobs/" + jobId + "/close", {
+                method: "PATCH",
+                headers: {
+                    "Authorization": "Bearer " + employerToken
+                }
+            });
+
+            const result = await safeReadResponse(res);
+            result.json ? showJson(result.json) : show(result.text);
+        } catch (e) {
+            show("关闭岗位报错: " + e.message);
+        }
+    }
+
+    async function deleteJob() {
+        try {
+            show("正在删除岗位...");
+            const jobId = document.getElementById("deleteJobIdInput").value;
+
+            const res = await fetch(BASE_URL + "/jobs/" + jobId, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": "Bearer " + employerToken
+                }
+            });
+
+            const result = await safeReadResponse(res);
+            result.json ? showJson(result.json) : show(result.text);
+        } catch (e) {
+            show("删除岗位报错: " + e.message);
+        }
+    }
+
+    document.getElementById("registerEmployerBtn").addEventListener("click", registerEmployer);
+    document.getElementById("registerStudentBtn").addEventListener("click", registerStudent);
+    document.getElementById("loginEmployerBtn").addEventListener("click", loginEmployer);
+    document.getElementById("loginStudentBtn").addEventListener("click", loginStudent);
     document.getElementById("createJobBtn").addEventListener("click", createJob);
+    document.getElementById("updateJobBtn").addEventListener("click", updateJob);
     document.getElementById("applyJobBtn").addEventListener("click", applyJob);
     document.getElementById("viewApplicationsBtn").addEventListener("click", viewApplications);
     document.getElementById("updateStatusBtn").addEventListener("click", updateStatus);
-document.getElementById("registerBtn").addEventListener("click", register);
-    show("页面已加载，可以开始测试");
-    showToken();
+    document.getElementById("closeJobBtn").addEventListener("click", closeJob);
+    document.getElementById("deleteJobBtn").addEventListener("click", deleteJob);
+
+    show("页面已加载，可以开始完整流程测试");
+    refreshBoxes();
 </script>
 </body>
 </html>
+

@@ -23,6 +23,31 @@ public class JobController {
         this.jwtUtil = jwtUtil;
     }
 
+    @PutMapping("/{jobId}")
+    public ApiResponse<Map<String, Object>> updateJob(
+            @PathVariable Long jobId,
+            @Valid @RequestBody JobCreateRequest request,
+            HttpServletRequest httpServletRequest
+    ) {
+        String authHeader = httpServletRequest.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+
+        String token = authHeader.substring(7);
+        Long employerId = jwtUtil.getUserId(token);
+        String role = jwtUtil.getRole(token);
+
+        if (!"employer".equals(role)) {
+            throw new RuntimeException("Only employer can update job");
+        }
+
+        return ApiResponse.success(
+                "job updated",
+                jobService.updateJob(employerId, jobId, request)
+        );
+    }
+
     @PostMapping
     public ApiResponse<Map<String, Object>> createJob(@Valid @RequestBody JobCreateRequest request,
                                                       HttpServletRequest httpServletRequest) {
@@ -43,7 +68,34 @@ public class JobController {
         Map<String, Object> result = jobService.createJob(employerId, request);
         return ApiResponse.success("job created", result);
     }
+    @DeleteMapping("/{jobId}")
+    public ApiResponse<?> deleteJob(
+            @PathVariable Long jobId,
+            HttpServletRequest httpServletRequest
+    ) {
+        try {
+            String authHeader = httpServletRequest.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                throw new RuntimeException("Missing or invalid Authorization header");
+            }
 
+            String token = authHeader.substring(7);
+            Long employerId = jwtUtil.getUserId(token);
+            String role = jwtUtil.getRole(token);
+
+            if (!"employer".equals(role)) {
+                throw new RuntimeException("Only employer can delete job");
+            }
+
+            return ApiResponse.success(
+                    "job deleted",
+                    jobService.deleteJob(employerId, jobId)
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail(500, e.getMessage());
+        }
+    }
     @GetMapping
     public ApiResponse<List<Map<String, Object>>> getJobs(
             @RequestParam(required = false) String keyword,
@@ -71,8 +123,41 @@ public class JobController {
         return ApiResponse.success(jobService.getJobDetail(jobId));
     }
 
+    @PatchMapping("/{jobId}/close")
+    public ApiResponse<?> closeJob(
+            @PathVariable Long jobId,
+            HttpServletRequest httpServletRequest
+    ) {
+        try {
+            String authHeader = httpServletRequest.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                throw new RuntimeException("Missing or invalid Authorization header");
+            }
+
+            String token = authHeader.substring(7);
+            Long employerId = jwtUtil.getUserId(token);
+            String role = jwtUtil.getRole(token);
+
+            if (!"employer".equals(role)) {
+                throw new RuntimeException("Only employer can close job");
+            }
+
+            return ApiResponse.success(
+                    "job closed",
+                    jobService.closeJob(employerId, jobId)
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail(500, e.getMessage());
+        }
+    }
+
+
     @GetMapping("/my")
-    public ApiResponse<List<Map<String, Object>>> getMyJobs(HttpServletRequest httpServletRequest) {
+    public ApiResponse<List<Map<String, Object>>> getMyJobs(
+            @RequestParam(required = false) String status,
+            HttpServletRequest httpServletRequest
+    ) {
 
         String authHeader = httpServletRequest.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -87,6 +172,6 @@ public class JobController {
             throw new RuntimeException("Only employer can view own jobs");
         }
 
-        return ApiResponse.success(jobService.getEmployerJobs(employerId));
+        return ApiResponse.success(jobService.getEmployerJobs(employerId, status));
     }
 }
