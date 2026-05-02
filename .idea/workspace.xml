@@ -4,18 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b57fd497-c4dc-4cce-8955-059e16b67c5a" name="Changes" comment="Add AI assistant feature for student, employer, and admin">
-      <change afterPath="$PROJECT_DIR$/backend/src/main/resources/static/css/employer-ai-assistant.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/resources/static/js/employer-ai-assistant.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/images/robot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/static/employer.html" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/static/employer.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/controller/ApplicationController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/controller/ApplicationController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/controller/JobController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/controller/JobController.class" afterDir="false" />
-    </list>
+    <list default="true" id="b57fd497-c4dc-4cce-8955-059e16b67c5a" name="Changes" comment="Add AI assistant feature for student, employer, and admin" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -29,18 +18,18 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "huiwang439"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;huiwang439&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/huiwang439/159333_Group5_StudentJobSystem.git",
-    "accountId": "97a4068f-d87b-4832-8493-02a7b0a07ac0"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/huiwang439/159333_Group5_StudentJobSystem.git&quot;,
+    &quot;accountId&quot;: &quot;97a4068f-d87b-4832-8493-02a7b0a07ac0&quot;
   }
-}]]></component>
+}</component>
   <component name="KubernetesApiPersistence">{}</component>
   <component name="KubernetesApiProvider">{
   &quot;isMigrated&quot;: true
@@ -48,9 +37,7 @@
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
-        <option name="customMavenHome" value="D:\env\apache-maven-3.9.5" />
         <option name="localRepository" value="D:\env\apache-maven-3.9.5\repo" />
-        <option name="mavenHomeTypeForPersistence" value="CUSTOM" />
         <option name="userSettingsFile" value="D:\env\apache-maven-3.9.5\conf\settings.xml" />
       </MavenGeneralSettings>
     </option>
@@ -75,7 +62,7 @@
     "RequestMappingsPanelWidth1": "75",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "Spring Boot.JobboardApplication.executor": "Run",
-    "git-widget-placeholder": "branch-ZhengZihui",
+    "git-widget-placeholder": "develop",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "D:/cursor",
     "node.js.detected.package.eslint": "true",
@@ -144,6 +131,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="add frontend pages" />
     <MESSAGE value="Add AI assistant feature for student, employer, and admin" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add AI assistant feature for student, employer, and admin" />
+    <MESSAGE value="New backend features have been added and refined." />
+    <option name="LAST_COMMIT_MESSAGE" value="New backend features have been added and refined." />
   </component>
 </project>

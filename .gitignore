@@ -4,7 +4,6 @@ backend/target/
 
 .idea/
 *.iml
-<<<<<<< HEAD
 .vscode/
 
 node_modules/
@@ -14,8 +13,3 @@ build/
 .env
 .DS_Store
 Thumbs.db
-=======
-out/
-target/*
-!backend/target/classes/static/**
->>>>>>> origin/branch-ZhengZihui
