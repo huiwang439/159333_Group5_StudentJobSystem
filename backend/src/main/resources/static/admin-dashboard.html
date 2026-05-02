@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Dashboard</title>
+    <link rel="stylesheet" href="/css/admin-dashboard.css">
+    <link rel="stylesheet" href="/css/admin-common.css">
+</head>
+<body data-page="dashboard">
+
+<div class="topbar">
+    <div class="topbar-left">
+        <button id="menuToggleBtn" class="menu-toggle-btn">▶</button>
+        <div class="topbar-title">Job Board System</div>
+    </div>
+</div>
+
+<div class="layout">
+    <aside id="sidebar" class="sidebar hidden">
+        <div class="sidebar-menu">
+            <div class="menu-item active" onclick="location.href='/admin-dashboard.html'">Dashboard</div>
+
+            <div class="menu-group open">
+                <div class="menu-item parent" data-href="/admin-users.html">User Management</div>
+                <div class="sub-menu">
+                    <div class="sub-menu-item" onclick="location.href='/admin-users.html?role=student'">Job Seekers</div>
+                    <div class="sub-menu-item" onclick="location.href='/admin-users.html?role=employer'">Recruiters</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="location.href='/admin-jobs.html'">Job Management</div>
+
+            <div class="menu-group open">
+                <div class="menu-item parent" data-href="/admin-company-verification.html">Company Management</div>
+                <div class="sub-menu">
+                    <div class="sub-menu-item" onclick="location.href='/admin-company-verification.html'">Company Verification</div>
+                    <div class="sub-menu-item" onclick="location.href='/admin-company-info.html'">Company Information</div>
+                </div>
+            </div>
+
+            <div class="menu-group open">
+                <div class="menu-item parent" data-href="/admin-report-handling.html">Platform Monitoring</div>
+                <div class="sub-menu">
+                    <div class="sub-menu-item" onclick="location.href='/admin-report-handling.html'">Report Handling</div>
+                    <div class="sub-menu-item" onclick="location.href='/admin-abnormal-monitoring.html'">Abnormal Data / Behavior</div>
+                    <div class="sub-menu-item" onclick="location.href='/admin-daily-active.html'">Daily Active Users</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="location.href='/admin-analytics.html'">Analytics</div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Dashboard</h1>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="dashboard-card large-card">
+                <div class="card-title">Total Users</div>
+                <div class="card-value" id="totalUsers">0</div>
+                <div class="sub-stats">
+                    <span>Students: <strong id="totalStudents">0</strong></span>
+                    <span>Employers: <strong id="totalEmployers">0</strong></span>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-title">Total Jobs</div>
+                <div class="card-value" id="totalJobs">0</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-title">Total Applications</div>
+                <div class="card-value" id="totalApplications">0</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-title">New Jobs Today</div>
+                <div class="card-value" id="newJobsToday">0</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-title">New Applications Today</div>
+                <div class="card-value" id="newApplicationsToday">0</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-title">Active Users</div>
+                <div class="card-value" id="activeUsers">0</div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/js/admin-sidebar.js"></script>
+<script src="/js/admin-dashboard.js"></script>
+</body>
+</html>

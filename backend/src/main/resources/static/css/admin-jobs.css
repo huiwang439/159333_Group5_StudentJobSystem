@@ -1,0 +1,183 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f5f7fb;
+}
+
+.topbar {
+    height: 64px;
+    background: #123a78;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    box-sizing: border-box;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.topbar-title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.menu-toggle-btn {
+    border: none;
+    background: white;
+    color: #123a78;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.layout {
+    display: flex;
+    margin-top: 64px;
+}
+
+.sidebar {
+    width: 240px;
+    min-height: calc(100vh - 64px);
+    background: #ffffff;
+    border-right: 1px solid #ddd;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.sidebar.hidden {
+    width: 0;
+    border-right: none;
+}
+
+.sidebar-menu {
+    padding: 16px 0;
+}
+
+.menu-item {
+    padding: 14px 20px;
+    font-size: 15px;
+    color: #333;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.menu-item:hover {
+    background: #f0f4fa;
+}
+
+.menu-item.active {
+    background: #e8f0ff;
+    color: #123a78;
+    font-weight: bold;
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.container {
+    max-width: 1250px;
+    margin: 0 auto;
+}
+
+h1 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.toolbar {
+    margin-bottom: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+input, select, button {
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+    font-size: 14px;
+}
+
+th {
+    background: #f0f2f5;
+}
+
+button {
+    cursor: pointer;
+}
+
+.action-btn {
+    margin-right: 6px;
+    margin-bottom: 4px;
+}
+
+#messageBox {
+    margin-top: 20px;
+    padding: 12px;
+    background: #eef2f7;
+    min-height: 60px;
+    white-space: pre-wrap;
+}
+
+.status-pending,
+.status-approved,
+.status-rejected,
+.status-removed {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.status-pending {
+    background: #fff4e5;
+    color: #b76e00;
+}
+
+.status-approved {
+    background: #e8f7ee;
+    color: #1f7a3d;
+}
+
+.status-rejected {
+    background: #fdeaea;
+    color: #b42318;
+}
+
+.status-removed {
+    background: #ececec;
+    color: #666;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}

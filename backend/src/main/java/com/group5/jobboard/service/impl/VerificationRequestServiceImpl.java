@@ -1,0 +1,176 @@
+package com.group5.jobboard.service.impl;
+
+import com.group5.jobboard.entity.AnalyticsLog;
+import com.group5.jobboard.entity.EmployerProfile;
+import com.group5.jobboard.entity.User;
+import com.group5.jobboard.entity.VerificationRequest;
+import com.group5.jobboard.repository.AnalyticsLogRepository;
+import com.group5.jobboard.repository.EmployerProfileRepository;
+import com.group5.jobboard.repository.UserRepository;
+import com.group5.jobboard.repository.VerificationRequestRepository;
+import com.group5.jobboard.service.NotificationService;
+import com.group5.jobboard.service.VerificationRequestService;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+@Service
+public class VerificationRequestServiceImpl implements VerificationRequestService {
+
+    private final VerificationRequestRepository verificationRequestRepository;
+    private final EmployerProfileRepository employerProfileRepository;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
+    private final AnalyticsLogRepository analyticsLogRepository;
+
+    public VerificationRequestServiceImpl(VerificationRequestRepository verificationRequestRepository,
+                                          EmployerProfileRepository employerProfileRepository,
+                                          UserRepository userRepository,
+                                          NotificationService notificationService,
+                                          AnalyticsLogRepository analyticsLogRepository) {
+        this.verificationRequestRepository = verificationRequestRepository;
+        this.employerProfileRepository = employerProfileRepository;
+        this.userRepository = userRepository;
+        this.notificationService = notificationService;
+        this.analyticsLogRepository = analyticsLogRepository;
+    }
+
+    @Override
+    public Map<String, Object> submitRequest(Long employerId, String businessLicenseUrl, String supportingDocumentUrl) {
+        EmployerProfile employerProfile = employerProfileRepository.findByUserId(employerId)
+                .orElseThrow(() -> new RuntimeException("Employer profile not found"));
+
+        verificationRequestRepository.findByEmployerProfileId(employerProfile.getId())
+                .ifPresent(request -> {
+                    throw new RuntimeException("Verification request already exists");
+                });
+
+        VerificationRequest verificationRequest = new VerificationRequest();
+        verificationRequest.setEmployerProfileId(employerProfile.getId());
+        verificationRequest.setBusinessLicenseUrl(businessLicenseUrl);
+        verificationRequest.setSupportingDocumentUrl(supportingDocumentUrl);
+        verificationRequest.setReviewStatus("pending");
+
+        verificationRequestRepository.save(verificationRequest);
+
+        employerProfile.setVerificationStatus("pending");
+        employerProfileRepository.save(employerProfile);
+
+        log(employerId, "SUBMIT_VERIFICATION", "VERIFICATION", verificationRequest.getId());
+
+        return verificationToMap(verificationRequest);
+    }
+
+    @Override
+    public Map<String, Object> getMyRequest(Long employerId) {
+        EmployerProfile employerProfile = employerProfileRepository.findByUserId(employerId)
+                .orElseThrow(() -> new RuntimeException("Employer profile not found"));
+
+        VerificationRequest verificationRequest = verificationRequestRepository.findByEmployerProfileId(employerProfile.getId())
+                .orElseThrow(() -> new RuntimeException("Verification request not found"));
+
+        return verificationToMap(verificationRequest);
+    }
+
+    @Override
+    public List<Map<String, Object>> getAllRequests(String reviewStatus) {
+        List<VerificationRequest> requests;
+
+        if (reviewStatus == null || reviewStatus.isBlank()) {
+            requests = verificationRequestRepository.findAll();
+        } else {
+            requests = verificationRequestRepository.findByReviewStatus(reviewStatus);
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (VerificationRequest request : requests) {
+            result.add(verificationToMap(request));
+        }
+
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> reviewRequest(Long verificationRequestId, Long adminId, String reviewStatus, String reviewNote) {
+        if (!"approved".equals(reviewStatus) && !"rejected".equals(reviewStatus)) {
+            throw new RuntimeException("Invalid review status");
+        }
+
+        VerificationRequest request = verificationRequestRepository.findById(verificationRequestId)
+                .orElseThrow(() -> new RuntimeException("Verification request not found"));
+
+        EmployerProfile employerProfile = employerProfileRepository.findById(request.getEmployerProfileId())
+                .orElseThrow(() -> new RuntimeException("Employer profile not found"));
+
+        request.setReviewStatus(reviewStatus);
+        request.setReviewedBy(adminId);
+        request.setReviewNote(reviewNote);
+        request.setReviewedAt(LocalDateTime.now());
+
+        verificationRequestRepository.save(request);
+
+        employerProfile.setVerificationStatus(reviewStatus);
+        employerProfileRepository.save(employerProfile);
+
+        log(adminId, "REVIEW_VERIFICATION", "VERIFICATION", verificationRequestId);
+
+        notificationService.createNotification(
+                employerProfile.getUserId(),
+                "VERIFICATION_REVIEW",
+                "Company verification result",
+                "Your company verification has been " + reviewStatus
+                        + (reviewNote == null || reviewNote.isBlank() ? "" : ". Note: " + reviewNote)
+        );
+
+        return verificationToMap(request);
+    }
+
+    private Map<String, Object> verificationToMap(VerificationRequest request) {
+        Map<String, Object> result = new HashMap<>();
+
+        result.put("verificationRequestId", request.getId());
+        result.put("employerProfileId", request.getEmployerProfileId());
+        result.put("businessLicenseUrl", request.getBusinessLicenseUrl());
+        result.put("supportingDocumentUrl", request.getSupportingDocumentUrl());
+        result.put("reviewStatus", request.getReviewStatus());
+        result.put("reviewedBy", request.getReviewedBy());
+        result.put("reviewNote", request.getReviewNote());
+        result.put("submittedAt", request.getSubmittedAt());
+        result.put("reviewedAt", request.getReviewedAt());
+
+        employerProfileRepository.findById(request.getEmployerProfileId()).ifPresent(profile -> {
+            result.put("userId", profile.getUserId());
+            result.put("companyName", profile.getCompanyName());
+            result.put("industry", profile.getIndustry());
+            result.put("location", profile.getLocation());
+            result.put("contactPerson", profile.getContactPerson());
+            result.put("contactEmail", profile.getContactEmail());
+            result.put("verificationStatus", profile.getVerificationStatus());
+
+            userRepository.findById(profile.getUserId()).ifPresent(user -> {
+                result.put("employerName", user.getFullName());
+                result.put("employerEmail", user.getEmail());
+                result.put("accountStatus", user.getAccountStatus());
+            });
+        });
+
+        if (request.getReviewedBy() != null) {
+            userRepository.findById(request.getReviewedBy())
+                    .ifPresent(admin -> result.put("reviewedByName", admin.getFullName()));
+        } else {
+            result.put("reviewedByName", null);
+        }
+
+        return result;
+    }
+
+    private void log(Long userId, String actionType, String targetType, Long targetId) {
+        AnalyticsLog log = new AnalyticsLog();
+        log.setUserId(userId);
+        log.setActionType(actionType);
+        log.setTargetType(targetType);
+        log.setTargetId(targetId);
+        analyticsLogRepository.save(log);
+    }
+}

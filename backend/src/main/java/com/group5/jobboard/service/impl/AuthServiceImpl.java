@@ -3,7 +3,9 @@ package com.group5.jobboard.service.impl;
 import com.group5.jobboard.config.JwtUtil;
 import com.group5.jobboard.dto.LoginRequest;
 import com.group5.jobboard.dto.RegisterRequest;
+import com.group5.jobboard.entity.AnalyticsLog;
 import com.group5.jobboard.entity.User;
+import com.group5.jobboard.repository.AnalyticsLogRepository;
 import com.group5.jobboard.repository.UserRepository;
 import com.group5.jobboard.service.AuthService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,33 +20,26 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final AnalyticsLogRepository analyticsLogRepository;
 
     public AuthServiceImpl(UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
-                           JwtUtil jwtUtil) {
+                           JwtUtil jwtUtil,
+                           AnalyticsLogRepository analyticsLogRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.analyticsLogRepository = analyticsLogRepository;
     }
 
     @Override
     public Map<String, Object> register(RegisterRequest request) {
-
-        System.out.println("register request: "
-                + request.getFullName() + ", "
-                + request.getEmail() + ", "
-                + request.getPassword() + ", "
-                + request.getRole() + ", "
-                + request.getPhone());
-
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
 
-        if (!request.getRole().equals("student")
-                && !request.getRole().equals("employer")
-                && !request.getRole().equals("admin")) {
-            throw new RuntimeException("Invalid role");
+        if (!"student".equals(request.getRole()) && !"employer".equals(request.getRole())) {
+            throw new RuntimeException("Only student and employer can register");
         }
 
         User user = new User();
@@ -57,9 +52,12 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
+        log(user.getId(), "REGISTER", "USER", user.getId());
+
         Map<String, Object> result = new HashMap<>();
         result.put("userId", user.getId());
         result.put("role", user.getRole());
+        result.put("accountStatus", user.getAccountStatus());
 
         return result;
     }
@@ -73,21 +71,38 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Invalid email or password");
         }
 
+        if (!"active".equals(user.getAccountStatus())) {
+            throw new RuntimeException("Your account has been disabled or banned");
+        }
+
         String token = jwtUtil.generateToken(user.getId(), user.getRole(), user.getEmail());
+
+        log(user.getId(), "LOGIN", "USER", user.getId());
 
         Map<String, Object> result = new HashMap<>();
         result.put("token", token);
         result.put("userId", user.getId());
         result.put("role", user.getRole());
         result.put("fullName", user.getFullName());
+        result.put("accountStatus", user.getAccountStatus());
+
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> logout(Long userId) {
+        log(userId, "LOGOUT", "USER", userId);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("userId", userId);
+        result.put("logout", true);
+        result.put("message", "logout success, please remove token on frontend");
 
         return result;
     }
 
     @Override
     public Map<String, Object> getCurrentUser(Long userId) {
-
-
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -96,8 +111,18 @@ public class AuthServiceImpl implements AuthService {
         result.put("fullName", user.getFullName());
         result.put("email", user.getEmail());
         result.put("role", user.getRole());
+        result.put("phone", user.getPhone());
         result.put("accountStatus", user.getAccountStatus());
 
         return result;
+    }
+
+    private void log(Long userId, String actionType, String targetType, Long targetId) {
+        AnalyticsLog log = new AnalyticsLog();
+        log.setUserId(userId);
+        log.setActionType(actionType);
+        log.setTargetType(targetType);
+        log.setTargetId(targetId);
+        analyticsLogRepository.save(log);
     }
 }

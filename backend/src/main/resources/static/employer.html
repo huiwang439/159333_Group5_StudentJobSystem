@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Job System - Employer</title>
+    <link rel="stylesheet" href="/employer.css" />
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="system-title">Student Job System</div>
+
+        <div class="nav-list">
+            <button class="nav-btn active" id="navVerification">Company Verification</button>
+            <button class="nav-btn" id="navJobs">Job Management</button>
+            <button class="nav-btn" id="navApplications">Application Management</button>
+            <button class="nav-btn" id="navDashboard">Analytics Dashboard</button>
+            <button class="nav-btn" id="navMessages">My Messages</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <h1 class="page-title" id="pageTitle">Company Verification</h1>
+            <div class="topbar-right">
+                <input id="loginEmail" class="top-input" placeholder="Email" />
+                <input id="loginPassword" class="top-input" type="password" placeholder="Password" />
+                <button class="outline-btn" id="loginBtn">Login</button>
+                <span class="status-tag" id="loginStatusTag">Not Logged In</span>
+            </div>
+        </div>
+
+        <section class="page-section active" id="verificationPage">
+            <div class="card company-card">
+                <div class="company-left">
+                    <div class="company-logo"></div>
+                    <div>
+                        <div class="company-name-row">
+                            <div class="company-name" id="companyNameText">Company Name</div>
+                            <span class="verify-badge" id="verificationStatusBadge">Pending</span>                        </div>
+                        <div class="company-meta" id="companyMetaText">Industry | Size | Address</div>
+                    </div>
+                </div>
+                <button class="outline-btn" id="goEditProfileBtn">Complete Profile</button>
+            </div>
+
+            <div class="card info-card">
+                <h2 class="section-title">Business Information</h2>
+
+                <div class="info-grid">
+                    <div>
+                        <div class="info-item-label">Contact Person</div>
+                        <div class="info-item-value" id="contactPersonText">Contact Person</div>
+                    </div>
+                    <div>
+                        <div class="info-item-label">Business License URL</div>
+                        <div class="info-item-value" id="businessLicenseText">Business License URL</div>
+                    </div>
+                    <div>
+                        <div class="info-item-label">Contact Email</div>
+                        <div class="info-item-value" id="contactEmailText">Contact Email</div>
+                    </div>
+                    <div>
+                        <div class="info-item-label">Supporting Document URL</div>
+                        <div class="info-item-value" id="supportDocumentText">Supporting Document URL</div>
+                    </div>
+                </div>
+
+                <h3 class="desc-title">Company Description</h3>
+                <div class="desc-box" id="companyDescriptionText">
+                    Company description will be displayed here.
+                </div>
+            </div>
+        </section>
+
+        <section class="page-section" id="editProfilePage">
+            <div class="card form-card">
+                <h2 class="section-title">Edit Company Profile</h2>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Company Name</label>
+                        <input class="form-input" id="editCompanyName" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Industry</label>
+                        <input class="form-input" id="editIndustry" />
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Company Size</label>
+                        <input class="form-input" id="editCompanySize" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input class="form-input" id="editLocation" />
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Contact Person</label>
+                        <input class="form-input" id="editContactPerson" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contact Email</label>
+                        <input class="form-input" id="editContactEmail" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Company Description</label>
+                    <textarea class="form-textarea" id="editCompanyDescription"></textarea>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Business License URL</label>
+                        <input class="form-input" id="editBusinessLicenseUrl" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Supporting Document URL</label>
+                        <input class="form-input" id="editSupportingDocumentUrl" />
+                    </div>
+                </div>
+
+                <div class="form-footer">
+                    <button class="outline-btn" id="saveProfileBtn">Save</button>
+                    <button class="outline-btn" id="cancelEditProfileBtn">Cancel</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="page-section" id="jobsPage">
+            <div class="job-summary-grid">
+                <div class="card job-summary-card">
+                    <div class="job-summary-label">Total Jobs</div>
+                    <div class="job-summary-value" id="jobTotal">0</div>
+                </div>
+
+                <div class="card job-summary-card">
+                    <div class="job-summary-label">Pending Jobs</div>
+                    <div class="job-summary-value" id="jobPending">0</div>
+                </div>
+
+                <div class="card job-summary-card">
+                    <div class="job-summary-label">Active / Approved Jobs</div>
+                    <div class="job-summary-value" id="jobApproved">0</div>
+                </div>
+
+                <div class="card job-summary-card">
+                    <div class="job-summary-label">Closed Jobs</div>
+                    <div class="job-summary-value" id="jobClosed">0</div>
+                </div>
+            </div>
+
+            <div class="card jobs-card">
+                <div class="toolbar">
+                    <div class="search-area">
+                        <input class="search-input" id="jobSearchInput" placeholder="Search jobs" />
+                        <select class="form-select" id="jobStatusFilter" style="width: 180px;">
+                            <option value="">All Statuses</option>
+                            <option value="pending">pending</option>
+                            <option value="approved">approved</option>
+                            <option value="active">active</option>
+                            <option value="closed">closed</option>
+                        </select>
+                        <button class="outline-btn" id="jobSearchBtn">Search</button>
+                    </div>
+
+                    <button class="outline-btn" id="goCreateJobBtn">Create Job</button>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Job ID</th>
+                            <th>Title</th>
+                            <th>Field of Study</th>
+                            <th>Employment Type</th>
+                            <th>Work Mode</th>
+                            <th>Salary</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="jobTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="page-section" id="applicationsPage">
+            <div class="applications-shell">
+                <div class="application-summary-grid">
+                    <div class="card application-summary-card">
+                        <div class="application-summary-label">Total Applications</div>
+                        <div class="application-summary-value" id="applicationSummaryTotal">0</div>
+                    </div>
+                    <div class="card application-summary-card">
+                        <div class="application-summary-label">Submitted</div>
+                        <div class="application-summary-value" id="applicationSummarySubmitted">0</div>
+                    </div>
+                    <div class="card application-summary-card">
+                        <div class="application-summary-label">Reviewing</div>
+                        <div class="application-summary-value" id="applicationSummaryReviewing">0</div>
+                    </div>
+                    <div class="card application-summary-card">
+                        <div class="application-summary-label">Accepted</div>
+                        <div class="application-summary-value" id="applicationSummaryAccepted">0</div>
+                    </div>
+                    <div class="card application-summary-card">
+                        <div class="application-summary-label">Rejected</div>
+                        <div class="application-summary-value" id="applicationSummaryRejected">0</div>
+                    </div>
+                </div>
+
+                <div class="card applications-filter-card">
+                    <div class="applications-filter-grid">
+                        <div class="filter-item">
+                            <label class="form-label">Job</label>
+                            <select class="form-select" id="applicationJobSelect">
+                                <option value="">All Jobs</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-item">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="applicationStatusFilter">
+                                <option value="">All</option>
+                                <option value="submitted">submitted</option>
+                                <option value="reviewing">reviewing</option>
+                                <option value="accepted">accepted</option>
+                                <option value="rejected">rejected</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-item">
+                            <label class="form-label">Student</label>
+                            <input class="form-input" id="applicationStudentSearch" placeholder="Student name / email / application ID" />
+                        </div>
+
+                        <div class="filter-action">
+                            <button class="outline-btn" id="applicationSearchBtn">Search</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card jobs-card">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Application ID</th>
+                                <th>Job ID</th>
+                                <th>Title</th>
+                                <th>Student ID</th>
+                                <th>Student</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="applicationTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="page-section" id="dashboardPage">
+            <div class="chart-grid">
+                <div class="card chart-card chart-small">
+                    <h3>Application Status Distribution</h3>
+                    <canvas id="statusPieChart"></canvas>
+                    <p class="chart-empty" id="statusEmpty">No application data available yet.</p>
+                </div>
+
+                <div class="card chart-card chart-large">
+                    <h3>Applications per Job</h3>
+                    <canvas id="jobBarChart"></canvas>
+                    <p class="chart-empty" id="jobEmpty">No job application data available yet.</p>
+                </div>
+
+                <div class="card chart-card chart-wide">
+                    <h3>Application Trend</h3>
+                    <canvas id="applicationTrendChart"></canvas>
+                    <p class="chart-empty" id="trendEmpty">No application trend data available yet.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="page-section" id="messagesPage">
+            <div class="messages-layout">
+                <div class="card messages-summary-card">
+                    <div class="messages-summary-title">Message Center</div>
+                    <div class="messages-summary-desc">
+                        System alerts, application updates, and job-related notifications are displayed here.
+                    </div>
+                </div>
+
+                <div class="messages-list" id="messagesList"></div>
+            </div>
+        </section>
+
+        <section class="page-section" id="createJobPage">
+            <div class="card form-card">
+                <h2 class="section-title">Create Job</h2>
+
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input class="form-input" id="jobTitle" />
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Job ID</label>
+                        <input class="form-input" id="jobIdInput" placeholder="Auto generated / display only" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Employment Type</label>
+                        <select class="form-select" id="jobEmploymentType">
+                            <option value="internship">internship</option>
+                            <option value="part-time">part-time</option>
+                            <option value="full-time">full-time</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Work Mode</label>
+                        <select class="form-select" id="jobWorkMode">
+                            <option value="hybrid">hybrid</option>
+                            <option value="onsite">onsite</option>
+                            <option value="remote">remote</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input class="form-input" id="jobLocation" />
+                    </div>
+                </div>
+
+                <div class="form-grid-3">
+                    <div class="form-group">
+                        <label class="form-label">Field of Study</label>
+                        <input class="form-input" id="jobFieldOfStudy" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Minimum Salary</label>
+                        <input class="form-input" id="jobSalaryMin" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Maximum Salary</label>
+                        <input class="form-input" id="jobSalaryMax" />
+                    </div>
+                </div>
+
+                <div class="form-group" id="deadlineGroup">
+                    <label class="form-label">Deadline</label>
+                    <input class="form-input" id="jobDeadline" type="date" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" id="jobDescription"></textarea>
+                </div>
+
+                <div class="form-footer">
+                    <button class="outline-btn" id="publishJobBtn">Publish</button>
+                    <button class="outline-btn hidden" id="updateJobBtn">Save Changes</button>
+                    <button class="outline-btn" id="cancelCreateBtn">Cancel</button>
+                    <button class="outline-btn" id="backToJobsBtn">Back</button>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="confirmModal" class="modal hidden">
+    <div class="modal-content">
+        <h3>Confirm Delete</h3>
+        <p>Are you sure?</p>
+        <div class="modal-actions">
+            <button id="cancelDeleteBtn" class="outline-btn">Cancel</button>
+            <button id="confirmDeleteBtn" class="danger-btn">Delete</button>
+        </div>
+    </div>
+</div>
+
+<div id="applicationDetailModal" class="modal hidden">
+    <div class="modal-content application-detail-modal">
+        <div class="detail-header">
+            <h3>Application Details</h3>
+            <button class="outline-btn" id="closeApplicationDetailBtn">Close</button>
+        </div>
+
+        <div class="detail-grid">
+            <div><b>Application ID:</b> <span id="detailApplicationId">-</span></div>
+            <div><b>Job ID:</b> <span id="detailJobId">-</span></div>
+            <div><b>Job Title:</b> <span id="detailJobTitle">-</span></div>
+            <div><b>Student ID:</b> <span id="detailStudentId">-</span></div>
+            <div><b>Student:</b> <span id="detailStudentName">-</span></div>
+            <div><b>Student Email:</b> <span id="detailStudentEmail">-</span></div>
+            <div><b>Status:</b> <span id="detailStatus">-</span></div>
+            <div><b>Applied At:</b> <span id="detailAppliedAt">-</span></div>
+        </div>
+
+        <div class="detail-cover">
+            <h4>Cover Letter</h4>
+            <p id="detailCoverLetter">-</p>
+        </div>
+    </div>
+</div>
+
+<div id="jobDetailModal" class="modal hidden">
+    <div class="modal-content application-detail-modal">
+        <div class="detail-header">
+            <h3>Job Details</h3>
+            <button class="outline-btn" id="closeJobDetailBtn">Close</button>
+        </div>
+
+        <div class="detail-grid">
+            <div><b>Job ID:</b> <span id="jobDetailId">-</span></div>
+            <div><b>Title:</b> <span id="jobDetailTitle">-</span></div>
+            <div><b>Field of Study:</b> <span id="jobDetailField">-</span></div>
+            <div><b>Employment Type:</b> <span id="jobDetailEmploymentType">-</span></div>
+            <div><b>Work Mode:</b> <span id="jobDetailWorkMode">-</span></div>
+            <div><b>Location:</b> <span id="jobDetailLocation">-</span></div>
+            <div><b>Salary:</b> <span id="jobDetailSalary">-</span></div>
+            <div><b>Deadline:</b> <span id="jobDetailDeadline">-</span></div>
+            <div><b>Status:</b> <span id="jobDetailStatus">-</span></div>
+        </div>
+
+        <div class="detail-cover">
+            <h4>Description</h4>
+            <p id="jobDetailDescription">-</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/employer.js"></script>
+<div id="toast" class="toast hidden"></div>
+</body>
+</html>

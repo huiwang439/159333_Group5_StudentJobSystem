@@ -128,6 +128,9 @@ public class Job {
     public String getLocation() {
         return location;
     }
+    public String getJobType() {
+        return this.employmentType;
+    }
 
     public void setLocation(String location) {
         this.location = location;

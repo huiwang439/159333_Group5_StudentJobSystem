@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recruiter Login</title>
+    <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+<div class="auth-page">
+    <div class="auth-card">
+        <h1 class="auth-title">Recruiter Login</h1>
+        <p class="auth-subtitle">
+            Sign in to manage job postings and review applications.
+        </p>
+
+        <form>
+            <div class="form-group">
+                <label class="form-label" for="employer-username">Username</label>
+                <input class="form-input" id="employer-username" type="text" placeholder="Enter your username">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="employer-password">Password</label>
+                <input class="form-input" id="employer-password" type="password" placeholder="Enter your password">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="employer-company">Company</label>
+                <input class="form-input" id="employer-company" type="text" placeholder="Enter your company name">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="employer-email">Email</label>
+                <input class="form-input" id="employer-email" type="email" placeholder="Enter your email">
+            </div>
+
+            <button class="primary-btn" type="button">Log In</button>
+        </form>
+
+        <div class="auth-footer">
+            Do not have an account?
+            <a class="auth-link" href="/register-employer.html">Register Now</a>
+        </div>
+    </div>
+</div>
+<script>
+    document.querySelector(".primary-btn").addEventListener("click", async () => {
+        const email = document.getElementById("employer-email").value.trim();
+        const password = document.getElementById("employer-password").value.trim();
+
+        if (!email || !password) {
+            alert("Please enter email and password.");
+            return;
+        }
+
+        try {
+            const res = await fetch("/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            });
+
+            const result = await res.json();
+
+            if (result.code !== 200 || !result.data || !result.data.token) {
+                alert(result.message || "Login failed.");
+                return;
+            }
+
+            const token = result.data.token;
+
+            localStorage.setItem("employerToken", token);
+
+            window.location.href = "/employer.html";
+
+        } catch (error) {
+            console.error(error);
+            alert("Network error. Please check backend server.");
+        }
+    });
+</script>
+</body>
+</html>

@@ -17,7 +17,7 @@ public class User {
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column(name = "password_hash", nullable = false, length = 255)
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
     @Column(nullable = false, length = 30)
@@ -86,6 +86,7 @@ public class User {
     public void setPhone(String phone) {
         this.phone = phone;
     }
+
 
     public String getAccountStatus() {
         return accountStatus;

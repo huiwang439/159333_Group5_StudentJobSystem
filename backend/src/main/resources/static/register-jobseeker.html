@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Seeker Register</title>
+    <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+<div class="auth-page">
+    <div class="auth-card">
+        <h1 class="auth-title">Job Seeker Register</h1>
+        <p class="auth-subtitle">
+            Create your account to start applying for jobs.
+        </p>
+
+        <form>
+            <div class="form-group">
+                <label class="form-label" for="jobseeker-role">Role</label>
+                <select class="form-select" id="jobseeker-role">
+                    <option>Job Seeker</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="jobseeker-register-username">Username</label>
+                <input class="form-input" id="jobseeker-register-username" type="text" placeholder="Create a username">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="jobseeker-register-password">Password</label>
+                <input class="form-input" id="jobseeker-register-password" type="password" placeholder="Create a password">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="jobseeker-confirm-password">Confirm Password</label>
+                <input class="form-input" id="jobseeker-confirm-password" type="password" placeholder="Confirm your password">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="jobseeker-register-email">Email</label>
+                <input class="form-input" id="jobseeker-register-email" type="email" placeholder="Enter your email">
+            </div>
+
+            <div class="button-row">
+                <a href="/login-jobseeker.html" class="secondary-btn" style="display:flex;align-items:center;justify-content:center;">Back</a>
+                <button class="primary-btn" type="button">Register Now</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>
