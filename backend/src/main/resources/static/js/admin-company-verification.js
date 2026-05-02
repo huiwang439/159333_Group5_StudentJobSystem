@@ -1,7 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    if (!requireRole("admin")) {
-        return;
-    }
+    if (!requireRole("admin")) return;
 
     const statusFilter = document.getElementById("statusFilter");
     const loadBtn = document.getElementById("loadBtn");
@@ -13,26 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
         messageBox.style.color = isError ? "#d93025" : "#2b7a0b";
     }
 
-    function getStatusClass(status) {
-        if (status === "approved") return "status-approved";
-        if (status === "rejected") return "status-rejected";
-        return "status-pending";
-    }
-
-    function formatText(value) {
-        if (value === null || value === undefined || value === "") {
-            return "-";
-        }
-        return value;
-    }
-
-    function formatLink(url) {
-        if (!url) {
-            return "-";
-        }
-        return `<a href="${url}" target="_blank">${url}</a>`;
-    }
-
     function renderCompanies(items) {
         companyVerificationBody.innerHTML = "";
 
@@ -41,55 +19,42 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        items.forEach((item) => {
+        items.forEach(item => {
             const tr = document.createElement("tr");
-            const status = item.reviewStatus || "pending";
-            const statusClass = getStatusClass(status);
 
             tr.innerHTML = `
                 <td>${item.verificationRequestId}</td>
-                <td>Employer #${item.employerProfileId}</td>
-                <td>${formatLink(item.businessLicenseUrl)}</td>
-                <td>${formatLink(item.supportingDocumentUrl)}</td>
-                <td>${formatText(item.submittedAt)}</td>
-                <td><span class="${statusClass}">${status}</span></td>
                 <td>
-                    <button class="action-btn" data-id="${item.verificationRequestId}" data-status="approved" ${status === "approved" ? "disabled" : ""}>Approve</button>
-                    <button class="action-btn" data-id="${item.verificationRequestId}" data-status="rejected" ${status === "rejected" ? "disabled" : ""}>Reject</button>
+                    ${item.companyName ?? `Employer #${item.employerProfileId}`}<br>
+                    <small>${item.industry ?? "-"} | ${item.location ?? "-"}</small><br>
+                    <small>${item.contactPerson ?? "-"} / ${item.contactEmail ?? "-"}</small>
+                </td>
+                <td>${item.businessLicenseUrl ? `<a href="${item.businessLicenseUrl}" target="_blank">View</a>` : "-"}</td>
+                <td>${item.supportingDocumentUrl ? `<a href="${item.supportingDocumentUrl}" target="_blank">View</a>` : "-"}</td>
+                <td>${item.submittedAt ?? "-"}</td>
+                <td>${item.reviewStatus ?? "-"}</td>
+                <td>
+                    <button class="approve-btn" data-id="${item.verificationRequestId}">Approve</button>
+                    <button class="reject-btn" data-id="${item.verificationRequestId}">Reject</button>
                 </td>
             `;
 
             companyVerificationBody.appendChild(tr);
         });
 
-        companyVerificationBody.querySelectorAll(".action-btn").forEach((button) => {
-            button.addEventListener("click", async () => {
-                const requestId = button.dataset.id;
-                const newStatus = button.dataset.status;
+        companyVerificationBody.querySelectorAll(".approve-btn").forEach(btn => {
+            btn.addEventListener("click", () => review(btn.dataset.id, "approved"));
+        });
 
-                try {
-                    showMessage(`Updating request ${requestId}...`);
-                    await apiPutForm(`/verification/admin/${requestId}/review`, {
-                        reviewStatus: newStatus,
-                        reviewNote: ""
-                    });
-                    showMessage(`Request ${requestId} updated to ${newStatus}.`);
-                    await loadCompanies();
-                } catch (error) {
-                    showMessage(error.message, true);
-                }
-            });
+        companyVerificationBody.querySelectorAll(".reject-btn").forEach(btn => {
+            btn.addEventListener("click", () => review(btn.dataset.id, "rejected"));
         });
     }
 
     async function loadCompanies() {
         try {
-            showMessage("Loading verification requests...");
-            const selectedStatus = statusFilter.value.trim();
-            const path = selectedStatus
-                ? `/verification/admin?reviewStatus=${encodeURIComponent(selectedStatus)}`
-                : "/verification/admin";
-
+            const status = statusFilter.value;
+            const path = status ? `/verification/admin?reviewStatus=${status}` : "/verification/admin";
             const data = await apiGet(path);
             renderCompanies(data);
             showMessage("Verification requests loaded.");
@@ -99,7 +64,20 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    loadBtn.addEventListener("click", loadCompanies);
+    async function review(id, status) {
+        try {
+            const note = prompt("Review note:", "") || "";
+            await apiPutForm(`/verification/admin/${id}/review`, {
+                reviewStatus: status,
+                reviewNote: note
+            });
+            showMessage(`Request ${id} updated to ${status}.`);
+            await loadCompanies();
+        } catch (error) {
+            showMessage(error.message, true);
+        }
+    }
 
+    loadBtn.addEventListener("click", loadCompanies);
     loadCompanies();
 });

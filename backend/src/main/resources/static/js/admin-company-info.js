@@ -1,91 +1,92 @@
-const menuToggleBtn = document.getElementById("menuToggleBtn");
-const sidebar = document.getElementById("sidebar");
-const searchInput = document.getElementById("companysearchInput");
-const searchBtn = document.getElementById("companysearchBtn");
-const resetBtn = document.getElementById("companyresetBtn");
-const industryFilter = document.getElementById("industryFilter");
-const companyInfoBody = document.getElementById("companyInfoBody");
-const messageBox = document.getElementById("messageBox");
+document.addEventListener("DOMContentLoaded", () => {
+    if (!requireRole("admin")) return;
 
-const mockCompanyInfo = [
-    { id: 1, name: "Future Tech", address: "Auckland", industry: "Technology", status: "approved" },
-    { id: 2, name: "Green Company", address: "Wellington", industry: "Environment", status: "approved" },
-    { id: 3, name: "Vision Studio", address: "Christchurch", industry: "Design", status: "pending" },
-    { id: 4, name: "Blue Sky Ltd", address: "Hamilton", industry: "Consulting", status: "rejected" }
-];
+    const searchInput = document.getElementById("companysearchInput");
+    const searchBtn = document.getElementById("companysearchBtn");
+    const resetBtn = document.getElementById("companyresetBtn");
+    const industryFilter = document.getElementById("industryFilter");
+    const companyInfoBody = document.getElementById("companyInfoBody");
+    const messageBox = document.getElementById("messageBox");
 
-function showMessage(message) {
-    messageBox.textContent = message;
-}
-
-function getStatusClass(status) {
-    if (status === "approved") return "status-approved";
-    if (status === "rejected") return "status-rejected";
-    return "status-pending";
-}
-
-function getFilteredCompanyInfo() {
-    const keyword = searchInput.value.trim().toLowerCase();
-    const industry = industryFilter.value;
-
-    let filteredCompanies = mockCompanyInfo;
-
-    if (industry) {
-        filteredCompanies = filteredCompanies.filter(company => company.industry === industry);
+    function showMessage(message, isError = false) {
+        messageBox.textContent = message || "";
+        messageBox.style.color = isError ? "#d93025" : "#2b7a0b";
     }
 
-    if (keyword) {
-        filteredCompanies = filteredCompanies.filter(company =>
-            company.name.toLowerCase().includes(keyword)
-        );
+    function buildPath() {
+        const params = new URLSearchParams();
+        if (industryFilter.value) params.append("industry", industryFilter.value);
+        if (searchInput.value.trim()) params.append("keyword", searchInput.value.trim());
+        return params.toString() ? `/admin/employers?${params}` : "/admin/employers";
     }
 
-    return filteredCompanies;
-}
+    function renderCompanies(companies) {
+        companyInfoBody.innerHTML = "";
 
-function renderCompanyInfo(companies) {
-    companyInfoBody.innerHTML = "";
+        if (!companies || companies.length === 0) {
+            companyInfoBody.innerHTML = `<tr><td colspan="10">No companies found</td></tr>`;
+            return;
+        }
 
-    if (!companies.length) {
-        companyInfoBody.innerHTML = `<tr><td colspan="5">No companies found</td></tr>`;
-        return;
+        companies.forEach(company => {
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${company.employerProfileId ?? "-"}</td>
+                <td>${company.companyName ?? "-"}</td>
+                <td>${company.industry ?? "-"}</td>
+                <td>${company.companySize ?? "-"}</td>
+                <td>${company.location ?? "-"}</td>
+                <td>${company.contactPerson ?? "-"}</td>
+                <td>${company.contactEmail ?? "-"}</td>
+                <td>${company.verificationStatus ?? "-"}</td>
+                <td>${company.accountStatus ?? "-"}</td>
+                <td><button class="detail-btn" data-id="${company.userId}">View</button></td>
+            `;
+
+            companyInfoBody.appendChild(tr);
+        });
+
+        companyInfoBody.querySelectorAll(".detail-btn").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                await loadCompanyDetail(btn.dataset.id);
+            });
+        });
     }
 
-    companies.forEach(company => {
-        const tr = document.createElement("tr");
-        const statusClass = getStatusClass(company.status);
+    async function loadCompanies() {
+        try {
+            showMessage("Loading companies...");
+            const companies = await apiGet(buildPath());
+            renderCompanies(companies);
+            showMessage("Companies loaded.");
+        } catch (error) {
+            renderCompanies([]);
+            showMessage(error.message, true);
+        }
+    }
 
-        tr.innerHTML = `
-            <td>${company.id}</td>
-            <td>${company.name}</td>
-            <td>${company.address}</td>
-            <td>${company.industry}</td>
-            <td><span class="${statusClass}">${company.status}</span></td>
-        `;
+    async function loadCompanyDetail(userId) {
+        try {
+            const detail = await apiGet(`/admin/employers/${userId}`);
+            showMessage(JSON.stringify(detail, null, 2));
+        } catch (error) {
+            showMessage(error.message, true);
+        }
+    }
 
-        companyInfoBody.appendChild(tr);
+    function resetFilters() {
+        industryFilter.value = "";
+        searchInput.value = "";
+        loadCompanies();
+    }
+
+    searchBtn.addEventListener("click", loadCompanies);
+    resetBtn.addEventListener("click", resetFilters);
+    industryFilter.addEventListener("change", loadCompanies);
+    searchInput.addEventListener("keydown", e => {
+        if (e.key === "Enter") loadCompanies();
     });
-}
 
-function loadCompanyInfo() {
-    renderCompanyInfo(getFilteredCompanyInfo());
-    showMessage("Company information loaded.");
-}
-
-function resetFilters() {
-    searchInput.value = "";
-    industryFilter.value = "";
-    loadCompanyInfo();
-    showMessage("Filters reset.");
-}
-
-searchBtn.addEventListener("click", loadCompanyInfo);
-resetBtn.addEventListener("click", resetFilters);
-
-searchInput.addEventListener("keydown", function (event) {
-    if (event.key === "Enter") {
-        loadCompanyInfo();
-    }
+    loadCompanies();
 });
-
-loadCompanyInfo();

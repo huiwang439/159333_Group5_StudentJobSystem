@@ -20,13 +20,7 @@
         <div class="sidebar-menu">
             <div class="menu-item" onclick="location.href='/admin-dashboard.html'">Dashboard</div>
 
-            <div class="menu-group open">
-                <div class="menu-item parent" data-href="/admin-users.html">User Management</div>
-                <div class="sub-menu">
-                    <div class="sub-menu-item" onclick="location.href='/admin-users.html?role=student'">Job Seekers</div>
-                    <div class="sub-menu-item" onclick="location.href='/admin-users.html?role=employer'">Recruiters</div>
-                </div>
-            </div>
+            <div class="menu-item" onclick="location.href='/admin-users.html'">User Management</div>
 
             <div class="menu-item" onclick="location.href='/admin-jobs.html'">Job Management</div>
 
@@ -73,8 +67,9 @@
             <table>
                 <thead>
                 <tr>
-                    <th>Time Range</th>
-                    <th>Active Count</th>
+                    <th>Hour</th>
+                    <th>Active Users</th>
+                    <th>Log Count</th>
                 </tr>
                 </thead>
                 <tbody id="dailyActiveTableBody"></tbody>
@@ -85,6 +80,7 @@
     </main>
 </div>
 
+<script src="/js/api-client.js"></script>
 <script src="/js/admin-sidebar.js"></script>
 <script src="/js/admin-daily-active.js"></script>
 </body>

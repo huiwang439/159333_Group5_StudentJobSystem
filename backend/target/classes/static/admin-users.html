@@ -20,13 +20,7 @@
         <div class="sidebar-menu">
             <div class="menu-item" onclick="location.href='/admin-dashboard.html'">Dashboard</div>
 
-            <div class="menu-group open">
-                <div class="menu-item parent active" data-href="/admin-users.html">User Management</div>
-                <div class="sub-menu">
-                    <div class="sub-menu-item" data-role="student" onclick="location.href='/admin-users.html?role=student'">Job Seekers</div>
-                    <div class="sub-menu-item" data-role="employer" onclick="location.href='/admin-users.html?role=employer'">Recruiters</div>
-                </div>
-            </div>
+            <div class="menu-item active" onclick="location.href='/admin-users.html'">User Management</div>
 
             <div class="menu-item" onclick="location.href='/admin-jobs.html'">Job Management</div>
 
@@ -54,12 +48,6 @@
     <main class="main-content">
         <div class="container">
             <h1>User Management</h1>
-
-            <div class="toolbar">
-                <label for="tokenInput">Admin Token:</label>
-                <input id="tokenInput" type="text" placeholder="Paste Bearer token here">
-                <button id="saveTokenBtn">Save Token</button>
-            </div>
 
             <div class="toolbar">
                 <label for="roleFilter">Role:</label>
@@ -101,6 +89,7 @@
     </main>
 </div>
 
+<script src="/js/api-client.js"></script>
 <script src="/js/admin-sidebar.js"></script>
 <script src="/js/admin-users.js"></script>
 </body>

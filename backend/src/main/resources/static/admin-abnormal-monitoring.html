@@ -20,13 +20,7 @@
         <div class="sidebar-menu">
             <div class="menu-item" onclick="location.href='/admin-dashboard.html'">Dashboard</div>
 
-            <div class="menu-group open">
-                <div class="menu-item parent" data-href="/admin-users.html">User Management</div>
-                <div class="sub-menu">
-                    <div class="sub-menu-item" onclick="location.href='/admin-users.html?role=student'">Job Seekers</div>
-                    <div class="sub-menu-item" onclick="location.href='/admin-users.html?role=employer'">Recruiters</div>
-                </div>
-            </div>
+            <div class="menu-item" onclick="location.href='/admin-users.html'">User Management</div>
 
             <div class="menu-item" onclick="location.href='/admin-jobs.html'">Job Management</div>
 
@@ -59,8 +53,7 @@
                 <label for="levelFilter">Risk Level:</label>
                 <select id="levelFilter">
                     <option value="">All</option>
-                    <option value="normal">Normal</option>
-                    <option value="warning">Warning</option>
+                    <option value="medium">Medium</option>
                     <option value="high">High</option>
                 </select>
                 <button id="loadBtn">Load</button>
@@ -84,6 +77,7 @@
     </main>
 </div>
 
+<script src="/js/api-client.js"></script>
 <script src="/js/admin-sidebar.js"></script>
 <script src="/js/admin-abnormal-monitoring.js"></script>
 </body>

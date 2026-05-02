@@ -1,7 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    if (!requireRole("admin")) {
-        return;
-    }
+    if (!requireRole("admin")) return;
 
     const statusFilter = document.getElementById("statusFilter");
     const loadBtn = document.getElementById("loadBtn");
@@ -13,13 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
         messageBox.style.color = isError ? "#d93025" : "#2b7a0b";
     }
 
-    function getStatusClass(status) {
-        if (status === "resolved") return "status-resolved";
-        if (status === "rejected") return "status-rejected";
-        if (status === "reviewed") return "status-reviewed";
-        return "status-pending";
-    }
-
     function renderReports(reports) {
         reportTableBody.innerHTML = "";
 
@@ -28,52 +19,40 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        reports.forEach((report) => {
+        reports.forEach(report => {
             const tr = document.createElement("tr");
-            const status = report.reportStatus || "pending";
-            const statusClass = getStatusClass(status);
 
             tr.innerHTML = `
                 <td>${report.reportId}</td>
-                <td>User #${report.reportedUserId}</td>
-                <td>${report.reportReason || "-"}</td>
-                <td>${report.relatedJobId ? `Job #${report.relatedJobId}` : "-"}</td>
-                <td><span class="${statusClass}">${status}</span></td>
                 <td>
-                    <button class="action-btn" data-id="${report.reportId}" data-status="resolved" ${status === "resolved" ? "disabled" : ""}>Resolve</button>
+                    ${report.reportedUserName ?? `User #${report.reportedUserId}`}<br>
+                    <small>Reporter: ${report.reporterName ?? `User #${report.reporterUserId}`}</small>
+                </td>
+                <td>${report.reportReason ?? "-"}</td>
+                <td>${report.relatedJobTitle ?? (report.relatedJobId ? `Job #${report.relatedJobId}` : "-")}</td>
+                <td>${report.reportStatus ?? "-"}</td>
+                <td>
+                    <button class="resolve-btn" data-id="${report.reportId}">Resolve</button>
+                    <button class="reject-btn" data-id="${report.reportId}">Reject</button>
                 </td>
             `;
 
             reportTableBody.appendChild(tr);
         });
 
-        reportTableBody.querySelectorAll(".action-btn").forEach((button) => {
-            button.addEventListener("click", async () => {
-                const reportId = button.dataset.id;
-                const newStatus = button.dataset.status;
+        reportTableBody.querySelectorAll(".resolve-btn").forEach(btn => {
+            btn.addEventListener("click", () => handleReport(btn.dataset.id, "resolved"));
+        });
 
-                try {
-                    showMessage(`Updating report ${reportId}...`);
-                    await apiPutForm(`/reports/admin/${reportId}/handle`, {
-                        reportStatus: newStatus
-                    });
-                    showMessage(`Report ${reportId} updated to ${newStatus}.`);
-                    await loadReports();
-                } catch (error) {
-                    showMessage(error.message, true);
-                }
-            });
+        reportTableBody.querySelectorAll(".reject-btn").forEach(btn => {
+            btn.addEventListener("click", () => handleReport(btn.dataset.id, "rejected"));
         });
     }
 
     async function loadReports() {
         try {
-            showMessage("Loading reports...");
-            const selectedStatus = statusFilter.value.trim();
-            const path = selectedStatus
-                ? `/reports/admin?reportStatus=${encodeURIComponent(selectedStatus)}`
-                : "/reports/admin";
-
+            const status = statusFilter.value;
+            const path = status ? `/reports/admin?reportStatus=${status}` : "/reports/admin";
             const data = await apiGet(path);
             renderReports(data);
             showMessage("Reports loaded.");
@@ -83,7 +62,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    loadBtn.addEventListener("click", loadReports);
+    async function handleReport(id, status) {
+        try {
+            await apiPutForm(`/reports/admin/${id}/handle`, { reportStatus: status });
+            showMessage(`Report ${id} updated to ${status}.`);
+            await loadReports();
+        } catch (error) {
+            showMessage(error.message, true);
+        }
+    }
 
+    loadBtn.addEventListener("click", loadReports);
     loadReports();
 });

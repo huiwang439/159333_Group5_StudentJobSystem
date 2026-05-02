@@ -1,35 +1,56 @@
-const menuToggleBtn = document.getElementById("menuToggleBtn");
-const sidebar = document.getElementById("sidebar");
+document.addEventListener("DOMContentLoaded", async () => {
+    if (!requireRole("admin")) {
+        return;
+    }
 
-const totalUsers = document.getElementById("totalUsers");
-const totalStudents = document.getElementById("totalStudents");
-const totalEmployers = document.getElementById("totalEmployers");
-const totalJobs = document.getElementById("totalJobs");
-const totalApplications = document.getElementById("totalApplications");
-const newJobsToday = document.getElementById("newJobsToday");
-const newApplicationsToday = document.getElementById("newApplicationsToday");
-const activeUsers = document.getElementById("activeUsers");
+    const totalUsers = document.getElementById("totalUsers");
+    const totalStudents = document.getElementById("totalStudents");
+    const totalEmployers = document.getElementById("totalEmployers");
+    const totalAdmins = document.getElementById("totalAdmins");
 
-const mockDashboardData = {
-    totalUsers: 120,
-    totalStudents: 78,
-    totalEmployers: 42,
-    totalJobs: 96,
-    totalApplications: 183,
-    newJobsToday: 8,
-    newApplicationsToday: 15,
-    activeUsers: 64
-};
+    const totalJobs = document.getElementById("totalJobs");
+    const pendingJobs = document.getElementById("pendingJobs");
+    const approvedJobs = document.getElementById("approvedJobs");
+    const rejectedJobs = document.getElementById("rejectedJobs");
 
-function renderDashboard() {
-    totalUsers.textContent = mockDashboardData.totalUsers;
-    totalStudents.textContent = mockDashboardData.totalStudents;
-    totalEmployers.textContent = mockDashboardData.totalEmployers;
-    totalJobs.textContent = mockDashboardData.totalJobs;
-    totalApplications.textContent = mockDashboardData.totalApplications;
-    newJobsToday.textContent = mockDashboardData.newJobsToday;
-    newApplicationsToday.textContent = mockDashboardData.newApplicationsToday;
-    activeUsers.textContent = mockDashboardData.activeUsers;
-}
+    const totalApplications = document.getElementById("totalApplications");
 
-renderDashboard();
+    function setSafeText(element, value) {
+        if (!element) return;
+        element.textContent = value ?? 0;
+    }
+
+    async function loadDashboard() {
+        try {
+            showText("dashboardMessage", "Loading dashboard...");
+
+            const [
+                summaryData,
+                jobsData,
+                usersData
+            ] = await Promise.all([
+                apiGet("/admin/dashboard"),
+                apiGet("/admin/dashboard/jobs"),
+                apiGet("/admin/dashboard/users")
+            ]);
+
+            setSafeText(totalUsers, summaryData.totalUsers);
+            setSafeText(totalStudents, summaryData.totalStudents);
+            setSafeText(totalEmployers, summaryData.totalEmployers);
+            setSafeText(totalAdmins, usersData.adminUsers);
+
+            setSafeText(totalJobs, summaryData.totalJobs);
+            setSafeText(totalApplications, summaryData.totalApplications);
+
+            setSafeText(pendingJobs, jobsData.pendingJobs);
+            setSafeText(approvedJobs, jobsData.approvedJobs);
+            setSafeText(rejectedJobs, jobsData.rejectedJobs);
+
+            showText("dashboardMessage", "Dashboard loaded.");
+        } catch (error) {
+            showText("dashboardMessage", error.message, true);
+        }
+    }
+
+    loadDashboard();
+});
