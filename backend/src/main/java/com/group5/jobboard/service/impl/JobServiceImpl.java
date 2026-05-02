@@ -66,7 +66,6 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public List<Map<String, Object>> getPublicJobs() {
-
         List<Job> jobs = jobRepository.findByStatus("approved");
         List<Map<String, Object>> result = new ArrayList<>();
 
@@ -146,13 +145,103 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public List<Map<String, Object>> getEmployerJobs(Long employerId) {
-
         List<Job> jobs = jobRepository.findByEmployerId(employerId);
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (Job job : jobs) {
             result.add(jobToMap(job));
         }
+
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> getEmployerJobs(Long employerId, String status) {
+        List<Job> jobs = jobRepository.findByEmployerId(employerId);
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (Job job : jobs) {
+            if (status == null || status.isBlank() || status.equals(job.getStatus())) {
+                result.add(jobToMap(job));
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> updateJob(Long employerId, Long jobId, JobCreateRequest request) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        if (!job.getEmployerId().equals(employerId)) {
+            throw new RuntimeException("You are not allowed to update this job");
+        }
+
+        job.setTitle(request.getTitle());
+        job.setCategoryId(request.getCategoryId());
+        job.setDescription(request.getDescription());
+        job.setRequirements(request.getRequirements());
+        job.setEmploymentType(request.getEmploymentType());
+        job.setWorkMode(request.getWorkMode());
+        job.setLocation(request.getLocation());
+        job.setFieldOfStudy(request.getFieldOfStudy());
+        job.setSalaryMin(request.getSalaryMin());
+        job.setSalaryMax(request.getSalaryMax());
+        job.setDeadline(request.getDeadline());
+
+        jobRepository.save(job);
+
+        log(employerId, "UPDATE_JOB", "JOB", job.getId());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("jobId", job.getId());
+        result.put("title", job.getTitle());
+        result.put("status", job.getStatus());
+        result.put("updated", true);
+
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> deleteJob(Long employerId, Long jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        if (!job.getEmployerId().equals(employerId)) {
+            throw new RuntimeException("You are not allowed to delete this job");
+        }
+
+        job.setStatus("deleted");
+        jobRepository.save(job);
+
+        log(employerId, "DELETE_JOB", "JOB", job.getId());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("jobId", job.getId());
+        result.put("deleted", true);
+
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> closeJob(Long employerId, Long jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        if (!job.getEmployerId().equals(employerId)) {
+            throw new RuntimeException("You are not allowed to close this job");
+        }
+
+        job.setStatus("closed");
+        jobRepository.save(job);
+
+        log(employerId, "CLOSE_JOB", "JOB", job.getId());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("jobId", job.getId());
+        result.put("status", job.getStatus());
+        result.put("closed", true);
 
         return result;
     }

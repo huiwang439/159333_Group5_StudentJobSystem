@@ -12,6 +12,8 @@ public interface ApplicationService {
 
     List<Map<String, Object>> getMyApplications(Long studentId);
 
+    List<Map<String, Object>> getApplicationsByJob(Long employerId, Long jobId);
+
     List<Map<String, Object>> getApplicationsByJob(Long employerId, Long jobId, String status);
 
     Map<String, Object> getApplicationDetail(Long userId, String role, Long applicationId);

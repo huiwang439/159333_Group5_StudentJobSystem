@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Component
-@Profile("dev")
+
 public class TestDataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;

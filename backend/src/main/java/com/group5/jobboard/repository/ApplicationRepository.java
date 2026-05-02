@@ -26,6 +26,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     long countByJobIdInAndStatus(List<Long> jobIds, String status);
 
+
+
     List<Application> findByAppliedAtBetween(LocalDateTime start, LocalDateTime end);
 
     long countByStatus(String status);
