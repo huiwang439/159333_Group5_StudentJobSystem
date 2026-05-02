@@ -1,6 +1,5 @@
 .idea/
 *.iml
 out/
-target/
-target/
-*.class
+target/*
+!backend/target/classes/static/**
