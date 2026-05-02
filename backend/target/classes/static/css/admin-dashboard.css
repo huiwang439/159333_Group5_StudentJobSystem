@@ -1,0 +1,155 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f5f7fb;
+}
+
+.topbar {
+    height: 64px;
+    background: #123a78;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    box-sizing: border-box;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.topbar-title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.menu-toggle-btn {
+    border: none;
+    background: white;
+    color: #123a78;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.layout {
+    display: flex;
+    margin-top: 64px;
+}
+
+.sidebar {
+    width: 240px;
+    min-height: calc(100vh - 64px);
+    background: #ffffff;
+    border-right: 1px solid #ddd;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.sidebar.hidden {
+    width: 0;
+    border-right: none;
+}
+
+.sidebar-menu {
+    padding: 16px 0;
+}
+
+.menu-item {
+    padding: 14px 20px;
+    font-size: 15px;
+    color: #333;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.menu-item:hover {
+    background: #f0f4fa;
+}
+
+.menu-item.active {
+    background: #e8f0ff;
+    color: #123a78;
+    font-weight: bold;
+}
+
+.main-content {
+    flex: 1;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 28px;
+    color: #222;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+    gap: 24px;
+    max-width: 1100px;
+}
+
+.dashboard-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 14px;
+    min-height: 180px;
+    padding: 24px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.large-card {
+    min-height: 180px;
+}
+
+.card-title {
+    font-size: 18px;
+    color: #444;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.card-value {
+    font-size: 42px;
+    font-weight: bold;
+    color: #123a78;
+    margin-bottom: 18px;
+}
+
+.sub-stats {
+    display: flex;
+    gap: 24px;
+    font-size: 15px;
+    color: #444;
+}
+
+.sub-stats strong {
+    color: #111;
+}
+
+@media (max-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
