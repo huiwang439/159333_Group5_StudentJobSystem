@@ -35,6 +35,12 @@ public class Application {
         this.updatedAt = LocalDateTime.now();
     }
 
+    @Column(name = "resume_document_id")
+    private Long resumeDocumentId;
+
+    @Column(name = "portfolio_document_id")
+
+    private Long portfolioDocumentId;
     public Application() {
     }
 
@@ -81,4 +87,21 @@ public class Application {
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
+
+    public Long getResumeDocumentId() {
+        return resumeDocumentId;
+    }
+
+    public void setResumeDocumentId(Long resumeDocumentId) {
+        this.resumeDocumentId = resumeDocumentId;
+    }
+
+    public Long getPortfolioDocumentId() {
+        return portfolioDocumentId;
+    }
+
+    public void setPortfolioDocumentId(Long portfolioDocumentId) {
+        this.portfolioDocumentId = portfolioDocumentId;
+    }
 }
+

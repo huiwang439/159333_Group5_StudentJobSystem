@@ -116,4 +116,22 @@ public class ApplicationController {
         Map<String, Object> result = applicationService.updateApplicationStatus(employerId, applicationId, request);
         return ApiResponse.success("application status updated", result);
     }
+
+    @GetMapping("/{applicationId}/history")
+    public ApiResponse<List<Map<String, Object>>> getApplicationHistory(@PathVariable Long applicationId,
+                                                                        HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+
+        String token = authHeader.substring(7);
+        Long userId = jwtUtil.getUserId(token);
+        String role = jwtUtil.getRole(token);
+
+        return ApiResponse.success(
+                applicationService.getApplicationHistory(userId, role, applicationId)
+        );
+    }
 }

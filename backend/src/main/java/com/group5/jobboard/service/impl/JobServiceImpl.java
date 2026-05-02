@@ -177,18 +177,28 @@ public class JobServiceImpl implements JobService {
         item.put("createdAt", job.getCreatedAt());
         item.put("updatedAt", job.getUpdatedAt());
 
-        employerProfileRepository.findByUserId(job.getEmployerId())
-                .ifPresent(profile -> {
-                    item.put("companyName", profile.getCompanyName());
-                    item.put("industry", profile.getIndustry());
-                    item.put("companyLocation", profile.getLocation());
-                    item.put("verificationStatus", profile.getVerificationStatus());
-                });
-
         if (job.getCategoryId() != null) {
             jobCategoryRepository.findById(job.getCategoryId())
                     .ifPresent(category -> item.put("categoryName", category.getCategoryName()));
         }
+
+        employerProfileRepository.findByUserId(job.getEmployerId()).ifPresent(profile -> {
+            Map<String, Object> employerProfile = new HashMap<>();
+            employerProfile.put("employerProfileId", profile.getId());
+            employerProfile.put("userId", profile.getUserId());
+            employerProfile.put("companyName", profile.getCompanyName());
+            employerProfile.put("industry", profile.getIndustry());
+            employerProfile.put("companySize", profile.getCompanySize());
+            employerProfile.put("website", profile.getWebsite());
+            employerProfile.put("location", profile.getLocation());
+            employerProfile.put("companyDescription", profile.getCompanyDescription());
+            employerProfile.put("contactPerson", profile.getContactPerson());
+            employerProfile.put("contactEmail", profile.getContactEmail());
+            employerProfile.put("verificationStatus", profile.getVerificationStatus());
+            employerProfile.put("logoUrl", profile.getLogoUrl());
+
+            item.put("employerProfile", employerProfile);
+        });
 
         return item;
     }

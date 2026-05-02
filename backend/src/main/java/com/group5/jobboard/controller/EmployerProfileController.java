@@ -7,6 +7,7 @@ import com.group5.jobboard.service.EmployerProfileService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -17,7 +18,8 @@ public class EmployerProfileController {
     private final EmployerProfileService employerProfileService;
     private final JwtUtil jwtUtil;
 
-    public EmployerProfileController(EmployerProfileService employerProfileService, JwtUtil jwtUtil) {
+    public EmployerProfileController(EmployerProfileService employerProfileService,
+                                     JwtUtil jwtUtil) {
         this.employerProfileService = employerProfileService;
         this.jwtUtil = jwtUtil;
     }
@@ -26,12 +28,7 @@ public class EmployerProfileController {
     public ApiResponse<Map<String, Object>> saveProfile(@Valid @RequestBody EmployerProfileRequest request,
                                                         HttpServletRequest httpServletRequest) {
 
-        String authHeader = httpServletRequest.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing or invalid Authorization header");
-        }
-
-        String token = authHeader.substring(7);
+        String token = getToken(httpServletRequest);
         Long userId = jwtUtil.getUserId(token);
         String role = jwtUtil.getRole(token);
 
@@ -46,12 +43,7 @@ public class EmployerProfileController {
     @GetMapping("/profile")
     public ApiResponse<Map<String, Object>> getProfile(HttpServletRequest httpServletRequest) {
 
-        String authHeader = httpServletRequest.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing or invalid Authorization header");
-        }
-
-        String token = authHeader.substring(7);
+        String token = getToken(httpServletRequest);
         Long userId = jwtUtil.getUserId(token);
         String role = jwtUtil.getRole(token);
 
@@ -61,5 +53,31 @@ public class EmployerProfileController {
 
         Map<String, Object> result = employerProfileService.getProfile(userId);
         return ApiResponse.success(result);
+    }
+
+    @PostMapping("/profile/logo")
+    public ApiResponse<Map<String, Object>> uploadLogo(@RequestParam MultipartFile file,
+                                                       HttpServletRequest httpServletRequest) {
+
+        String token = getToken(httpServletRequest);
+        Long employerId = jwtUtil.getUserId(token);
+        String role = jwtUtil.getRole(token);
+
+        if (!"employer".equals(role)) {
+            throw new RuntimeException("Only employer can upload company logo");
+        }
+
+        Map<String, Object> result = employerProfileService.uploadLogo(employerId, file);
+        return ApiResponse.success("company logo uploaded", result);
+    }
+
+    private String getToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+
+        return authHeader.substring(7);
     }
 }

@@ -9,8 +9,11 @@ public class ApplicationCreateRequest {
 
     private String coverLetterText;
 
-    public ApplicationCreateRequest() {
-    }
+    private Long resumeDocumentId;
+
+    private Long portfolioDocumentId;
+
+    public ApplicationCreateRequest() {}
 
     public Long getJobId() {
         return jobId;
@@ -26,5 +29,21 @@ public class ApplicationCreateRequest {
 
     public void setCoverLetterText(String coverLetterText) {
         this.coverLetterText = coverLetterText;
+    }
+
+    public Long getResumeDocumentId() {
+        return resumeDocumentId;
+    }
+
+    public void setResumeDocumentId(Long resumeDocumentId) {
+        this.resumeDocumentId = resumeDocumentId;
+    }
+
+    public Long getPortfolioDocumentId() {
+        return portfolioDocumentId;
+    }
+
+    public void setPortfolioDocumentId(Long portfolioDocumentId) {
+        this.portfolioDocumentId = portfolioDocumentId;
     }
 }

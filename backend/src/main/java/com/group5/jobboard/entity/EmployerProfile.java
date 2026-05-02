@@ -48,6 +48,9 @@ public class EmployerProfile {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    @Column(name = "logo_url", length = 500)
+    private String logoUrl;
+
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
@@ -146,5 +149,13 @@ public class EmployerProfile {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
     }
 }

@@ -4,7 +4,9 @@ import com.group5.jobboard.dto.EmployerProfileRequest;
 import com.group5.jobboard.entity.EmployerProfile;
 import com.group5.jobboard.repository.EmployerProfileRepository;
 import com.group5.jobboard.service.EmployerProfileService;
+import com.group5.jobboard.service.FileStorageService;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,9 +15,12 @@ import java.util.Map;
 public class EmployerProfileServiceImpl implements EmployerProfileService {
 
     private final EmployerProfileRepository employerProfileRepository;
+    private final FileStorageService fileStorageService;
 
-    public EmployerProfileServiceImpl(EmployerProfileRepository employerProfileRepository) {
+    public EmployerProfileServiceImpl(EmployerProfileRepository employerProfileRepository,
+                                      FileStorageService fileStorageService) {
         this.employerProfileRepository = employerProfileRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     @Override
@@ -43,6 +48,7 @@ public class EmployerProfileServiceImpl implements EmployerProfileService {
         Map<String, Object> result = new HashMap<>();
         result.put("employerProfileId", profile.getId());
         result.put("verificationStatus", profile.getVerificationStatus());
+        result.put("logoUrl", profile.getLogoUrl());
 
         return result;
     }
@@ -52,7 +58,29 @@ public class EmployerProfileServiceImpl implements EmployerProfileService {
         EmployerProfile profile = employerProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Employer profile not found"));
 
+        return toMap(profile);
+    }
+
+    @Override
+    public Map<String, Object> uploadLogo(Long employerId, MultipartFile file) {
+
+        EmployerProfile profile = employerProfileRepository.findByUserId(employerId)
+                .orElseThrow(() -> new RuntimeException("Employer profile not found"));
+
+        String logoUrl = fileStorageService.saveFile(file, "employer-logos");
+
+        profile.setLogoUrl(logoUrl);
+        employerProfileRepository.save(profile);
+
+        Map<String, Object> result = toMap(profile);
+        result.put("updated", true);
+
+        return result;
+    }
+
+    private Map<String, Object> toMap(EmployerProfile profile) {
         Map<String, Object> result = new HashMap<>();
+
         result.put("employerProfileId", profile.getId());
         result.put("userId", profile.getUserId());
         result.put("companyName", profile.getCompanyName());
@@ -64,6 +92,7 @@ public class EmployerProfileServiceImpl implements EmployerProfileService {
         result.put("contactPerson", profile.getContactPerson());
         result.put("contactEmail", profile.getContactEmail());
         result.put("verificationStatus", profile.getVerificationStatus());
+        result.put("logoUrl", profile.getLogoUrl());
 
         return result;
     }
