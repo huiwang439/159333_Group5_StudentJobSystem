@@ -729,7 +729,7 @@
         <p class="brand-sub">Massey · Student</p>
       </div>
       <ul class="nav">
-        <li><a class="active" href="#"><span class="nav-ico">⌂</span> Dashboard</a></li>
+        <li><a class="active" href="./index.html"><span class="nav-ico">⌂</span> Dashboard</a></li>
         <li><a href="./browse-jobs.html"><span class="nav-ico">◎</span> Browse Jobs</a></li>
         <li><a href="./my-favorites.html"><span class="nav-ico">★</span> My Favorites</a></li>
         <li><a href="./my-applications.html"><span class="nav-ico">→</span> My Applications</a></li>
@@ -844,6 +844,7 @@
             </select>
             <button id="dash-search-btn" type="button" class="btn btn-primary">Search</button>
             <a class="btn btn-ghost" href="./browse-jobs.html" style="text-decoration:none">Browse</a>
+
           </div>
         </div>
 
@@ -901,7 +902,8 @@
     </div>
   </div>
   <script>
-    const DASHBOARD_API = "http://localhost:8080/api/student/dashboard?studentId=1";
+    const userId = localStorage.getItem("userId");
+    const DASHBOARD_API = `http://localhost:8080/api/student/dashboard?studentId=${userId}`;
     const FAVORITES_API = "http://localhost:8080/api/student/favorites";
     const APPLICATIONS_API = "http://localhost:8080/api/student/applications?studentId=1";
 
@@ -932,48 +934,74 @@
 
       await loadRecentApplications();
 
-      const featuredContainer = document.getElementById("dashboard-featured-jobs");
-      featuredContainer.innerHTML = (data.featuredJobs || []).map((job, index) => `
-        <article class="job-card">
-          <h4><a href="./job-detail.html?jobId=${job.id}" style="color:inherit;text-decoration:none;">${job.title}</a></h4>
-          <p>${job.companyName} · ${job.location} · ${job.jobType}</p>
-          <p>${job.salaryRange}</p>
-          <div class="job-card-ft">
-            <span>${index === 0 ? "Today" : index === 1 ? "1 day ago" : "2 days ago"}</span>
-            <div style="display:flex;gap:.35rem;">
-              <a class="btn btn-ghost" href="./job-detail.html?jobId=${job.id}" style="padding:0.3rem 0.55rem;font-size:0.72rem;text-decoration:none;">View</a>
-              <button type="button" class="btn btn-ghost dash-favorite-btn" data-job-id="${job.id}" style="padding:0.3rem 0.55rem;font-size:0.72rem">Favorite</button>
-            </div>
-          </div>
-        </article>
-      `).join("") || "<div class='loading-note'>No featured roles available.</div>";
+const featuredContainer = document.getElementById("dashboard-featured-jobs");
+featuredContainer.innerHTML = (data.featuredJobs || []).map((job, index) => `
+  <article class="job-card">
+    <h4><a href="./job-detail.html?jobId=${job.id}" style="color:inherit;text-decoration:none;">${job.title}</a></h4>
+    <p>${job.companyName} · ${job.location} · ${job.jobType}</p>
+    <p>${job.salaryRange}</p>
+    <div class="job-card-ft">
+      <span>${index === 0 ? "Today" : index === 1 ? "1 day ago" : "2 days ago"}</span>
+      <div style="display:flex;gap:.35rem;">
+        <a class="btn btn-ghost" href="./job-detail.html?jobId=${job.id}" style="padding:0.3rem 0.55rem;font-size:0.72rem;text-decoration:none;">View</a>
+        <button type="button" class="btn btn-ghost dash-favorite-btn" data-job-id="${job.id}" style="padding:0.3rem 0.55rem;font-size:0.72rem">Favorite</button>
+      </div>
+    </div>
+  </article>
+`).join("") || "<div class='loading-note'>No featured roles available.</div>";
+}
+
+async function loadRecentApplications() {
+  const recentApps = document.getElementById("recent-app-list");
+
+  try {
+    const response = await fetch(APPLICATIONS_API);
+
+    if (!response.ok) {
+      recentApps.innerHTML = "<li>Unable to load recent applications.</li>";
+      return;
     }
 
-    async function loadRecentApplications() {
-      const recentApps = document.getElementById("recent-app-list");
-      const response = await fetch(APPLICATIONS_API);
-      if (!response.ok) {
-        recentApps.innerHTML = "<li>Unable to load recent applications.</li>";
-        return;
-      }
-      const records = await response.json();
-      const items = records.slice(0, 3);
-      if (!items.length) {
-        recentApps.innerHTML = "<li>No applications yet. Apply to a role to track progress.</li>";
-        return;
-      }
-      recentApps.innerHTML = items.map(item => `
-        <li>
-          <div class="item-row">
-            <div>
-              <strong>${item.jobTitle}</strong>
-              <span class="recommend-sub">${item.companyName} · ${item.location} · ${item.jobType}</span>
-            </div>
-            <span class="mini-badge ${item.status === "In Review" ? "review" : item.status === "Shortlisted" ? "shortlisted" : "submitted"}">${item.status}</span>
-          </div>
-        </li>
-      `).join("");
+    const result = await response.json();
+
+    const records = Array.isArray(result)
+      ? result
+      : (result.data || []);
+
+    const items = records.slice(0, 3);
+
+    if (!items.length) {
+      recentApps.innerHTML = "<li>No applications yet. Apply to a role to track progress.</li>";
+      return;
     }
+
+    recentApps.innerHTML = items.map(item => `
+      <li>
+        <div class="item-row">
+          <div>
+            <strong>${item.jobTitle || "Unknown Job"}</strong>
+            <span class="recommend-sub">
+              ${item.companyName || ""} · ${item.location || ""} · ${item.jobType || ""}
+            </span>
+          </div>
+          <span class="mini-badge ${
+            item.status === "In Review"
+              ? "review"
+              : item.status === "Shortlisted"
+              ? "shortlisted"
+              : "submitted"
+          }">
+            ${item.status || "submitted"}
+          </span>
+        </div>
+      </li>
+    `).join("");
+
+  } catch (error) {
+    console.error(error);
+    recentApps.innerHTML = "<li>Error loading applications.</li>";
+  }
+}
 
     async function toggleFavorite(jobId) {
       const getIds = await fetch("http://localhost:8080/api/student/favorites/ids?studentId=1");

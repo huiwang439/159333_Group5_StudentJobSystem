@@ -2,7 +2,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("jobseekerLoginForm");
     const emailInput = document.getElementById("jobseeker-email");
     const passwordInput = document.getElementById("jobseeker-password");
+    const token = result.data.token;
+    const user = result.data.user;
 
+    localStorage.setItem("token", token);
+    localStorage.setItem("userId", user.id);
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
 
@@ -21,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
             saveAuth(data);
             showText("authMessage", "Login successful.");
 
-            window.location.href = "/jobseeker-dashboard.html";
+            window.location.href = "/student/index.html";
         } catch (error) {
             clearAuth();
             showText("authMessage", error.message, true);

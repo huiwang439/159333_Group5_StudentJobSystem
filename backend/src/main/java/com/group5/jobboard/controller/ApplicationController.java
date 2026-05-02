@@ -25,8 +25,10 @@ public class ApplicationController {
     }
 
     @PostMapping
-    public ApiResponse<Map<String, Object>> submitApplication(@Valid @RequestBody ApplicationCreateRequest request,
-                                                              HttpServletRequest httpServletRequest) {
+    public ApiResponse<Map<String, Object>> submitApplication(
+            @Valid @RequestBody ApplicationCreateRequest request,
+            HttpServletRequest httpServletRequest) {
+
         String token = getToken(httpServletRequest);
         Long studentId = jwtUtil.getUserId(token);
         String role = jwtUtil.getRole(token);
@@ -40,7 +42,9 @@ public class ApplicationController {
     }
 
     @GetMapping("/my")
-    public ApiResponse<List<Map<String, Object>>> getMyApplications(HttpServletRequest httpServletRequest) {
+    public ApiResponse<List<Map<String, Object>>> getMyApplications(
+            HttpServletRequest httpServletRequest) {
+
         String token = getToken(httpServletRequest);
         Long studentId = jwtUtil.getUserId(token);
         String role = jwtUtil.getRole(token);
@@ -53,23 +57,12 @@ public class ApplicationController {
     }
 
     @GetMapping("/job/{jobId}")
-<<<<<<< HEAD
-    public ApiResponse<List<Map<String, Object>>> getApplicationsByJob(@PathVariable Long jobId,
-                                                                       HttpServletRequest httpServletRequest) {
-        String token = getToken(httpServletRequest);
-=======
     public ApiResponse<List<Map<String, Object>>> getApplicationsByJob(
             @PathVariable Long jobId,
             @RequestParam(required = false) String status,
             HttpServletRequest httpServletRequest) {
 
-        String authHeader = httpServletRequest.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing or invalid Authorization header");
-        }
-
-        String token = authHeader.substring(7);
->>>>>>> origin/branch-ZhengZihui
+        String token = getToken(httpServletRequest);
         Long employerId = jwtUtil.getUserId(token);
         String role = jwtUtil.getRole(token);
 
@@ -81,8 +74,10 @@ public class ApplicationController {
     }
 
     @GetMapping("/{applicationId}")
-    public ApiResponse<Map<String, Object>> getApplicationDetail(@PathVariable Long applicationId,
-                                                                 HttpServletRequest httpServletRequest) {
+    public ApiResponse<Map<String, Object>> getApplicationDetail(
+            @PathVariable Long applicationId,
+            HttpServletRequest httpServletRequest) {
+
         String token = getToken(httpServletRequest);
         Long userId = jwtUtil.getUserId(token);
         String role = jwtUtil.getRole(token);
@@ -91,9 +86,11 @@ public class ApplicationController {
     }
 
     @PatchMapping("/{applicationId}/status")
-    public ApiResponse<Map<String, Object>> updateApplicationStatus(@PathVariable Long applicationId,
-                                                                    @Valid @RequestBody ApplicationStatusUpdateRequest request,
-                                                                    HttpServletRequest httpServletRequest) {
+    public ApiResponse<Map<String, Object>> updateApplicationStatus(
+            @PathVariable Long applicationId,
+            @Valid @RequestBody ApplicationStatusUpdateRequest request,
+            HttpServletRequest httpServletRequest) {
+
         String token = getToken(httpServletRequest);
         Long employerId = jwtUtil.getUserId(token);
         String role = jwtUtil.getRole(token);
@@ -107,8 +104,10 @@ public class ApplicationController {
     }
 
     @GetMapping("/{applicationId}/resume")
-    public ApiResponse<Map<String, Object>> getApplicationResume(@PathVariable Long applicationId,
-                                                                 HttpServletRequest httpServletRequest) {
+    public ApiResponse<Map<String, Object>> getApplicationResume(
+            @PathVariable Long applicationId,
+            HttpServletRequest httpServletRequest) {
+
         String token = getToken(httpServletRequest);
         Long employerId = jwtUtil.getUserId(token);
         String role = jwtUtil.getRole(token);

@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             saveAuth(data);
             showText("authMessage", "Login successful.");
-            window.location.href = "/admin-dashboard.html";
+            window.location.href = "/admin/admin-dashboard.html";
         } catch (error) {
             clearAuth();
             showText("authMessage", error.message, true);

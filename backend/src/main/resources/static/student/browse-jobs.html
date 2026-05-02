@@ -173,9 +173,9 @@
   </div>
 
   <script>
-    const API_BASE = "http://localhost:8080/api/student/jobs";
-    const FAVORITES_API = "http://localhost:8080/api/student/favorites";
-    const STUDENT_ID = 1;
+    const API_BASE = "http://localhost:8080/api/jobs";
+    const FAVORITES_API = "http://localhost:8080/api/saved-jobs";
+    const STUDENT_ID = localStorage.getItem("userId");
     const state = {
       page: 0,
       size: 6,

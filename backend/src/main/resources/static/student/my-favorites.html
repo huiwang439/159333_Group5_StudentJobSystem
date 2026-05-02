@@ -41,7 +41,8 @@
   </style>
 </head>
 <body>
-  <div class="app">
+<div class="app">
+  <aside class="sidebar">
     <aside class="sidebar">
       <a class="nav-item" href="./index.html">⌂ Dashboard</a>
       <a class="nav-item" href="./browse-jobs.html">◎ Browse Jobs</a>
@@ -50,68 +51,71 @@
       <a class="nav-item" href="./profile.html">◎ Profile</a>
       <a class="nav-item" href="./notifications.html">◆ Notifications</a>
     </aside>
-    <main class="main">
-      <div class="head">
-        <h1>My Favorites</h1>
-        <span class="status" id="result-info">Loading...</span>
-      </div>
-      <section class="jobs-grid" id="favorites-container"></section>
-    </main>
-  </div>
+  </aside>
 
-  <script>
-    const FAVORITES_API = "http://localhost:8080/api/student/favorites";
-    const STUDENT_ID = 1;
-    const container = document.getElementById("favorites-container");
-    const info = document.getElementById("result-info");
+  <main class="main">
+    <div class="head">
+      <h1>My Favorites</h1>
+      <span class="status" id="result-info">Loading...</span>
+    </div>
 
-    function renderFavorites(items) {
-      if (!items.length) {
-        container.innerHTML = "<div class='empty'>No saved jobs yet. Go to Browse Jobs to add favorites.</div>";
-        return;
-      }
-      container.innerHTML = items.map(job => `
-        <article class="job-card">
-          <h3>${job.title}</h3>
-          <p class="job-meta">${job.companyName} · ${job.location} · ${job.jobType}</p>
-          <p class="job-meta">Industry: ${job.industry} | Salary: ${job.salaryRange}</p>
-          <p class="job-desc">${job.description}</p>
-          <div class="job-ft">
-            <button class="btn btn-primary">View</button>
-            <button class="btn btn-ghost remove-btn" data-job-id="${job.id}">Remove</button>
-          </div>
-        </article>
-      `).join("");
+    <section class="jobs-grid" id="favorites-container"></section>
+  </main>
+</div>
+
+<script>
+  const FAVORITES_API = "http://localhost:8080/api/student/favorites";
+  const STUDENT_ID = 1;
+  const container = document.getElementById("favorites-container");
+  const info = document.getElementById("result-info");
+
+  function renderFavorites(items) {
+    if (!items.length) {
+      container.innerHTML = "<div class='empty'>No saved jobs yet. Go to Browse Jobs to add favorites.</div>";
+      return;
     }
+    container.innerHTML = items.map(job => `
+      <article class="job-card">
+        <h3>${job.title}</h3>
+        <p class="job-meta">${job.companyName} · ${job.location} · ${job.jobType}</p>
+        <p class="job-meta">Industry: ${job.industry} | Salary: ${job.salaryRange}</p>
+        <p class="job-desc">${job.description}</p>
+        <div class="job-ft">
+          <button class="btn btn-primary">View</button>
+          <button class="btn btn-ghost remove-btn" data-job-id="${job.id}">Remove</button>
+        </div>
+      </article>
+    `).join("");
+  }
 
-    async function fetchFavorites() {
-      info.textContent = "Loading...";
-      const response = await fetch(`${FAVORITES_API}?studentId=${STUDENT_ID}`);
-      if (!response.ok) {
-        info.textContent = "Failed to load favorites.";
-        container.innerHTML = "";
-        return;
-      }
-      const data = await response.json();
-      renderFavorites(data);
-      info.textContent = `${data.length} saved jobs`;
+  async function fetchFavorites() {
+    info.textContent = "Loading...";
+    const response = await fetch(`${FAVORITES_API}?studentId=${STUDENT_ID}`);
+    if (!response.ok) {
+      info.textContent = "Failed to load favorites.";
+      container.innerHTML = "";
+      return;
     }
+    const data = await response.json();
+    renderFavorites(data);
+    info.textContent = `${data.length} saved jobs`;
+  }
 
-    async function removeFavorite(jobId) {
-      const response = await fetch(`${FAVORITES_API}/${jobId}?studentId=${STUDENT_ID}`, { method: "DELETE" });
-      if (!response.ok) {
-        return;
-      }
-      fetchFavorites();
+  async function removeFavorite(jobId) {
+    const response = await fetch(`${FAVORITES_API}/${jobId}?studentId=${STUDENT_ID}`, { method: "DELETE" });
+    if (!response.ok) {
+      return;
     }
-
-    container.addEventListener("click", (event) => {
-      const button = event.target.closest(".remove-btn");
-      if (!button) return;
-      removeFavorite(Number(button.dataset.jobId));
-    });
-
     fetchFavorites();
-  </script>
+  }
+
+  container.addEventListener("click", (event) => {
+    const button = event.target.closest(".remove-btn");
+    if (!button) return;
+    removeFavorite(Number(button.dataset.jobId));
+  });
+
+  fetchFavorites();
+</script>
 </body>
 </html>
