@@ -2,13 +2,22 @@ package com.group5.jobboard.service.impl;
 
 import com.group5.jobboard.dto.ApplicationCreateRequest;
 import com.group5.jobboard.dto.ApplicationStatusUpdateRequest;
-import com.group5.jobboard.entity.*;
-import com.group5.jobboard.repository.*;
+import com.group5.jobboard.entity.AnalyticsLog;
+import com.group5.jobboard.entity.Application;
+import com.group5.jobboard.entity.Job;
+import com.group5.jobboard.entity.StudentDocument;
+import com.group5.jobboard.repository.AnalyticsLogRepository;
+import com.group5.jobboard.repository.ApplicationRepository;
+import com.group5.jobboard.repository.JobRepository;
+import com.group5.jobboard.repository.StudentDocumentRepository;
 import com.group5.jobboard.service.ApplicationService;
 import com.group5.jobboard.service.NotificationService;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
@@ -18,20 +27,17 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final AnalyticsLogRepository analyticsLogRepository;
     private final NotificationService notificationService;
     private final StudentDocumentRepository studentDocumentRepository;
-    private final ApplicationStatusHistoryRepository applicationStatusHistoryRepository;
 
     public ApplicationServiceImpl(ApplicationRepository applicationRepository,
                                   JobRepository jobRepository,
                                   AnalyticsLogRepository analyticsLogRepository,
                                   NotificationService notificationService,
-                                  StudentDocumentRepository studentDocumentRepository,
-                                  ApplicationStatusHistoryRepository applicationStatusHistoryRepository) {
+                                  StudentDocumentRepository studentDocumentRepository) {
         this.applicationRepository = applicationRepository;
         this.jobRepository = jobRepository;
         this.analyticsLogRepository = analyticsLogRepository;
         this.notificationService = notificationService;
         this.studentDocumentRepository = studentDocumentRepository;
-        this.applicationStatusHistoryRepository = applicationStatusHistoryRepository;
     }
 
     @Override
@@ -48,10 +54,26 @@ public class ApplicationServiceImpl implements ApplicationService {
                     throw new RuntimeException("You have already applied for this job");
                 });
 
-        validateStudentDocument(studentId, request.getResumeDocumentId(), "resume", true);
+        if (request.getResumeDocumentId() == null) {
+            throw new RuntimeException("resumeDocumentId is required");
+        }
+
+        StudentDocument resume = studentDocumentRepository
+                .findByIdAndStudentId(request.getResumeDocumentId(), studentId)
+                .orElseThrow(() -> new RuntimeException("Resume document not found"));
+
+        if (!"resume".equals(resume.getDocumentType())) {
+            throw new RuntimeException("resumeDocumentId must be a resume document");
+        }
 
         if (request.getPortfolioDocumentId() != null) {
-            validateStudentDocument(studentId, request.getPortfolioDocumentId(), "portfolio", false);
+            StudentDocument portfolio = studentDocumentRepository
+                    .findByIdAndStudentId(request.getPortfolioDocumentId(), studentId)
+                    .orElseThrow(() -> new RuntimeException("Portfolio document not found"));
+
+            if (!"portfolio".equals(portfolio.getDocumentType())) {
+                throw new RuntimeException("portfolioDocumentId must be a portfolio document");
+            }
         }
 
         Application application = new Application();
@@ -63,8 +85,6 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setStatus("submitted");
 
         applicationRepository.save(application);
-
-        saveHistory(application.getId(), "submitted", "Application submitted", studentId);
 
         log(studentId, "SUBMIT_APPLICATION", "APPLICATION", application.getId());
 
@@ -126,9 +146,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new RuntimeException("You are not allowed to view this application");
         }
 
-        Map<String, Object> result = applicationToMap(application);
-        result.put("history", getApplicationHistory(userId, role, applicationId));
-        return result;
+        return applicationToMap(application);
     }
 
     @Override
@@ -142,91 +160,102 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .orElseThrow(() -> new RuntimeException("Job not found"));
 
         if (!job.getEmployerId().equals(employerId)) {
-            throw new RuntimeException("You can only update applications for your own job");
+            throw new RuntimeException("You are not allowed to update this application");
         }
 
-        if (!isValidStatus(request.getStatus())) {
-            throw new RuntimeException("Invalid status. Use submitted, reviewing, interview, accepted, or rejected");
+        String status = request.getStatus();
+
+        if (!status.equals("submitted")
+                && !status.equals("reviewing")
+                && !status.equals("interview")
+                && !status.equals("accepted")
+                && !status.equals("rejected")) {
+            throw new RuntimeException("Invalid application status");
         }
 
-        application.setStatus(request.getStatus());
+        application.setStatus(status);
         applicationRepository.save(application);
 
-        saveHistory(applicationId, request.getStatus(), request.getNote(), employerId);
+        log(employerId, "UPDATE_APPLICATION_STATUS", "APPLICATION", application.getId());
 
         notificationService.createNotification(
                 application.getStudentId(),
                 "APPLICATION_STATUS",
                 "Application status updated",
-                "Your application status has been changed to: " + request.getStatus()
+                "Your application status has been changed to: " + status
         );
 
-        return applicationToMap(application);
+        Map<String, Object> result = applicationToMap(application);
+        result.put("updated", true);
+
+        return result;
     }
 
     @Override
-    public List<Map<String, Object>> getApplicationHistory(Long userId, String role, Long applicationId) {
+    public Map<String, Object> getApplicationResume(Long employerId, String role, Long applicationId) {
+        if (!"employer".equals(role)) {
+            throw new RuntimeException("Only employer can view student resume");
+        }
+
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found"));
 
         Job job = jobRepository.findById(application.getJobId())
                 .orElseThrow(() -> new RuntimeException("Job not found"));
 
-        boolean allowed =
-                "admin".equals(role)
-                        || ("student".equals(role) && application.getStudentId().equals(userId))
-                        || ("employer".equals(role) && job.getEmployerId().equals(userId));
-
-        if (!allowed) {
-            throw new RuntimeException("You are not allowed to view application history");
+        if (!job.getEmployerId().equals(employerId)) {
+            throw new RuntimeException("You can only view resumes for your own job applications");
         }
 
-        List<ApplicationStatusHistory> histories =
-                applicationStatusHistoryRepository.findByApplicationIdOrderByChangedAtAsc(applicationId);
+        Map<String, Object> result = new HashMap<>();
 
-        List<Map<String, Object>> result = new ArrayList<>();
+        result.put("applicationId", application.getId());
+        result.put("jobId", application.getJobId());
+        result.put("jobTitle", job.getTitle());
+        result.put("studentId", application.getStudentId());
+        result.put("coverLetterText", application.getCoverLetterText());
+        result.put("status", application.getStatus());
+        result.put("appliedAt", application.getAppliedAt());
+        result.put("updatedAt", application.getUpdatedAt());
 
-        for (ApplicationStatusHistory history : histories) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("historyId", history.getId());
-            item.put("applicationId", history.getApplicationId());
-            item.put("status", history.getStatus());
-            item.put("note", history.getNote());
-            item.put("changedBy", history.getChangedBy());
-            item.put("changedAt", history.getChangedAt());
-            result.add(item);
+        if (application.getResumeDocumentId() != null) {
+            StudentDocument resume = studentDocumentRepository.findById(application.getResumeDocumentId())
+                    .orElseThrow(() -> new RuntimeException("Resume document not found"));
+
+            result.put("resumeDocumentId", resume.getId());
+            result.put("resumeFileName", resume.getFileName());
+            result.put("resumeFileUrl", resume.getFileUrl());
+            result.put("resumeUploadedAt", resume.getUploadedAt());
+        } else {
+            result.put("resumeDocumentId", null);
+            result.put("resumeFileName", null);
+            result.put("resumeFileUrl", null);
+            result.put("resumeUploadedAt", null);
         }
+
+        if (application.getPortfolioDocumentId() != null) {
+            StudentDocument portfolio = studentDocumentRepository.findById(application.getPortfolioDocumentId())
+                    .orElseThrow(() -> new RuntimeException("Portfolio document not found"));
+
+            result.put("portfolioDocumentId", portfolio.getId());
+            result.put("portfolioFileName", portfolio.getFileName());
+            result.put("portfolioFileUrl", portfolio.getFileUrl());
+            result.put("portfolioUploadedAt", portfolio.getUploadedAt());
+        } else {
+            result.put("portfolioDocumentId", null);
+            result.put("portfolioFileName", null);
+            result.put("portfolioFileUrl", null);
+            result.put("portfolioUploadedAt", null);
+        }
+
+        log(employerId, "VIEW_STUDENT_RESUME", "APPLICATION", applicationId);
 
         return result;
     }
 
-    private void validateStudentDocument(Long studentId, Long documentId, String expectedType, boolean required) {
-        if (documentId == null) {
-            if (required) {
-                throw new RuntimeException(expectedType + "DocumentId is required");
-            }
-            return;
-        }
-
-        StudentDocument document = studentDocumentRepository.findByIdAndStudentId(documentId, studentId)
-                .orElseThrow(() -> new RuntimeException("Document not found or does not belong to current student"));
-
-        if (!expectedType.equals(document.getDocumentType())) {
-            throw new RuntimeException("Document type must be " + expectedType);
-        }
-    }
-
-    private void saveHistory(Long applicationId, String status, String note, Long changedBy) {
-        ApplicationStatusHistory history = new ApplicationStatusHistory();
-        history.setApplicationId(applicationId);
-        history.setStatus(status);
-        history.setNote(note);
-        history.setChangedBy(changedBy);
-        applicationStatusHistoryRepository.save(history);
-    }
-
     private Map<String, Object> applicationToMap(Application application) {
         Map<String, Object> item = new HashMap<>();
+
         item.put("applicationId", application.getId());
         item.put("jobId", application.getJobId());
         item.put("studentId", application.getStudentId());
@@ -238,28 +267,20 @@ public class ApplicationServiceImpl implements ApplicationService {
         item.put("updatedAt", application.getUpdatedAt());
 
         if (application.getResumeDocumentId() != null) {
-            studentDocumentRepository.findById(application.getResumeDocumentId()).ifPresent(doc -> {
-                item.put("resumeFileName", doc.getFileName());
-                item.put("resumeFileUrl", doc.getFileUrl());
+            studentDocumentRepository.findById(application.getResumeDocumentId()).ifPresent(resume -> {
+                item.put("resumeFileName", resume.getFileName());
+                item.put("resumeFileUrl", resume.getFileUrl());
             });
         }
 
         if (application.getPortfolioDocumentId() != null) {
-            studentDocumentRepository.findById(application.getPortfolioDocumentId()).ifPresent(doc -> {
-                item.put("portfolioFileName", doc.getFileName());
-                item.put("portfolioFileUrl", doc.getFileUrl());
+            studentDocumentRepository.findById(application.getPortfolioDocumentId()).ifPresent(portfolio -> {
+                item.put("portfolioFileName", portfolio.getFileName());
+                item.put("portfolioFileUrl", portfolio.getFileUrl());
             });
         }
 
         return item;
-    }
-
-    private boolean isValidStatus(String status) {
-        return "submitted".equals(status)
-                || "reviewing".equals(status)
-                || "interview".equals(status)
-                || "accepted".equals(status)
-                || "rejected".equals(status);
     }
 
     private void log(Long userId, String actionType, String targetType, Long targetId) {

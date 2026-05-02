@@ -18,5 +18,5 @@ public interface ApplicationService {
 
     Map<String, Object> updateApplicationStatus(Long employerId, Long applicationId, ApplicationStatusUpdateRequest request);
 
-    List<Map<String, Object>> getApplicationHistory(Long userId, String role, Long applicationId);
+    Map<String, Object> getApplicationResume(Long employerId, String role, Long applicationId);
 }

@@ -39,7 +39,6 @@ public class Application {
     private Long resumeDocumentId;
 
     @Column(name = "portfolio_document_id")
-
     private Long portfolioDocumentId;
     public Application() {
     }
