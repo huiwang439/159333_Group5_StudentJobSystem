@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Notifications - Student Job Board</title>
+  <style>
+    :root { --bg:#f3f5f8; --surface:#fff; --text:#1a1d26; --muted:#5c6478; --border:#e2e6ef; --accent:#14b8a6; --radius:12px; --shadow:0 1px 3px rgba(26,29,38,.06),0 8px 24px rgba(26,29,38,.06);}
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--text); }
+    .app { display:grid; grid-template-columns:240px 1fr; min-height:100vh; }
+    .sidebar { background:var(--surface); border-right:1px solid var(--border); padding:1rem .75rem; display:flex; flex-direction:column; gap:.35rem; }
+    .nav-item { display:flex; gap:.55rem; align-items:center; text-decoration:none; color:#60708f; padding:.8rem; border-radius:12px; font-size:.95rem; }
+    .nav-item.active { background:#e6fbf8; color:#0f766e; font-weight:600; }
+    .main { padding:1.2rem 1.4rem 2rem; max-width:1220px; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+    .header h1 { margin:0; font-size:1.3rem; }
+    .btn { border:none; border-radius:8px; padding:.55rem .85rem; cursor:pointer; font-weight:600; }
+    .btn-primary { background:var(--accent); color:#fff; }
+    .btn-ghost { background:#fff; border:1px solid var(--border); }
+    .layout { display:grid; gap:1rem; }
+    .panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; min-height:260px; }
+    .panel-hd { padding:.9rem 1rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+    .panel-hd h2 { margin:0; font-size:1rem; }
+    .list { padding:.6rem .9rem; }
+    .item { border:1px solid var(--border); border-radius:10px; padding:.78rem; margin-bottom:.55rem; background:#fff; display:flex; justify-content:space-between; align-items:flex-start; gap:.8rem; }
+    .item.unread { border-color:#91e7dd; background:#f6fffd; }
+    .item h3 { margin:0; font-size:.9rem; }
+    .meta { margin-top:.22rem; font-size:.82rem; color:var(--muted); }
+    .time { margin-top:.22rem; font-size:.75rem; color:var(--muted); }
+    .tag { font-size:.68rem; padding:.2rem .45rem; border-radius:6px; font-weight:700; white-space:nowrap; }
+    .tag.job { background:#dbeafe; color:#1d4ed8; }
+    .tag.application { background:#ede9fe; color:#6d28d9; }
+    .empty { color:var(--muted); font-size:.85rem; padding:1rem; }
+    @media (max-width: 760px) { .app{grid-template-columns:1fr;} .sidebar{display:none;} }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a class="nav-item" href="./index.html">⌂ Dashboard</a>
+      <a class="nav-item" href="./browse-jobs.html">◎ Browse Jobs</a>
+      <a class="nav-item" href="./my-favorites.html">★ My Favorites</a>
+      <a class="nav-item" href="./my-applications.html">→ My Applications</a>
+      <a class="nav-item" href="./profile.html">◎ Profile</a>
+      <a class="nav-item active" href="./notifications.html">◆ Notifications</a>
+    </aside>
+
+    <main class="main">
+      <header class="header">
+        <h1>Notifications</h1>
+        <div style="display:flex;gap:.5rem;">
+          <button id="mark-all-jobs" class="btn btn-ghost" type="button">Mark Job Alerts Read</button>
+          <button id="mark-all-apps" class="btn btn-primary" type="button">Mark Status Updates Read</button>
+        </div>
+      </header>
+
+      <section class="layout">
+        <section class="panel">
+          <div class="panel-hd">
+            <h2>New Job Alerts</h2>
+            <span id="job-count" class="meta">0 items</span>
+          </div>
+          <div class="list" id="job-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-hd">
+            <h2>Application Status Updates</h2>
+            <span id="application-count" class="meta">0 items</span>
+          </div>
+          <div class="list" id="application-list"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const STUDENT_ID = 1;
+    const API = "http://localhost:8080/api/student/notifications";
+
+    function renderItems(items, targetId, countId, type) {
+      const container = document.getElementById(targetId);
+      document.getElementById(countId).textContent = `${items.length} items`;
+      if (!items.length) {
+        container.innerHTML = `<div class="empty">No ${type} notifications yet.</div>`;
+        return;
+      }
+      container.innerHTML = items.map(item => `
+        <article class="item ${item.read ? "" : "unread"}">
+          <div>
+            <div style="display:flex;gap:.4rem;align-items:center;">
+              <h3>${item.title}</h3>
+              <span class="tag ${item.type}">${item.type}</span>
+            </div>
+            <p class="meta">${item.message}</p>
+            <p class="time">${new Date(item.createdAt).toLocaleString()}</p>
+          </div>
+          ${item.read ? "" : `<button class="btn btn-ghost" data-read-id="${item.id}" style="padding:.35rem .6rem;">Mark Read</button>`}
+        </article>
+      `).join("");
+    }
+
+    async function loadNotifications() {
+      const [jobResponse, appResponse] = await Promise.all([
+        fetch(`${API}?studentId=${STUDENT_ID}&type=job`),
+        fetch(`${API}?studentId=${STUDENT_ID}&type=application`)
+      ]);
+      const jobs = jobResponse.ok ? await jobResponse.json() : [];
+      const apps = appResponse.ok ? await appResponse.json() : [];
+      renderItems(jobs, "job-list", "job-count", "job");
+      renderItems(apps, "application-list", "application-count", "application");
+    }
+
+    async function markRead(notificationId) {
+      await fetch(`${API}/${notificationId}/read?studentId=${STUDENT_ID}`, { method: "PATCH" });
+      await loadNotifications();
+    }
+
+    async function markAll(type) {
+      await fetch(`${API}/read-all?studentId=${STUDENT_ID}&type=${type}`, { method: "PATCH" });
+      await loadNotifications();
+    }
+
+    document.body.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-read-id]");
+      if (!button) return;
+      markRead(Number(button.dataset.readId));
+    });
+    document.getElementById("mark-all-jobs").addEventListener("click", () => markAll("job"));
+    document.getElementById("mark-all-apps").addEventListener("click", () => markAll("application"));
+
+    loadNotifications();
+  </script>
+</body>
+</html>
