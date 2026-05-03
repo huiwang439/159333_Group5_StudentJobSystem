@@ -64,40 +64,57 @@
 </div>
 
 <script>
-  const STUDENT_ID = 1;
+  const API_BASE = "http://localhost:8080";
+  const token = localStorage.getItem("token");
+
   const params = new URLSearchParams(window.location.search);
   const jobId = Number(params.get("jobId"));
 
-  const JOB_API = "http://localhost:8080/api/student/jobs";
-  const APPLY_API = "http://localhost:8080/api/student/applications";
-
   let currentJob = null;
 
+  function authHeaders() {
+    return {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    };
+  }
+
   async function loadJobDetail() {
+    if (!token) {
+      alert("Please login first.");
+      window.location.href = "../login-jobseeker.html";
+      return;
+    }
+
     if (!jobId) {
       document.getElementById("job-title").textContent = "Invalid job id";
       return;
     }
 
-    const response = await fetch(`${JOB_API}/${jobId}`);
+    const response = await fetch(`${API_BASE}/jobs/${jobId}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
 
     if (!response.ok) {
       document.getElementById("job-title").textContent = "Job not found";
       return;
     }
 
-    currentJob = await response.json();
+    const result = await response.json();
+    currentJob = result.data || result;
 
-    document.getElementById("job-title").textContent = currentJob.title;
-    document.getElementById("company-name").textContent = currentJob.companyName;
-    document.getElementById("job-location").textContent = currentJob.location;
-    document.getElementById("job-salary").textContent = currentJob.salaryRange;
-    document.getElementById("job-type").textContent = currentJob.jobType;
-    document.getElementById("job-industry").textContent = currentJob.industry;
-    document.getElementById("job-description").textContent = currentJob.description;
+    document.getElementById("job-title").textContent = currentJob.title || "";
+    document.getElementById("company-name").textContent = currentJob.companyName || "";
+    document.getElementById("job-location").textContent = currentJob.location || "";
+    document.getElementById("job-salary").textContent = currentJob.salaryRange || "";
+    document.getElementById("job-type").textContent = currentJob.jobType || currentJob.employmentType || "";
+    document.getElementById("job-industry").textContent = currentJob.industry || currentJob.categoryName || "";
+    document.getElementById("job-description").textContent = currentJob.description || "";
 
     document.getElementById("company-info").textContent =
-      `${currentJob.companyName} is hiring for ${currentJob.jobType.toLowerCase()} talent in ${currentJob.location}. Industry focus: ${currentJob.industry}.`;
+      `${currentJob.companyName || "This company"} is hiring for ${currentJob.title || "this role"} in ${currentJob.location || "N/A"}.`;
   }
 
   async function applyNow() {
@@ -106,21 +123,17 @@
     const statusEl = document.getElementById("apply-status");
     statusEl.textContent = "Submitting application...";
 
-    const response = await fetch(APPLY_API, {
+    const response = await fetch(`${API_BASE}/applications`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: authHeaders(),
       body: JSON.stringify({
         jobId: currentJob.id,
-        studentId: STUDENT_ID,
-        resumeName: "Resume_Alex.pdf",
-        coverLetterNote: `Interested in ${currentJob.title} at ${currentJob.companyName}.`
+        coverLetterText: `Interested in ${currentJob.title} at ${currentJob.companyName}.`
       })
     });
 
     if (!response.ok) {
-      statusEl.textContent = "Failed to apply. Please try again.";
+      statusEl.textContent = "Failed to apply. Please check backend API or token.";
       return;
     }
 

@@ -101,23 +101,43 @@
 </div>
 
 <script>
-  const STUDENT_ID = 1;
-  const PROFILE_API = "http://localhost:8080/api/student/profile";
-  const DOC_API = "http://localhost:8080/api/student/profile/documents";
+  const API_BASE = "http://localhost:8080";
+  const token = localStorage.getItem("token");
+
+  const PROFILE_API = `${API_BASE}/students/profile`;
+  const DOC_API = `${API_BASE}/students/profile/documents`;
+
+  function authHeaders() {
+    return {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    };
+  }
+
+  function authOnlyHeaders() {
+    return {
+      "Authorization": `Bearer ${token}`
+    };
+  }
 
   async function loadProfile() {
-    const response = await fetch(`${PROFILE_API}?studentId=${STUDENT_ID}`);
+    const response = await fetch(PROFILE_API, {
+      headers: authOnlyHeaders()
+    });
+
     if (!response.ok) return;
-    const data = await response.json();
-    ["fullName","email","studentNumber","phone","major","location","bio"].forEach(key => {
+
+    const result = await response.json();
+    const data = result.data || result;
+
+    ["fullName", "email", "studentNumber", "phone", "major", "location", "bio"].forEach(key => {
       const el = document.getElementById(key);
-      el.value = data[key] ?? "";
+      if (el) el.value = data[key] ?? "";
     });
   }
 
   async function saveProfile() {
     const payload = {
-      studentId: STUDENT_ID,
       fullName: document.getElementById("fullName").value.trim(),
       email: document.getElementById("email").value.trim(),
       studentNumber: document.getElementById("studentNumber").value.trim(),
@@ -126,33 +146,55 @@
       location: document.getElementById("location").value.trim(),
       bio: document.getElementById("bio").value.trim()
     };
+
     await fetch(PROFILE_API, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      method: "PUT",
+      headers: authHeaders(),
       body: JSON.stringify(payload)
     });
+
     await loadProfile();
   }
 
   async function loadDocuments() {
-    const response = await fetch(`${DOC_API}?studentId=${STUDENT_ID}`);
+    const response = await fetch(DOC_API, {
+      headers: authOnlyHeaders()
+    });
+
     if (!response.ok) return;
-    const docs = await response.json();
+
+    const result = await response.json();
+    const docs = result.data || result || [];
+
     const list = document.getElementById("doc-list");
+
     if (!docs.length) {
       list.innerHTML = "<p class='note'>No documents uploaded yet.</p>";
       return;
     }
+
     list.innerHTML = docs.map(doc => `
       <div class="doc-item">
         <div>
-          <strong>${doc.fileName}</strong>
-          <div class="doc-meta">${(doc.fileSize / 1024).toFixed(1)} KB · ${new Date(doc.uploadedAt).toLocaleString()}</div>
+          <strong>${doc.fileName || doc.originalFilename || ""}</strong>
+          <div class="doc-meta">
+            ${doc.fileSize ? (doc.fileSize / 1024).toFixed(1) + " KB" : ""}
+            ${doc.uploadedAt ? " · " + new Date(doc.uploadedAt).toLocaleString() : ""}
+          </div>
         </div>
+
         <div style="display:flex;gap:.35rem;align-items:center;">
-          <span class="tag ${doc.documentType === "resume" ? "resume" : "portfolio"}">${doc.documentType}</span>
+          <span class="tag ${doc.documentType === "resume" ? "resume" : "portfolio"}">
+            ${doc.documentType || ""}
+          </span>
+
           ${doc.defaultResume ? "<span class='tag default'>Default Resume</span>" : ""}
-          ${doc.documentType === "resume" && !doc.defaultResume ? `<button class="btn btn-ghost" style="padding:.4rem .6rem;" data-set-default="${doc.id}">Set Default</button>` : ""}
+
+          ${doc.documentType === "resume" && !doc.defaultResume ? `
+            <button class="btn btn-ghost" style="padding:.4rem .6rem;" data-set-default="${doc.id}">
+              Set Default
+            </button>
+          ` : ""}
         </div>
       </div>
     `).join("");
@@ -161,35 +203,60 @@
   async function uploadFile(type, inputId) {
     const input = document.getElementById(inputId);
     if (!input.files.length) return;
+
     const formData = new FormData();
-    formData.append("studentId", String(STUDENT_ID));
     formData.append("documentType", type);
     formData.append("defaultResume", String(type === "resume"));
     formData.append("file", input.files[0]);
-    await fetch(`${DOC_API}/upload`, { method: "POST", body: formData });
+
+    await fetch(`${DOC_API}/upload`, {
+      method: "POST",
+      headers: authOnlyHeaders(),
+      body: formData
+    });
+
     input.value = "";
     await loadDocuments();
   }
 
   async function setDefaultResume(documentId) {
-    await fetch(`${DOC_API}/${documentId}/default-resume?studentId=${STUDENT_ID}`, { method: "PATCH" });
+    await fetch(`${DOC_API}/${documentId}/default-resume`, {
+      method: "PATCH",
+      headers: authOnlyHeaders()
+    });
+
     await loadDocuments();
   }
 
   document.getElementById("save-profile").addEventListener("click", saveProfile);
   document.getElementById("reload-profile").addEventListener("click", loadProfile);
-  document.getElementById("upload-resume").addEventListener("click", () => uploadFile("resume", "resume-file"));
-  document.getElementById("upload-portfolio").addEventListener("click", () => uploadFile("portfolio", "portfolio-file"));
+
+  document.getElementById("upload-resume").addEventListener("click", () => {
+    uploadFile("resume", "resume-file");
+  });
+
+  document.getElementById("upload-portfolio").addEventListener("click", () => {
+    uploadFile("portfolio", "portfolio-file");
+  });
+
   document.getElementById("doc-list").addEventListener("click", (event) => {
     const button = event.target.closest("[data-set-default]");
     if (!button) return;
+
     setDefaultResume(Number(button.dataset.setDefault));
   });
 
   async function init() {
+    if (!token) {
+      alert("Please login first.");
+      window.location.href = "../login-jobseeker.html";
+      return;
+    }
+
     await loadProfile();
     await loadDocuments();
   }
+
   init();
 </script>
 </body>

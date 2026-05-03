@@ -173,9 +173,9 @@
   </div>
 
   <script>
-    const API_BASE = "http://localhost:8080/api/jobs";
-    const FAVORITES_API = "http://localhost:8080/api/saved-jobs";
-    const STUDENT_ID = localStorage.getItem("userId");
+    const API_BASE = "http://localhost:8080";
+    const token = localStorage.getItem("token");
+
     const state = {
       page: 0,
       size: 6,
@@ -185,6 +185,12 @@
     const jobsContainer = document.getElementById("jobs-container");
     const pagination = document.getElementById("pagination");
     const resultInfo = document.getElementById("result-info");
+
+    function authHeaders() {
+      return {
+        "Authorization": `Bearer ${token}`
+      };
+    }
 
     function getFilters() {
       return {
@@ -196,89 +202,122 @@
     }
 
     function buildParams() {
-      const params = new URLSearchParams({ page: String(state.page), size: String(state.size) });
+      const params = new URLSearchParams();
+
       const filters = getFilters();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.set(key, value);
-      });
+      if (filters.keyword) params.set("keyword", filters.keyword);
+      if (filters.location) params.set("location", filters.location);
+      if (filters.industry) params.set("industry", filters.industry);
+      if (filters.jobType) params.set("jobType", filters.jobType);
+
       return params.toString();
     }
 
-    function renderJobs(items) {
-      if (!items.length) {
-        jobsContainer.innerHTML = "<div class='card' style='padding:1rem'>No matching jobs found. Try different filters.</div>";
-        return;
-      }
-      jobsContainer.innerHTML = items.map(job => `
-        <article class="job-card">
-          <h3><a href="./job-detail.html?jobId=${job.id}" style="color:inherit;text-decoration:none;">${job.title}</a></h3>
-          <p class="job-meta">${job.companyName} · ${job.location} · ${job.jobType}</p>
-          <p class="job-meta">Industry: ${job.industry} | Salary: ${job.salaryRange}</p>
-          <p class="job-desc">${job.description}</p>
-          <div class="job-ft">
-            <a class="btn btn-primary" href="./job-detail.html?jobId=${job.id}" style="padding:0.45rem 0.7rem;font-size:0.75rem;text-decoration:none;">View</a>
-            <button class="btn btn-ghost favorite-btn" data-job-id="${job.id}" style="padding:0.45rem 0.7rem;font-size:0.75rem;">${state.favoriteIds.has(job.id) ? "Unfavorite" : "Favorite"}</button>
-          </div>
-        </article>
-      `).join("");
-    }
+  function renderJobs(items) {
+  jobsContainer.innerHTML = items.map(job => {
+    const jobId = job.id || job.jobId;
 
-    function renderPagination(totalPages) {
-      if (totalPages <= 1) {
-        pagination.innerHTML = "";
-        return;
-      }
-      let html = `<button ${state.page === 0 ? "disabled" : ""} data-page="${state.page - 1}">&lt;</button>`;
-      for (let i = 0; i < totalPages; i += 1) {
-        html += `<button class="${i === state.page ? "active" : ""}" data-page="${i}">${i + 1}</button>`;
-      }
-      html += `<button ${state.page >= totalPages - 1 ? "disabled" : ""} data-page="${state.page + 1}">&gt;</button>`;
-      pagination.innerHTML = html;
+    return `
+      <article class="job-card">
+        <h3>${job.title}</h3>
+
+        <p class="job-meta">
+          ${job.companyName} · ${job.location} · ${job.jobType}
+        </p>
+
+        <p class="job-meta">Industry: ${job.industry}</p>
+        <p class="job-desc">${job.description}</p>
+
+        <div class="job-ft">
+          <a class="btn btn-primary" href="./job-detail.html?jobId=${jobId}">
+            View
+          </a>
+
+          <button class="btn btn-ghost favorite-btn" data-job-id="${jobId}">
+            Favorite
+          </button>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+    function renderPagination() {
+      pagination.innerHTML = "";
     }
 
     async function loadFavoriteIds() {
-      const response = await fetch(`${FAVORITES_API}/ids?studentId=${STUDENT_ID}`);
-      if (!response.ok) {
+      try {
+        const response = await fetch(`${API_BASE}/saved-jobs/my`, {
+          headers: authHeaders()
+        });
+
+        if (!response.ok) {
+          state.favoriteIds = new Set();
+          return;
+        }
+
+        const result = await response.json();
+        const list = result.data || result || [];
+
+        state.favoriteIds = new Set(
+          list.map(item => item.jobId || item.id || item.job?.id)
+        );
+      } catch (e) {
         state.favoriteIds = new Set();
-        return;
       }
-      const ids = await response.json();
-      state.favoriteIds = new Set(ids);
     }
 
     async function toggleFavorite(jobId) {
-      const isFavorited = state.favoriteIds.has(jobId);
-      const method = isFavorited ? "DELETE" : "POST";
-      const response = await fetch(`${FAVORITES_API}/${jobId}?studentId=${STUDENT_ID}`, { method });
-      if (!response.ok) {
-        return;
-      }
-      if (isFavorited) {
-        state.favoriteIds.delete(jobId);
-      } else {
-        state.favoriteIds.add(jobId);
-      }
-      fetchJobs();
-    }
+  if (!jobId) {
+    alert("jobId is undefined ❌");
+    return;
+  }
 
+  const res = await fetch(`${API_BASE}/saved-jobs?jobId=${jobId}`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    alert("收藏失败 ❌");
+    return;
+  }
+
+  alert("收藏成功 ✅");
+}
     async function fetchJobs() {
       resultInfo.textContent = "Loading...";
-      const response = await fetch(`${API_BASE}?${buildParams()}`);
+
+      const query = buildParams();
+      const url = query ? `${API_BASE}/jobs?${query}` : `${API_BASE}/jobs`;
+
+      const response = await fetch(url, {
+        headers: authHeaders()
+      });
+
       if (!response.ok) {
         resultInfo.textContent = "Failed to load jobs. Please check backend service.";
         jobsContainer.innerHTML = "";
         pagination.innerHTML = "";
         return;
       }
-      const data = await response.json();
-      renderJobs(data.content || []);
-      renderPagination(data.totalPages || 0);
-      resultInfo.textContent = `Total ${data.totalElements || 0} jobs, page ${state.page + 1}`;
+
+      const result = await response.json();
+      const data = result.data || result;
+
+      const jobs = Array.isArray(data) ? data : (data.content || []);
+
+      renderJobs(jobs);
+      renderPagination();
+
+      resultInfo.textContent = `Total ${jobs.length} jobs`;
     }
 
     document.getElementById("search-form").addEventListener("submit", (event) => {
       event.preventDefault();
-      state.page = 0;
       fetchJobs();
     });
 
@@ -287,30 +326,26 @@
       document.getElementById("location").value = "";
       document.getElementById("industry").value = "";
       document.getElementById("jobType").value = "";
-      state.page = 0;
-      fetchJobs();
-    });
-
-    pagination.addEventListener("click", (event) => {
-      const button = event.target.closest("button");
-      if (!button || button.disabled) return;
-      state.page = Number(button.dataset.page);
       fetchJobs();
     });
 
     jobsContainer.addEventListener("click", (event) => {
-      const favoriteButton = event.target.closest(".favorite-btn");
-      if (!favoriteButton) return;
-      const jobId = Number(favoriteButton.dataset.jobId);
-      toggleFavorite(jobId);
-    });
+  const btn = event.target.closest(".favorite-btn");
+  if (!btn) return;
+
+  const jobId = Number(btn.dataset.jobId);
+  console.log("点击收藏 jobId =", jobId);
+
+  toggleFavorite(jobId);
+});
 
     async function init() {
-      const urlParams = new URLSearchParams(window.location.search);
-      document.getElementById("keyword").value = urlParams.get("keyword") || "";
-      document.getElementById("location").value = urlParams.get("location") || "";
-      document.getElementById("industry").value = urlParams.get("industry") || "";
-      document.getElementById("jobType").value = urlParams.get("jobType") || "";
+      if (!token) {
+        alert("Please login first.");
+        window.location.href = "../login-jobseeker.html";
+        return;
+      }
+
       await loadFavoriteIds();
       await fetchJobs();
     }

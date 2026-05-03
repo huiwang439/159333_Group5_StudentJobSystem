@@ -737,7 +737,7 @@
         <li><a href="./notifications.html"><span class="nav-ico">◆</span> Notifications</a></li>
       </ul>
       <div class="logout-wrap">
-        <a class="btn btn-ghost" href="#" style="width:100%">Logout</a>
+        <a class="nav-item" href="javascript:void(0)" id="logout-btn">Logout</a>
       </div>
     </aside>
 
@@ -902,160 +902,170 @@
     </div>
   </div>
   <script>
-    const userId = localStorage.getItem("userId");
-    const DASHBOARD_API = `http://localhost:8080/api/student/dashboard?studentId=${userId}`;
-    const FAVORITES_API = "http://localhost:8080/api/student/favorites";
-    const APPLICATIONS_API = "http://localhost:8080/api/student/applications?studentId=1";
+    const API_BASE = "http://localhost:8080";
+    const token = localStorage.getItem("token");
+
+    function authHeaders() {
+      return {
+        "Authorization": `Bearer ${token}`
+      };
+    }
+
+    async function logout() {
+  try {
+    await fetch(`${API_BASE}/auth/logout`, {
+      method: "POST",
+      headers: authHeaders()
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
+
+  localStorage.clear();
+
+  window.location.replace("../admin/login.html");
+}
 
     async function loadDashboard() {
-      const response = await fetch(DASHBOARD_API);
-      if (!response.ok) {
-        return;
-      }
-      const data = await response.json();
-      document.getElementById("stat-total-jobs").textContent = data.totalJobs ?? 0;
-      document.getElementById("stat-favorites").textContent = data.favoriteCount ?? 0;
-      document.getElementById("stat-new-matches").textContent = data.newMatches ?? 0;
-      document.getElementById("stat-profile").textContent = data.profileCompleteness ?? 72;
-      document.getElementById("new-matches-count").textContent = data.newMatches ?? 0;
+      try {
+        const jobRes = await fetch(`${API_BASE}/jobs`, {
+          headers: authHeaders()
+        });
 
-      const recommendList = document.getElementById("recommend-list");
-      recommendList.innerHTML = (data.recommendations || []).map((job, index) =>
-        `<li>
-          <div class="item-row">
-            <div>
-              <strong>${job.title}</strong>
-              <span class="recommend-sub">${job.companyName} · Match by major</span>
+        const jobResult = await jobRes.json();
+        const jobs = jobResult.data || jobResult || [];
+
+        const favRes = await fetch(`${API_BASE}/saved-jobs/my`, {
+          headers: authHeaders()
+        });
+
+        const favResult = await favRes.json();
+        const favorites = favResult.data || favResult || [];
+
+        const appRes = await fetch(`${API_BASE}/applications/my`, {
+          headers: authHeaders()
+        });
+
+        const appResult = await appRes.json();
+        const applications = appResult.data || appResult || [];
+
+        document.getElementById("stat-total-jobs").textContent = jobs.length;
+        document.getElementById("stat-favorites").textContent = favorites.length;
+        document.getElementById("stat-new-matches").textContent = jobs.length;
+        document.getElementById("stat-profile").textContent = 80;
+
+        const recommendList = document.getElementById("recommend-list");
+        recommendList.innerHTML = jobs.slice(0, 3).map(job => `
+          <li>
+            <div class="item-row">
+              <div>
+                <strong>${job.title}</strong>
+                <span class="recommend-sub">${job.companyName}</span>
+              </div>
+              <button class="btn btn-ghost dash-favorite-btn" data-job-id="${job.id}">
+                Favorite
+              </button>
             </div>
-            <button type="button" class="btn btn-ghost dash-favorite-btn" data-job-id="${job.id}" style="padding:0.3rem 0.55rem;font-size:0.72rem">Favorite</button>
-          </div>
-        </li>`
-      ).join("") || "<li>No recommendations available yet.</li>";
+          </li>
+        `).join("") || "<li>No recommendations</li>";
 
-      await loadRecentApplications();
+        const featuredContainer = document.getElementById("dashboard-featured-jobs");
+        featuredContainer.innerHTML = jobs.slice(0, 3).map((job, index) => `
+          <article class="job-card">
+            <h4>
+              <a href="./job-detail.html?jobId=${job.id}">
+                ${job.title}
+              </a>
+            </h4>
 
-const featuredContainer = document.getElementById("dashboard-featured-jobs");
-featuredContainer.innerHTML = (data.featuredJobs || []).map((job, index) => `
-  <article class="job-card">
-    <h4><a href="./job-detail.html?jobId=${job.id}" style="color:inherit;text-decoration:none;">${job.title}</a></h4>
-    <p>${job.companyName} · ${job.location} · ${job.jobType}</p>
-    <p>${job.salaryRange}</p>
-    <div class="job-card-ft">
-      <span>${index === 0 ? "Today" : index === 1 ? "1 day ago" : "2 days ago"}</span>
-      <div style="display:flex;gap:.35rem;">
-        <a class="btn btn-ghost" href="./job-detail.html?jobId=${job.id}" style="padding:0.3rem 0.55rem;font-size:0.72rem;text-decoration:none;">View</a>
-        <button type="button" class="btn btn-ghost dash-favorite-btn" data-job-id="${job.id}" style="padding:0.3rem 0.55rem;font-size:0.72rem">Favorite</button>
-      </div>
-    </div>
-  </article>
-`).join("") || "<div class='loading-note'>No featured roles available.</div>";
-}
+            <p>${job.companyName} · ${job.location} · ${job.jobType}</p>
 
-async function loadRecentApplications() {
-  const recentApps = document.getElementById("recent-app-list");
+            <div class="job-card-ft">
+              <span>${index === 0 ? "Today" : "1 day ago"}</span>
+              <div>
+                <a class="btn btn-ghost" href="./job-detail.html?jobId=${job.id}">
+                  View
+                </a>
+                <button class="btn btn-ghost dash-favorite-btn" data-job-id="${job.id}">
+                  Favorite
+                </button>
+              </div>
+            </div>
+          </article>
+        `).join("");
 
-  try {
-    const response = await fetch(APPLICATIONS_API);
+        const recentApps = document.getElementById("recent-app-list");
 
-    if (!response.ok) {
-      recentApps.innerHTML = "<li>Unable to load recent applications.</li>";
-      return;
+        if (!applications.length) {
+          recentApps.innerHTML = "<li>No applications yet</li>";
+        } else {
+          recentApps.innerHTML = applications.slice(0, 3).map(item => `
+            <li>
+              <div class="item-row">
+                <div>
+                  <strong>${item.jobTitle || "Job"}</strong>
+                  <span>${item.companyName || ""}</span>
+                </div>
+                <span class="mini-badge">${item.status || "submitted"}</span>
+              </div>
+            </li>
+          `).join("");
+        }
+
+      } catch (e) {
+        console.error(e);
+      }
     }
-
-    const result = await response.json();
-
-    const records = Array.isArray(result)
-      ? result
-      : (result.data || []);
-
-    const items = records.slice(0, 3);
-
-    if (!items.length) {
-      recentApps.innerHTML = "<li>No applications yet. Apply to a role to track progress.</li>";
-      return;
-    }
-
-    recentApps.innerHTML = items.map(item => `
-      <li>
-        <div class="item-row">
-          <div>
-            <strong>${item.jobTitle || "Unknown Job"}</strong>
-            <span class="recommend-sub">
-              ${item.companyName || ""} · ${item.location || ""} · ${item.jobType || ""}
-            </span>
-          </div>
-          <span class="mini-badge ${
-            item.status === "In Review"
-              ? "review"
-              : item.status === "Shortlisted"
-              ? "shortlisted"
-              : "submitted"
-          }">
-            ${item.status || "submitted"}
-          </span>
-        </div>
-      </li>
-    `).join("");
-
-  } catch (error) {
-    console.error(error);
-    recentApps.innerHTML = "<li>Error loading applications.</li>";
-  }
-}
 
     async function toggleFavorite(jobId) {
-      const getIds = await fetch("http://localhost:8080/api/student/favorites/ids?studentId=1");
-      let method = "POST";
-      if (getIds.ok) {
-        const ids = await getIds.json();
-        if (ids.includes(jobId)) {
-          method = "DELETE";
-        }
+      const res = await fetch(`${API_BASE}/saved-jobs?jobId=${jobId}`, {
+        method: "POST",
+        headers: authHeaders()
+      });
+
+      if (!res.ok) {
+        alert("Favorite failed");
+        return;
       }
-      await fetch(`${FAVORITES_API}/${jobId}?studentId=1`, { method });
-      await loadDashboard();
+
+      loadDashboard();
     }
 
     document.body.addEventListener("click", (event) => {
-      const button = event.target.closest(".dash-favorite-btn");
-      if (!button) return;
-      toggleFavorite(Number(button.dataset.jobId));
+      const favoriteBtn = event.target.closest(".dash-favorite-btn");
+      if (favoriteBtn) {
+        toggleFavorite(Number(favoriteBtn.dataset.jobId));
+        return;
+      }
+
+      const logoutBtn = event.target.closest("#logout-btn");
+      if (logoutBtn) {
+        event.preventDefault();
+        logout();
+      }
     });
 
-    document.getElementById("dash-search-btn").addEventListener("click", () => {
-      const params = new URLSearchParams();
-      const keyword = document.getElementById("dash-keyword").value.trim();
-      const location = document.getElementById("dash-location").value;
-      const industry = document.getElementById("dash-industry").value;
-      const jobType = document.getElementById("dash-job-type").value;
-      if (keyword) params.set("keyword", keyword);
-      if (location) params.set("location", location);
-      if (industry) params.set("industry", industry);
-      if (jobType) params.set("jobType", jobType);
-      window.location.href = `./browse-jobs.html${params.toString() ? `?${params.toString()}` : ""}`;
-    });
+    const searchBtn = document.getElementById("dash-search-btn");
+    if (searchBtn) {
+      searchBtn.addEventListener("click", () => {
+        const params = new URLSearchParams();
 
-    let currentSlide = 0;
-    const slides = Array.from(document.querySelectorAll(".slide"));
-    const dots = Array.from(document.querySelectorAll(".dot"));
+        const keyword = document.getElementById("dash-keyword").value.trim();
+        const location = document.getElementById("dash-location").value;
 
-    function showSlide(index) {
-      currentSlide = index;
-      slides.forEach((slide, i) => slide.classList.toggle("active", i === index));
-      dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
+        if (keyword) params.set("keyword", keyword);
+        if (location) params.set("location", location);
+
+        window.location.href = `./browse-jobs.html?${params.toString()}`;
+      });
     }
 
-    document.getElementById("hero-dots").addEventListener("click", (event) => {
-      const dot = event.target.closest(".dot");
-      if (!dot) return;
-      showSlide(Number(dot.dataset.slide));
-    });
-
-    setInterval(() => {
-      showSlide((currentSlide + 1) % slides.length);
-    }, 4500);
-
-    loadDashboard();
+    if (!token) {
+      alert("Please login first");
+      window.location.replace("../login-jobseeker.html");
+    } else {
+      loadDashboard();
+    }
   </script>
 </body>
 </html>

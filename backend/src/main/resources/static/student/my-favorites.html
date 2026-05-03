@@ -64,58 +64,110 @@
 </div>
 
 <script>
-  const FAVORITES_API = "http://localhost:8080/api/student/favorites";
-  const STUDENT_ID = 1;
+  const API_BASE = "http://localhost:8080";
+  const token = localStorage.getItem("token");
+
   const container = document.getElementById("favorites-container");
   const info = document.getElementById("result-info");
 
+  function authHeaders() {
+    return {
+      "Authorization": `Bearer ${token}`
+    };
+  }
+
+  function getJob(item) {
+    return item.job || item;
+  }
+
   function renderFavorites(items) {
     if (!items.length) {
-      container.innerHTML = "<div class='empty'>No saved jobs yet. Go to Browse Jobs to add favorites.</div>";
+      container.innerHTML = "<div class='empty'>No saved jobs yet.</div>";
+      info.textContent = "0 saved jobs";
       return;
     }
-    container.innerHTML = items.map(job => `
-      <article class="job-card">
-        <h3>${job.title}</h3>
-        <p class="job-meta">${job.companyName} · ${job.location} · ${job.jobType}</p>
-        <p class="job-meta">Industry: ${job.industry} | Salary: ${job.salaryRange}</p>
-        <p class="job-desc">${job.description}</p>
-        <div class="job-ft">
-          <button class="btn btn-primary">View</button>
-          <button class="btn btn-ghost remove-btn" data-job-id="${job.id}">Remove</button>
-        </div>
-      </article>
-    `).join("");
+
+    container.innerHTML = items.map(item => {
+      const job = getJob(item);
+      const jobId = job.id || item.jobId;
+
+      return `
+        <article class="job-card">
+          <h3>${job.title || ""}</h3>
+          <p class="job-meta">
+            ${job.companyName || ""} · ${job.location || ""} · ${job.jobType || job.employmentType || ""}
+          </p>
+          <p class="job-meta">Industry: ${job.industry || job.categoryName || "-"}</p>
+          <p class="job-desc">${job.description || ""}</p>
+
+          <div class="job-ft">
+            <a class="btn btn-primary" href="./job-detail.html?jobId=${jobId}">View</a>
+            <button class="btn btn-ghost remove-btn" data-job-id="${jobId}">Remove</button>
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    info.textContent = `${items.length} saved jobs`;
   }
 
   async function fetchFavorites() {
     info.textContent = "Loading...";
-    const response = await fetch(`${FAVORITES_API}?studentId=${STUDENT_ID}`);
-    if (!response.ok) {
-      info.textContent = "Failed to load favorites.";
-      container.innerHTML = "";
-      return;
+
+    try {
+      const response = await fetch(`${API_BASE}/saved-jobs/my`, {
+        method: "GET",
+        headers: authHeaders()
+      });
+
+      if (!response.ok) {
+        info.textContent = `Failed to load favorites. Status: ${response.status}`;
+        container.innerHTML = "";
+        return;
+      }
+
+      const result = await response.json();
+      const data = result.data || result || [];
+
+      renderFavorites(data);
+    } catch (error) {
+      console.error(error);
+      info.textContent = "Failed to connect backend.";
     }
-    const data = await response.json();
-    renderFavorites(data);
-    info.textContent = `${data.length} saved jobs`;
   }
 
   async function removeFavorite(jobId) {
-    const response = await fetch(`${FAVORITES_API}/${jobId}?studentId=${STUDENT_ID}`, { method: "DELETE" });
-    if (!response.ok) {
-      return;
+    try {
+      const response = await fetch(`${API_BASE}/saved-jobs?jobId=${jobId}`, {
+        method: "DELETE",
+        headers: authHeaders()
+      });
+
+      if (!response.ok) {
+        alert(`Failed to remove favorite. Status: ${response.status}`);
+        return;
+      }
+
+      await fetchFavorites();
+    } catch (error) {
+      console.error(error);
+      alert("Backend connection failed.");
     }
-    fetchFavorites();
   }
 
   container.addEventListener("click", (event) => {
     const button = event.target.closest(".remove-btn");
     if (!button) return;
+
     removeFavorite(Number(button.dataset.jobId));
   });
 
-  fetchFavorites();
+  if (!token) {
+    alert("Please login first.");
+    window.location.href = "../login-jobseeker.html";
+  } else {
+    fetchFavorites();
+  }
 </script>
 </body>
 </html>

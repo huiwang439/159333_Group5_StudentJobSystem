@@ -76,61 +76,101 @@
 </div>
 
 <script>
-  const STUDENT_ID = 1;
-  const API = "http://localhost:8080/api/student/notifications";
+  const API_BASE = "http://localhost:8080";
+  const token = localStorage.getItem("token");
+
+  function authHeaders() {
+    return {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    };
+  }
 
   function renderItems(items, targetId, countId, type) {
     const container = document.getElementById(targetId);
     document.getElementById(countId).textContent = `${items.length} items`;
+
     if (!items.length) {
       container.innerHTML = `<div class="empty">No ${type} notifications yet.</div>`;
       return;
     }
+
     container.innerHTML = items.map(item => `
       <article class="item ${item.read ? "" : "unread"}">
         <div>
           <div style="display:flex;gap:.4rem;align-items:center;">
-            <h3>${item.title}</h3>
-            <span class="tag ${item.type}">${item.type}</span>
+            <h3>${item.title || ""}</h3>
+            <span class="tag ${item.type || type}">${item.type || type}</span>
           </div>
-          <p class="meta">${item.message}</p>
-          <p class="time">${new Date(item.createdAt).toLocaleString()}</p>
+          <p class="meta">${item.message || ""}</p>
+          <p class="time">
+            ${item.createdAt ? new Date(item.createdAt).toLocaleString() : ""}
+          </p>
         </div>
-        ${item.read ? "" : `<button class="btn btn-ghost" data-read-id="${item.id}" style="padding:.35rem .6rem;">Mark Read</button>`}
+
+        ${item.read ? "" : `
+          <button class="btn btn-ghost" data-read-id="${item.id}" style="padding:.35rem .6rem;">
+            Mark Read
+          </button>
+        `}
       </article>
     `).join("");
   }
 
   async function loadNotifications() {
     const [jobResponse, appResponse] = await Promise.all([
-      fetch(`${API}?studentId=${STUDENT_ID}&type=job`),
-      fetch(`${API}?studentId=${STUDENT_ID}&type=application`)
+      fetch(`${API_BASE}/notifications?type=job`, {
+        headers: authHeaders()
+      }),
+      fetch(`${API_BASE}/notifications?type=application`, {
+        headers: authHeaders()
+      })
     ]);
-    const jobs = jobResponse.ok ? await jobResponse.json() : [];
-    const apps = appResponse.ok ? await appResponse.json() : [];
+
+    const jobResult = jobResponse.ok ? await jobResponse.json() : [];
+    const appResult = appResponse.ok ? await appResponse.json() : [];
+
+    const jobs = jobResult.data || jobResult || [];
+    const apps = appResult.data || appResult || [];
+
     renderItems(jobs, "job-list", "job-count", "job");
     renderItems(apps, "application-list", "application-count", "application");
   }
 
   async function markRead(notificationId) {
-    await fetch(`${API}/${notificationId}/read?studentId=${STUDENT_ID}`, { method: "PATCH" });
+    await fetch(`${API_BASE}/notifications/${notificationId}/read`, {
+      method: "PATCH",
+      headers: authHeaders()
+    });
+
     await loadNotifications();
   }
 
   async function markAll(type) {
-    await fetch(`${API}/read-all?studentId=${STUDENT_ID}&type=${type}`, { method: "PATCH" });
+    await fetch(`${API_BASE}/notifications/read-all?type=${type}`, {
+      method: "PATCH",
+      headers: authHeaders()
+    });
+
     await loadNotifications();
   }
 
   document.body.addEventListener("click", (event) => {
     const button = event.target.closest("[data-read-id]");
     if (!button) return;
+
     markRead(Number(button.dataset.readId));
   });
+
   document.getElementById("mark-all-jobs").addEventListener("click", () => markAll("job"));
   document.getElementById("mark-all-apps").addEventListener("click", () => markAll("application"));
 
-  loadNotifications();
+  if (!token) {
+    alert("Please login first.");
+    window.location.href = "../login-jobseeker.html";
+  } else {
+    loadNotifications();
+  }
 </script>
 </body>
 </html>

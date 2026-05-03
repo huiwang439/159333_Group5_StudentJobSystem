@@ -124,13 +124,20 @@
 </div>
 
 <script>
-  const STUDENT_ID = 1;
-  const APPLICATION_API = "http://localhost:8080/api/student/applications";
+  const API_BASE = "http://localhost:8080";
+  const token = localStorage.getItem("token");
   let currentApplicationId = null;
 
   const listEl = document.getElementById("application-list");
   const timelineEl = document.getElementById("timeline");
   const listNote = document.getElementById("list-note");
+
+  function authHeaders() {
+    return {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    };
+  }
 
   function statusClass(status) {
     const normalized = String(status || "").toLowerCase();
@@ -140,72 +147,104 @@
   }
 
   async function loadSummary() {
-    const response = await fetch(`${APPLICATION_API}/summary?studentId=${STUDENT_ID}`);
+    const response = await fetch(`${API_BASE}/applications/my`, {
+      headers: authHeaders()
+    });
+
     if (!response.ok) return;
-    const data = await response.json();
-    document.getElementById("sum-total").textContent = data.totalApplied ?? 0;
-    document.getElementById("sum-pending").textContent = data.pendingCount ?? 0;
+
+    const result = await response.json();
+    const data = result.data || result || [];
+
+    const total = data.length;
+    const pending = data.filter(item =>
+      String(item.status || "").toLowerCase().includes("submitted") ||
+      String(item.status || "").toLowerCase().includes("pending")
+    ).length;
+
+    document.getElementById("sum-total").textContent = total;
+    document.getElementById("sum-pending").textContent = pending;
   }
 
   async function loadApplications() {
     listNote.textContent = "Loading...";
-    const response = await fetch(`${APPLICATION_API}?studentId=${STUDENT_ID}`);
+
+    const response = await fetch(`${API_BASE}/applications/my`, {
+      headers: authHeaders()
+    });
+
     if (!response.ok) {
       listNote.textContent = "Failed to load applications";
       listEl.innerHTML = "";
       return;
     }
-    const data = await response.json();
+
+    const result = await response.json();
+    const data = result.data || result || [];
+
     listNote.textContent = `${data.length} records`;
 
     if (!data.length) {
-      listEl.innerHTML = "<div class='empty'>No applications yet. Try Quick Apply above.</div>";
+      listEl.innerHTML = "<div class='empty'>No applications yet.</div>";
       timelineEl.innerHTML = "";
       return;
     }
 
-    listEl.innerHTML = data.map(item => `
-      <article class="application-item ${currentApplicationId === item.applicationId ? "active" : ""}" data-app-id="${item.applicationId}">
-        <h3>${item.jobTitle}</h3>
-        <p class="meta">${item.companyName} · ${item.location} · ${item.jobType}</p>
-        <div class="row">
-          <span class="badge ${statusClass(item.status)}">${item.status}</span>
-          <span class="status-note">${new Date(item.appliedAt).toLocaleString()}</span>
-        </div>
-      </article>
-    `).join("");
+    listEl.innerHTML = data.map(item => {
+      const appId = item.applicationId || item.id;
+
+      return `
+        <article class="application-item ${currentApplicationId === appId ? "active" : ""}" data-app-id="${appId}">
+          <h3>${item.jobTitle || item.job?.title || "Unknown Job"}</h3>
+          <p class="meta">
+            ${item.companyName || item.job?.companyName || ""} ·
+            ${item.location || item.job?.location || ""} ·
+            ${item.jobType || item.job?.jobType || item.job?.employmentType || ""}
+          </p>
+          <div class="row">
+            <span class="badge ${statusClass(item.status)}">${item.status || "submitted"}</span>
+            <span class="status-note">
+              ${item.appliedAt ? new Date(item.appliedAt).toLocaleString() : ""}
+            </span>
+          </div>
+        </article>
+      `;
+    }).join("");
 
     if (!currentApplicationId) {
-      currentApplicationId = data[0].applicationId;
+      currentApplicationId = data[0].applicationId || data[0].id;
     }
 
-    await loadDetail(currentApplicationId);
+    await loadDetail(currentApplicationId, data);
   }
 
-  async function loadDetail(applicationId) {
-    const response = await fetch(`${APPLICATION_API}/${applicationId}?studentId=${STUDENT_ID}`);
-    if (!response.ok) {
-      timelineEl.innerHTML = "<div class='empty'>Failed to load timeline.</div>";
+  async function loadDetail(applicationId, cachedList = null) {
+    const records = cachedList || [];
+
+    const item = records.find(app =>
+      Number(app.applicationId || app.id) === Number(applicationId)
+    );
+
+    if (!item) {
+      timelineEl.innerHTML = "<div class='empty'>Select an application to view detail.</div>";
       return;
     }
 
-    const data = await response.json();
+    document.getElementById("detail-title").textContent =
+      item.jobTitle || item.job?.title || "Unknown Job";
 
-    document.getElementById("detail-title").textContent = `${data.application.jobTitle}`;
-    document.getElementById("detail-sub").textContent = `${data.application.companyName} · Resume: ${data.application.resumeName}`;
+    document.getElementById("detail-sub").textContent =
+      `${item.companyName || item.job?.companyName || ""} · Status: ${item.status || "submitted"}`;
 
-    if (!data.timeline.length) {
-      timelineEl.innerHTML = "<div class='empty'>No status updates yet.</div>";
-      return;
-    }
-
-    timelineEl.innerHTML = data.timeline.map(item => `
+    timelineEl.innerHTML = `
       <div class="timeline-item">
-        <div class="timeline-status">${item.oldStatus} → ${item.newStatus}</div>
-        <div class="timeline-note">${item.note}</div>
-        <div class="timeline-time">${new Date(item.changedAt).toLocaleString()}</div>
+        <div class="timeline-status">Application submitted</div>
+        <div class="timeline-note">Your application status is ${item.status || "submitted"}.</div>
+        <div class="timeline-time">
+          ${item.appliedAt ? new Date(item.appliedAt).toLocaleString() : ""}
+        </div>
       </div>
-    `).join("");
+    `;
 
     document.querySelectorAll(".application-item").forEach(node => {
       node.classList.toggle("active", Number(node.dataset.appId) === Number(applicationId));
@@ -216,36 +255,59 @@
     const jobId = Number(document.getElementById("apply-job-id").value);
     if (!jobId) return;
 
-    const resumeName = document.getElementById("apply-resume").value.trim() || "Resume_Alex.pdf";
-    const coverLetterNote = document.getElementById("apply-note").value.trim() || "Looking forward to this opportunity.";
+    const coverLetterText =
+      document.getElementById("apply-note").value.trim() ||
+      "Looking forward to this opportunity.";
 
-    const response = await fetch(APPLICATION_API, {
+    const response = await fetch(`${API_BASE}/applications`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jobId, studentId: STUDENT_ID, resumeName, coverLetterNote })
+      headers: authHeaders(),
+      body: JSON.stringify({
+        jobId,
+        coverLetterText
+      })
     });
 
-    if (!response.ok) return;
+    if (!response.ok) {
+      alert("Failed to apply. Please check job id or token.");
+      return;
+    }
 
     currentApplicationId = null;
     await loadSummary();
     await loadApplications();
   }
 
-  listEl.addEventListener("click", (event) => {
+  listEl.addEventListener("click", async (event) => {
     const card = event.target.closest(".application-item");
     if (!card) return;
+
     currentApplicationId = Number(card.dataset.appId);
-    loadDetail(currentApplicationId);
+
+    const response = await fetch(`${API_BASE}/applications/my`, {
+      headers: authHeaders()
+    });
+
+    const result = await response.json();
+    const data = result.data || result || [];
+
+    loadDetail(currentApplicationId, data);
   });
 
   document.getElementById("apply-btn").addEventListener("click", applyJob);
+
   document.getElementById("refresh-btn").addEventListener("click", async () => {
     await loadSummary();
     await loadApplications();
   });
 
   async function init() {
+    if (!token) {
+      alert("Please login first.");
+      window.location.href = "../login-jobseeker.html";
+      return;
+    }
+
     await loadSummary();
     await loadApplications();
   }
