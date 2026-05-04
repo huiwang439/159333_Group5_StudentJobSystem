@@ -2,11 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("jobseekerLoginForm");
     const emailInput = document.getElementById("jobseeker-email");
     const passwordInput = document.getElementById("jobseeker-password");
-    const token = result.data.token;
-    const user = result.data.user;
 
-    localStorage.setItem("token", token);
-    localStorage.setItem("userId", user.id);
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
 
