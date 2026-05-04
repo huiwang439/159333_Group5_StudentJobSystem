@@ -22,8 +22,20 @@
     .body { padding:0 1rem 1rem; }
     .section-title { margin:.8rem 0 .4rem; font-size:1rem; color:#0f766e; }
     .card { border:1px solid var(--border); border-radius:10px; padding:.75rem; color:#334155; line-height:1.55; }
-    .actions { padding:0 1rem 1rem; display:flex; justify-content:center; }
+    .actions { padding:0 1rem 1rem; display:flex; flex-wrap:wrap; justify-content:center; gap:.55rem; align-items:center; }
     .status { font-size:.82rem; color:var(--muted); margin-top:.5rem; text-align:center; min-height:1.2rem; }
+    .btn-report { background:#fff; border:1px solid #cbd5e1; color:#64748b; }
+    .btn-report:hover { border-color:#94a3b8; color:#334155; background:#f8fafc; }
+    .report-status { font-size:.82rem; color:var(--muted); margin-top:.35rem; text-align:center; min-height:1.2rem; }
+    .modal-backdrop { display:none; position:fixed; inset:0; z-index:100; background:rgba(15,23,42,.45); align-items:center; justify-content:center; padding:1rem; }
+    .modal-backdrop.open { display:flex; }
+    .modal { background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); box-shadow:var(--shadow); max-width:440px; width:100%; padding:1.1rem 1.15rem; max-height:90vh; overflow:auto; }
+    .modal h2 { margin:0 0 .75rem; font-size:1.1rem; }
+    .modal label { display:block; font-size:.82rem; font-weight:600; color:#334155; margin:.65rem 0 .3rem; }
+    .modal select, .modal textarea { width:100%; padding:.55rem .65rem; border-radius:8px; border:1px solid var(--border); font:inherit; font-size:.88rem; }
+    .modal textarea { min-height:88px; resize:vertical; }
+    .modal-actions { display:flex; gap:.5rem; justify-content:flex-end; margin-top:1rem; flex-wrap:wrap; }
+    .modal-hint { font-size:.78rem; color:var(--muted); margin:.5rem 0 0; line-height:1.45; }
     @media (max-width: 860px){ .chips { grid-template-columns:1fr 1fr; } }
   </style>
 </head>
@@ -57,10 +69,35 @@
 
     <div class="actions">
       <button id="apply-btn" class="btn btn-primary" type="button">Apply Now</button>
+      <button id="report-open-btn" class="btn btn-report" type="button" disabled>Report this job</button>
     </div>
 
     <p class="status" id="apply-status"></p>
+    <p class="report-status" id="report-inline-status" aria-live="polite"></p>
   </section>
+</div>
+
+<div id="report-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="report-modal-title">
+  <div class="modal">
+    <h2 id="report-modal-title">Report this job</h2>
+    <p class="modal-hint">Reports are reviewed by administrators. Misuse may affect your account.</p>
+    <label for="report-reason">Reason <span style="font-weight:400;color:var(--muted)">(required)</span></label>
+    <select id="report-reason">
+      <option value="">Select a reason</option>
+      <option value="Fraudulent or scam listing">Fraudulent or scam listing</option>
+      <option value="Misleading job information">Misleading job information</option>
+      <option value="Discrimination or harassment">Discrimination or harassment</option>
+      <option value="Spam or duplicate posting">Spam or duplicate posting</option>
+      <option value="Other">Other</option>
+    </select>
+    <label for="report-description">Additional details <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+    <textarea id="report-description" placeholder="Describe what is wrong (optional)"></textarea>
+    <p class="modal-hint" id="report-modal-status" role="status"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="report-cancel-btn">Cancel</button>
+      <button type="button" class="btn btn-primary" id="report-submit-btn">Submit report</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -71,6 +108,18 @@
   const jobId = Number(params.get("jobId"));
 
   let currentJob = null;
+
+  function getJobPk(job) {
+    if (!job) return jobId;
+    return job.jobId != null ? job.jobId : job.id != null ? job.id : jobId;
+  }
+
+  function getReportedEmployerUserId(job) {
+    if (!job) return null;
+    if (job.employerId != null) return job.employerId;
+    if (job.employerProfile && job.employerProfile.userId != null) return job.employerProfile.userId;
+    return null;
+  }
 
   function authHeaders() {
     return {
@@ -106,7 +155,12 @@
     currentJob = result.data || result;
 
     document.getElementById("job-title").textContent = currentJob.title || "";
-    document.getElementById("company-name").textContent = currentJob.companyName || "";
+    const companyFromProfile =
+      currentJob.employerProfile && currentJob.employerProfile.companyName
+        ? currentJob.employerProfile.companyName
+        : "";
+    document.getElementById("company-name").textContent =
+      currentJob.companyName || companyFromProfile || "";
     document.getElementById("job-location").textContent = currentJob.location || "";
     document.getElementById("job-salary").textContent = currentJob.salaryRange || "";
     document.getElementById("job-type").textContent = currentJob.jobType || currentJob.employmentType || "";
@@ -114,7 +168,10 @@
     document.getElementById("job-description").textContent = currentJob.description || "";
 
     document.getElementById("company-info").textContent =
-      `${currentJob.companyName || "This company"} is hiring for ${currentJob.title || "this role"} in ${currentJob.location || "N/A"}.`;
+      `${currentJob.companyName || companyFromProfile || "This company"} is hiring for ${currentJob.title || "this role"} in ${currentJob.location || "N/A"}.`;
+
+    const reportBtn = document.getElementById("report-open-btn");
+    reportBtn.disabled = getReportedEmployerUserId(currentJob) == null;
   }
 
   async function applyNow() {
@@ -127,8 +184,8 @@
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify({
-        jobId: currentJob.id,
-        coverLetterText: `Interested in ${currentJob.title} at ${currentJob.companyName}.`
+        jobId: getJobPk(currentJob),
+        coverLetterText: `Interested in ${currentJob.title} at ${currentJob.companyName || ""}.`
       })
     });
 
@@ -141,6 +198,73 @@
   }
 
   document.getElementById("apply-btn").addEventListener("click", applyNow);
+
+  const reportModal = document.getElementById("report-modal");
+  const reportModalStatus = document.getElementById("report-modal-status");
+  const reportInlineStatus = document.getElementById("report-inline-status");
+
+  function openReportModal() {
+    if (!currentJob || getReportedEmployerUserId(currentJob) == null) return;
+    document.getElementById("report-reason").value = "";
+    document.getElementById("report-description").value = "";
+    reportModalStatus.textContent = "";
+    reportModal.classList.add("open");
+  }
+
+  function closeReportModal() {
+    reportModal.classList.remove("open");
+  }
+
+  async function submitReport() {
+    const reason = document.getElementById("report-reason").value.trim();
+    const description = document.getElementById("report-description").value.trim();
+    const reportedUserId = getReportedEmployerUserId(currentJob);
+    const relatedJobId = getJobPk(currentJob);
+
+    if (!reason) {
+      reportModalStatus.textContent = "Please choose a reason.";
+      return;
+    }
+
+    reportModalStatus.textContent = "Submitting…";
+    const body = new URLSearchParams();
+    body.set("reportedUserId", String(reportedUserId));
+    body.set("relatedJobId", String(relatedJobId));
+    body.set("reason", reason);
+    if (description) body.set("description", description);
+
+    try {
+      const response = await fetch(`${API_BASE}/reports`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: body.toString()
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (result.code === 200) {
+        closeReportModal();
+        reportInlineStatus.textContent = result.message || "Report submitted. Thank you.";
+        return;
+      }
+
+      reportModalStatus.textContent =
+        result.message || "Report could not be submitted. Please try again.";
+    } catch (e) {
+      reportModalStatus.textContent = "Network error. Please try again.";
+    }
+  }
+
+  document.getElementById("report-open-btn").addEventListener("click", openReportModal);
+  document.getElementById("report-cancel-btn").addEventListener("click", closeReportModal);
+  document.getElementById("report-submit-btn").addEventListener("click", submitReport);
+
+  reportModal.addEventListener("click", (e) => {
+    if (e.target === reportModal) closeReportModal();
+  });
 
   loadJobDetail();
 </script>

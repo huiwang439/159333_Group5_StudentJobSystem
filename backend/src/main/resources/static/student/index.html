@@ -275,15 +275,15 @@
     }
 
     .slide.s1 {
-      background-image: url("C:/Users/yang'jia'qi/.cursor/projects/d-cursor/assets/c__Users_yang_jia_qi_AppData_Roaming_Cursor_User_workspaceStorage_9f96fd892ac90034961649e9444e1194_images_image-12b40533-ed1f-4d6e-8afe-9efcc46375ca.png");
+      background-image: url("photo/photo1.png");
     }
 
     .slide.s2 {
-      background-image: url("C:/Users/yang'jia'qi/.cursor/projects/d-cursor/assets/c__Users_yang_jia_qi_AppData_Roaming_Cursor_User_workspaceStorage_9f96fd892ac90034961649e9444e1194_images_image-f8a4c06a-f962-4323-9a1f-672d25059d03.png");
+      background-image: url("photo/photo2.png");
     }
 
     .slide.s3 {
-      background-image: url("C:/Users/yang'jia'qi/.cursor/projects/d-cursor/assets/c__Users_yang_jia_qi_AppData_Roaming_Cursor_User_workspaceStorage_9f96fd892ac90034961649e9444e1194_images_image-025d8ed0-e664-42aa-a0d3-d6709aa70ac2.png");
+      background-image: url("photo/photo3.png");
     }
 
     .slide h3 {
@@ -680,11 +680,6 @@
       border-color: var(--accent);
     }
 
-    .logout-wrap {
-      border-top: 1px solid var(--border);
-      padding: 0.9rem 0.75rem 0;
-    }
-
     .footer-note {
       margin-top: 2rem;
       font-size: 0.75rem;
@@ -735,10 +730,8 @@
         <li><a href="./my-applications.html"><span class="nav-ico">→</span> My Applications</a></li>
         <li><a href="./profile.html"><span class="nav-ico">◎</span> Profile</a></li>
         <li><a href="./notifications.html"><span class="nav-ico">◆</span> Notifications</a></li>
+        <li><a href="javascript:void(0)" id="logout-btn"><span class="nav-ico">↩</span> Logout</a></li>
       </ul>
-      <div class="logout-wrap">
-        <a class="nav-item" href="javascript:void(0)" id="logout-btn">Logout</a>
-      </div>
     </aside>
 
     <div>
@@ -1066,6 +1059,20 @@
     } else {
       loadDashboard();
     }
+
+    (function initHeroCarousel() {
+      const slides = document.querySelectorAll(".visual-panel .slide");
+      const dots = document.querySelectorAll("#hero-dots .dot");
+      if (!slides.length) return;
+      let index = 0;
+      function go(n) {
+        index = (n + slides.length) % slides.length;
+        slides.forEach((el, j) => el.classList.toggle("active", j === index));
+        dots.forEach((el, j) => el.classList.toggle("active", j === index));
+      }
+      dots.forEach((dot, j) => dot.addEventListener("click", () => go(j)));
+      setInterval(() => go(index + 1), 5000);
+    })();
   </script>
 </body>
 </html>
