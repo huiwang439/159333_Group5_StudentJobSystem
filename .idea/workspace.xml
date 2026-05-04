@@ -5,16 +5,94 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b57fd497-c4dc-4cce-8955-059e16b67c5a" name="Changes" comment="Add AI assistant feature for student, employer, and admin">
-      <change afterPath="$PROJECT_DIR$/backend/src/main/resources/static/css/employer-ai-assistant.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/resources/static/js/employer-ai-assistant.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/images/robot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/static/employer.html" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/static/employer.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/controller/ApplicationController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/controller/ApplicationController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/controller/JobController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/controller/JobController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14__Changes_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14__Changes_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_14__Changes_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_15__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_15__Changes_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_28__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_28__Changes_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_28__Changes_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_2026_4_30_19_28__Changes_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/css/admin-ai-assistant.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/css/employer-ai-assistant.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/css/student-ai-assistant.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/js/admin-ai-assistant.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/js/employer-ai-assistant.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/js/student-ai-assistant.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/StudentJobBoardApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/application/ApplicationSeedData.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/application/ApplicationStatusHistory.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/application/ApplicationStatusHistoryRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/application/StudentApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/application/StudentApplicationController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/application/StudentApplicationRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/application/dto/ApplicationDetailResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/application/dto/ApplicationItemResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/application/dto/ApplicationSummaryResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/application/dto/ApplicationTimelineItemResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/application/dto/ApplyRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/dashboard/DashboardController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/dashboard/DashboardResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/favorite/Favorite.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/favorite/FavoriteController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/favorite/FavoriteRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/job/Job.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/job/JobController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/job/JobRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/notification/NotificationController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/notification/NotificationSeedData.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/notification/StudentNotification.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/notification/StudentNotificationRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/profile/ProfileController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/profile/ProfileSeedData.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/profile/StudentDocument.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/profile/StudentDocumentRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/profile/StudentProfile.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/profile/StudentProfileRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/java/nz/ac/massey/studentjobboard/profile/dto/ProfileUpdateRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/src/main/resources/data.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/data.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/StudentJobBoardApplication.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/application/ApplicationSeedData.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/application/ApplicationStatusHistory.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/application/ApplicationStatusHistoryRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/application/StudentApplication.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/application/StudentApplicationController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/application/StudentApplicationRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/application/dto/ApplicationDetailResponse.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/application/dto/ApplicationItemResponse.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/application/dto/ApplicationSummaryResponse.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/application/dto/ApplicationTimelineItemResponse.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/application/dto/ApplyRequest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/dashboard/DashboardController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/dashboard/DashboardResponse.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/favorite/Favorite.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/favorite/FavoriteController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/favorite/FavoriteRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/job/Job.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/job/JobController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/job/JobRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/notification/NotificationController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/notification/NotificationSeedData.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/notification/StudentNotification.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/notification/StudentNotificationRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/profile/ProfileController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/profile/ProfileSeedData.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/profile/StudentDocument.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/profile/StudentDocumentRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/profile/StudentProfile.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/profile/StudentProfileRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/classes/nz/ac/massey/studentjobboard/profile/dto/ProfileUpdateRequest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-1/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/config/TestDataInitializer.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/config/TestDataInitializer.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/repository/ApplicationRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/repository/ApplicationRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/repository/JobRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/repository/JobRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/service/ApplicationService.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/service/ApplicationService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/service/JobService.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/service/JobService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/service/impl/ApplicationServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/service/impl/ApplicationServiceImpl.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/service/impl/JobServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/group5/jobboard/service/impl/JobServiceImpl.class" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,18 +107,18 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "huiwang439"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;huiwang439&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/huiwang439/159333_Group5_StudentJobSystem.git",
-    "accountId": "97a4068f-d87b-4832-8493-02a7b0a07ac0"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/huiwang439/159333_Group5_StudentJobSystem.git&quot;,
+    &quot;accountId&quot;: &quot;97a4068f-d87b-4832-8493-02a7b0a07ac0&quot;
   }
-}]]></component>
+}</component>
   <component name="KubernetesApiPersistence">{}</component>
   <component name="KubernetesApiProvider">{
   &quot;isMigrated&quot;: true
@@ -64,28 +142,28 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.JobboardApplication.executor": "Run",
-    "HTTP Request.All in saved-job-test.executor": "Run",
-    "HTTP Request.test | Student view my applications.executor": "Run",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "Spring Boot.JobboardApplication.executor": "Run",
-    "git-widget-placeholder": "branch-ZhengZihui",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "D:/cursor",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "MavenSettings",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.JobboardApplication.executor&quot;: &quot;Run&quot;,
+    &quot;HTTP Request.All in saved-job-test.executor&quot;: &quot;Run&quot;,
+    &quot;HTTP Request.test | Student view my applications.executor&quot;: &quot;Run&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;Spring Boot.JobboardApplication.executor&quot;: &quot;Run&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;branch-ZhengZihui&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/cursor&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration default="true" type="JetRunConfigurationType">
       <module name="backend" />
@@ -140,6 +218,17 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="add frontend pages" />
