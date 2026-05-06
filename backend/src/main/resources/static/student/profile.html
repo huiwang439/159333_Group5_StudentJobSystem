@@ -68,6 +68,8 @@
       <header class="panel-hd"><h2>Basic Information</h2></header>
       <div class="panel-bd">
         <div class="form-grid">
+          <div class="field"><label>Full Name (Account)</label><input id="accountFullName" readonly /></div>
+          <div class="field"><label>Email (Account)</label><input id="accountEmail" readonly /></div>
           <div class="field"><label>University</label><input id="university" /></div>
           <div class="field"><label>Degree Level</label><input id="degreeLevel" placeholder="e.g. Bachelor" /></div>
           <div class="field"><label>Graduation Year</label><input id="graduationYear" type="number" min="2000" max="2100" /></div>
@@ -132,6 +134,22 @@
     return {
       "Authorization": `Bearer ${token}`
     };
+  }
+
+  async function loadAccountInfo() {
+    const response = await fetch(`${API_BASE}/auth/me`, {
+      headers: authOnlyHeaders()
+    });
+
+    if (!response.ok) return;
+
+    const result = await response.json();
+    const data = result.data || result || {};
+    const fullNameEl = document.getElementById("accountFullName");
+    const emailEl = document.getElementById("accountEmail");
+
+    if (fullNameEl) fullNameEl.value = data.fullName || "";
+    if (emailEl) emailEl.value = data.email || "";
   }
 
   async function loadProfile() {
@@ -290,6 +308,7 @@
       return;
     }
 
+    await loadAccountInfo();
     await loadProfile();
     await loadDocuments();
   }
