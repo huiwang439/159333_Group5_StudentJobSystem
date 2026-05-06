@@ -19,9 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             saveAuth(data);
-            showText("authMessage", "Login successful.");
 
-            window.location.href = "/employer-dashboard.html";
+            localStorage.setItem("employerToken", data.token || "");
+
+            showText("authMessage", "Login successful.");
+            window.location.href = "/employer/employer.html";
         } catch (error) {
             clearAuth();
             showText("authMessage", error.message, true);

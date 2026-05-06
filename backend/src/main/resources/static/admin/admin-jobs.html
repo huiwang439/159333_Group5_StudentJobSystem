@@ -14,15 +14,15 @@
         <button id="menuToggleBtn" class="menu-toggle-btn">▶</button>
         <div class="topbar-title">Job Board System</div>
     </div>
+
+    <button id="adminLogoutBtn" class="logout-btn">Logout</button>
 </div>
 
 <div class="layout">
     <aside id="sidebar" class="sidebar hidden">
         <div class="sidebar-menu">
-            <div class="menu-item" onclick="location.href='./admin/admin-dashboard.html'">Dashboard</div>
-
+            <div class="menu-item" onclick="location.href='./admin-dashboard.html'">Dashboard</div>
             <div class="menu-item" onclick="location.href='./admin-users.html'">User Management</div>
-
             <div class="menu-item active" onclick="location.href='./admin-jobs.html'">Job Management</div>
 
             <div class="menu-group open">
@@ -48,53 +48,58 @@
 
     <main class="main-content">
         <div class="container">
-            <h1>Job Management</h1>
 
-            <div class="toolbar" style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;">
-                <div>
-                    <label for="keyword">Keyword</label><br>
-                    <input id="keyword" type="text" placeholder="Search by title or location">
+            <section id="jobListView">
+                <h1>Job Management</h1>
+
+                <div class="toolbar">
+                    <div>
+                        <label for="keyword">Keyword</label><br>
+                        <input id="keyword" type="text" placeholder="Search by title or location">
+                    </div>
+
+                    <div>
+                        <label for="statusFilter">Status</label><br>
+                        <select id="statusFilter">
+                            <option value="">All</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="removed">Removed</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <button id="loadJobsBtn">Search</button>
+                    </div>
                 </div>
 
-                <div>
-                    <label for="statusFilter">Status</label><br>
-                    <select id="statusFilter">
-                        <option value="">All</option>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="removed">Removed</option>
-                        <option value="closed">Closed</option>
-                    </select>
-                </div>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Company</th>
+                        <th>Category</th>
+                        <th>Location</th>
+                        <th>Employment</th>
+                        <th>Salary</th>
+                        <th>Deadline</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="jobsTableBody"></tbody>
+                </table>
+            </section>
 
-                <div>
-                    <button id="loadJobsBtn">Search</button>
-                </div>
-            </div>
+            <section id="jobDetailView" class="hidden">
+                <button id="backToJobsBtn" class="back-btn">Back</button>
+                <h1>Job Details</h1>
 
-            <table>
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Title</th>
-                    <th>Company</th>
-                    <th>Category</th>
-                    <th>Location</th>
-                    <th>Employment</th>
-                    <th>Salary</th>
-                    <th>Deadline</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody id="jobsTableBody"></tbody>
-            </table>
-
-            <div style="margin-top:16px;">
-                <h3>Job Details</h3>
-                <pre id="jobDetailsBox">Select a job to view details.</pre>
-            </div>
+                <div id="jobDetailCard" class="detail-card"></div>
+            </section>
 
             <pre id="jobsMessage"></pre>
         </div>
@@ -105,5 +110,6 @@
 <script src="./js/admin-sidebar.js"></script>
 <script src="./js/admin-jobs.js"></script>
 <script src="./js/admin-ai-assistant.js"></script>
+<script src="./js/admin-logout.js"></script>
 </body>
 </html>

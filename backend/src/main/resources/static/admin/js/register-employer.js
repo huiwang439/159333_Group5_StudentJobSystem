@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             showText("authMessage", "Registration successful.");
-            window.location.href = "/login-employer.html";
+            window.location.href = "./login-employer.html";
         } catch (error) {
             clearAuth();
             showText("authMessage", error.message, true);
