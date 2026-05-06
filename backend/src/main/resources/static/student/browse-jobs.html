@@ -122,6 +122,7 @@
           </select>
           <select id="industry">
             <option value="">Industry</option>
+            <option value="Software Engineering">Software Engineering</option>
             <option value="Technology">Technology</option>
             <option value="Finance">Finance</option>
             <option value="Education">Education</option>
@@ -188,26 +189,41 @@
       const filters = getFilters();
       if (filters.keyword) params.set("keyword", filters.keyword);
       if (filters.location) params.set("location", filters.location);
-      if (filters.industry) params.set("industry", filters.industry);
-      if (filters.jobType) params.set("jobType", filters.jobType);
+      if (filters.industry) params.set("fieldOfStudy", filters.industry);
+      if (filters.jobType) params.set("employmentType", filters.jobType);
 
       return params.toString();
     }
 
+  function firstNonEmpty(...values) {
+    for (const value of values) {
+      if (value !== null && value !== undefined) {
+        const text = String(value).trim();
+        if (text) return text;
+      }
+    }
+    return "";
+  }
+
   function renderJobs(items) {
   jobsContainer.innerHTML = items.map(job => {
     const jobId = job.id || job.jobId;
+    const companyName = firstNonEmpty(job.companyName, job.employerProfile && job.employerProfile.companyName, "Unknown company");
+    const jobType = firstNonEmpty(job.jobType, job.employmentType, "-");
+    const industry = firstNonEmpty(job.industry, job.categoryName, job.fieldOfStudy, "-");
+    const location = firstNonEmpty(job.location, "-");
+    const description = firstNonEmpty(job.description, "No description provided.");
 
     return `
       <article class="job-card">
         <h3>${job.title}</h3>
 
         <p class="job-meta">
-          ${job.companyName} · ${job.location} · ${job.jobType}
+          ${companyName} · ${location} · ${jobType}
         </p>
 
-        <p class="job-meta">Industry: ${job.industry}</p>
-        <p class="job-desc">${job.description}</p>
+        <p class="job-meta">Industry: ${industry}</p>
+        <p class="job-desc">${description}</p>
 
         <div class="job-ft">
           <a class="btn btn-primary" href="./job-detail.html?jobId=${jobId}">

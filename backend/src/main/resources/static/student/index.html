@@ -803,8 +803,7 @@
       <main class="main">
         <header class="topbar">
           <div class="greeting">
-            <h1>Hello, Alex</h1>
-            <p>You have <strong id="new-matches-count">0</strong> new roles matching your major. Start browsing and applying now.</p>
+            <h1>Hello, <span id="greeting-name">Student</span></h1>
           </div>
           <div class="top-actions">
             <a class="btn btn-ghost" href="./my-applications.html" style="text-decoration:none">My Applications</a>
@@ -1038,6 +1037,22 @@
       }
     }
 
+    async function loadCurrentUser() {
+      try {
+        const response = await fetch(`${API_BASE}/auth/me`, {
+          headers: authHeaders()
+        });
+        if (!response.ok) return;
+        const result = await response.json();
+        const data = result.data || result || {};
+        const name = data.fullName || localStorage.getItem("fullName") || "Student";
+        const el = document.getElementById("greeting-name");
+        if (el) el.textContent = name;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     async function toggleFavorite(jobId) {
       const res = await fetch(`${API_BASE}/saved-jobs?jobId=${jobId}`, {
         method: "POST",
@@ -1085,6 +1100,7 @@
       alert("Please login first");
       window.location.replace("../login-jobseeker.html");
     } else {
+      loadCurrentUser();
       loadDashboard();
     }
 

@@ -106,6 +106,45 @@
     );
   }
 
+  function firstNonEmpty(...values) {
+    for (const value of values) {
+      if (value !== null && value !== undefined) {
+        const text = String(value).trim();
+        if (text) return text;
+      }
+    }
+    return "";
+  }
+
+  async function enrichFavoriteItems(items) {
+    const tasks = items.map(async (item) => {
+      const job = getJob(item);
+      const jobId = job.id || job.jobId || item.jobId;
+      const hasIndustry = firstNonEmpty(job.industry, job.categoryName, item.industry, item.categoryName, item.fieldOfStudy);
+      if (!jobId || hasIndustry) return item;
+
+      try {
+        const response = await fetch(`${API_BASE}/jobs/${jobId}`, {
+          headers: authHeaders()
+        });
+        if (!response.ok) return item;
+        const result = await response.json();
+        const detail = result.data || result || {};
+        return {
+          ...item,
+          job: {
+            ...job,
+            ...detail
+          }
+        };
+      } catch (_) {
+        return item;
+      }
+    });
+
+    return Promise.all(tasks);
+  }
+
   function renderFavorites(items) {
     if (!items.length) {
       container.innerHTML = "<div class='empty'>No saved jobs yet.</div>";
@@ -118,15 +157,19 @@
       const jobId = job.id || item.jobId;
       const title = getJobTitle(item, job);
       const companyName = getCompanyName(item, job);
+      const location = firstNonEmpty(job.location, job.jobLocation, item.location, item.jobLocation);
+      const jobType = firstNonEmpty(job.jobType, job.employmentType, item.jobType);
+      const industry = firstNonEmpty(job.industry, job.categoryName, item.industry, item.categoryName);
+      const metaParts = [companyName, location, jobType].filter(Boolean);
 
       return `
         <article class="job-card">
           <h3>${title}</h3>
           <p class="job-meta">
-            ${companyName} · ${job.location || "-"} · ${job.jobType || job.employmentType || "-"}
+            ${metaParts.length ? metaParts.join(" · ") : "No summary available"}
           </p>
-          <p class="job-meta">Industry: ${job.industry || job.categoryName || "-"}</p>
-          <p class="job-desc">${job.description || ""}</p>
+          <p class="job-meta">Industry: ${industry || "Not provided"}</p>
+          <p class="job-desc">${job.description || item.jobDescription || ""}</p>
 
           <div class="job-ft">
             <a class="btn btn-primary" href="./job-detail.html?jobId=${jobId}">View</a>
@@ -157,7 +200,8 @@
       const result = await response.json();
       const data = result.data || result || [];
 
-      renderFavorites(data);
+      const enriched = await enrichFavoriteItems(data);
+      renderFavorites(enriched);
     } catch (error) {
       console.error(error);
       info.textContent = "Failed to connect backend.";
