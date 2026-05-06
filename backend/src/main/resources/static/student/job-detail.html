@@ -159,6 +159,52 @@
     };
   }
 
+  function formatSalary(job) {
+    if (!job) return "";
+    if (job.salaryRange) {
+      const range = String(job.salaryRange).trim();
+      return range.includes("$") ? range : `$${range}`;
+    }
+
+    const min = job.salaryMin;
+    const max = job.salaryMax;
+    const hasMin = min !== null && min !== undefined && min !== "";
+    const hasMax = max !== null && max !== undefined && max !== "";
+
+    if (hasMin && hasMax) return `$${min} - $${max}`;
+    if (hasMin) return `$${min}+`;
+    if (hasMax) return `Up to $${max}`;
+    return "";
+  }
+
+  async function resolveResumeDocumentId() {
+    const response = await fetch(`${API_BASE}/students/profile/documents`, {
+      headers: authHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to load resume documents.");
+    }
+
+    const result = await response.json();
+    const data = result && result.data !== undefined ? result.data : result;
+    const docs = Array.isArray(data) ? data : [];
+    const resumes = docs.filter(doc => String(doc.documentType || "").toLowerCase() === "resume");
+
+    if (!resumes.length) {
+      throw new Error("No resume found. Please upload a resume in Profile first.");
+    }
+
+    const defaultResume = resumes.find(doc => doc.isDefault === true || doc.defaultDocument === true);
+    if (defaultResume) return defaultResume.documentId || defaultResume.id;
+
+    const latest = resumes
+      .slice()
+      .sort((a, b) => new Date(b.uploadedAt || b.createdAt || 0) - new Date(a.uploadedAt || a.createdAt || 0))[0];
+
+    return latest.documentId || latest.id;
+  }
+
   async function loadJobDetail() {
     if (!token) {
       alert("Please login first.");
@@ -193,12 +239,17 @@
     document.getElementById("company-name").textContent =
       currentJob.companyName || companyFromProfile || "";
     document.getElementById("job-location").textContent = currentJob.location || "";
-    document.getElementById("job-salary").textContent = currentJob.salaryRange || "";
+    document.getElementById("job-salary").textContent = formatSalary(currentJob);
     document.getElementById("job-type").textContent = currentJob.jobType || currentJob.employmentType || "";
     document.getElementById("job-industry").textContent = currentJob.industry || currentJob.categoryName || "";
     document.getElementById("job-description").textContent = currentJob.description || "";
 
+    const companyDescription =
+      currentJob.companyDescription ||
+      (currentJob.employerProfile && currentJob.employerProfile.companyDescription) ||
+      "";
     document.getElementById("company-info").textContent =
+      companyDescription ||
       `${currentJob.companyName || companyFromProfile || "This company"} is hiring for ${currentJob.title || "this role"} in ${currentJob.location || "N/A"}.`;
 
     const reportBtn = document.getElementById("report-open-btn");
@@ -211,17 +262,27 @@
     const statusEl = document.getElementById("apply-status");
     statusEl.textContent = "Submitting application...";
 
+    let resumeDocumentId;
+    try {
+      resumeDocumentId = await resolveResumeDocumentId();
+    } catch (error) {
+      statusEl.textContent = error.message || "Cannot find resume document.";
+      return;
+    }
+
     const response = await fetch(`${API_BASE}/applications`, {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify({
         jobId: getJobPk(currentJob),
-        coverLetterText: `Interested in ${currentJob.title} at ${currentJob.companyName || ""}.`
+        coverLetterText: `Interested in ${currentJob.title} at ${currentJob.companyName || ""}.`,
+        resumeDocumentId
       })
     });
 
-    if (!response.ok) {
-      statusEl.textContent = "Failed to apply. Please check backend API or token.";
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || (result.code && result.code !== 200)) {
+      statusEl.textContent = result.message || "Failed to apply. Please check backend API or token.";
       return;
     }
 

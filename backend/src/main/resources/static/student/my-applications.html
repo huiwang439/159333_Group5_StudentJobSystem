@@ -150,6 +150,57 @@
     return "submitted";
   }
 
+  function extractApplications(result) {
+    const data = result && result.data !== undefined ? result.data : result;
+    if (Array.isArray(data)) return data;
+    if (!data || typeof data !== "object") return [];
+
+    if (Array.isArray(data.records)) return data.records;
+    if (Array.isArray(data.items)) return data.items;
+    if (Array.isArray(data.content)) return data.content;
+    if (Array.isArray(data.list)) return data.list;
+
+    return [];
+  }
+
+  function getApplicationStatus(item) {
+    return item.status || item.applicationStatus || "";
+  }
+
+  async function resolveResumeDocumentId(preferredFileName = "") {
+    const response = await fetch(`${API_BASE}/students/profile/documents`, {
+      headers: authHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to load resume documents.");
+    }
+
+    const result = await response.json();
+    const data = result && result.data !== undefined ? result.data : result;
+    const docs = Array.isArray(data) ? data : [];
+    const resumes = docs.filter(doc => String(doc.documentType || "").toLowerCase() === "resume");
+
+    if (!resumes.length) {
+      throw new Error("No resume found. Please upload a resume in Profile first.");
+    }
+
+    const preferred = preferredFileName.trim().toLowerCase();
+    if (preferred) {
+      const matched = resumes.find(doc => String(doc.fileName || "").toLowerCase() === preferred);
+      if (matched) return matched.documentId || matched.id;
+    }
+
+    const defaultResume = resumes.find(doc => doc.isDefault === true || doc.defaultDocument === true);
+    if (defaultResume) return defaultResume.documentId || defaultResume.id;
+
+    const latest = resumes
+      .slice()
+      .sort((a, b) => new Date(b.uploadedAt || b.createdAt || 0) - new Date(a.uploadedAt || a.createdAt || 0))[0];
+
+    return latest.documentId || latest.id;
+  }
+
   async function loadSummary() {
     const response = await fetch(`${API_BASE}/applications/my`, {
       headers: authHeaders()
@@ -158,12 +209,12 @@
     if (!response.ok) return;
 
     const result = await response.json();
-    const data = result.data || result || [];
+    const data = extractApplications(result);
 
     const total = data.length;
     const pending = data.filter(item =>
-      String(item.status || "").toLowerCase().includes("submitted") ||
-      String(item.status || "").toLowerCase().includes("pending")
+      String(getApplicationStatus(item)).toLowerCase().includes("submitted") ||
+      String(getApplicationStatus(item)).toLowerCase().includes("pending")
     ).length;
 
     document.getElementById("sum-total").textContent = total;
@@ -184,7 +235,7 @@
     }
 
     const result = await response.json();
-    const data = result.data || result || [];
+    const data = extractApplications(result);
 
     listNote.textContent = `${data.length} records`;
 
@@ -206,7 +257,7 @@
             ${item.jobType || item.job?.jobType || item.job?.employmentType || ""}
           </p>
           <div class="row">
-            <span class="badge ${statusClass(item.status)}">${item.status || "submitted"}</span>
+            <span class="badge ${statusClass(getApplicationStatus(item))}">${getApplicationStatus(item) || "submitted"}</span>
             <span class="status-note">
               ${item.appliedAt ? new Date(item.appliedAt).toLocaleString() : ""}
             </span>
@@ -238,12 +289,12 @@
       item.jobTitle || item.job?.title || "Unknown Job";
 
     document.getElementById("detail-sub").textContent =
-      `${item.companyName || item.job?.companyName || ""} · Status: ${item.status || "submitted"}`;
+      `${item.companyName || item.job?.companyName || ""} · Status: ${getApplicationStatus(item) || "submitted"}`;
 
     timelineEl.innerHTML = `
       <div class="timeline-item">
         <div class="timeline-status">Application submitted</div>
-        <div class="timeline-note">Your application status is ${item.status || "submitted"}.</div>
+        <div class="timeline-note">Your application status is ${getApplicationStatus(item) || "submitted"}.</div>
         <div class="timeline-time">
           ${item.appliedAt ? new Date(item.appliedAt).toLocaleString() : ""}
         </div>
@@ -259,21 +310,32 @@
     const jobId = Number(document.getElementById("apply-job-id").value);
     if (!jobId) return;
 
+    const resumeFileName = document.getElementById("apply-resume").value.trim();
     const coverLetterText =
       document.getElementById("apply-note").value.trim() ||
       "Looking forward to this opportunity.";
+
+    let resumeDocumentId;
+    try {
+      resumeDocumentId = await resolveResumeDocumentId(resumeFileName);
+    } catch (error) {
+      alert(error.message || "Cannot find resume document.");
+      return;
+    }
 
     const response = await fetch(`${API_BASE}/applications`, {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify({
         jobId,
-        coverLetterText
+        coverLetterText,
+        resumeDocumentId
       })
     });
 
-    if (!response.ok) {
-      alert("Failed to apply. Please check job id or token.");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || (result.code && result.code !== 200)) {
+      alert(result.message || "Failed to apply. Please check job id or token.");
       return;
     }
 
@@ -293,7 +355,7 @@
     });
 
     const result = await response.json();
-    const data = result.data || result || [];
+    const data = extractApplications(result);
 
     loadDetail(currentApplicationId, data);
   });

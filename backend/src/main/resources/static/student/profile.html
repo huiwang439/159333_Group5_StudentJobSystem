@@ -68,12 +68,13 @@
       <header class="panel-hd"><h2>Basic Information</h2></header>
       <div class="panel-bd">
         <div class="form-grid">
-          <div class="field"><label>Full Name</label><input id="fullName" /></div>
-          <div class="field"><label>Email</label><input id="email" /></div>
-          <div class="field"><label>Student Number</label><input id="studentNumber" /></div>
-          <div class="field"><label>Phone</label><input id="phone" /></div>
+          <div class="field"><label>University</label><input id="university" /></div>
+          <div class="field"><label>Degree Level</label><input id="degreeLevel" placeholder="e.g. Bachelor" /></div>
+          <div class="field"><label>Graduation Year</label><input id="graduationYear" type="number" min="2000" max="2100" /></div>
+          <div class="field"><label>Skills</label><input id="skills" placeholder="e.g. Java, SQL, React" /></div>
           <div class="field"><label>Major</label><input id="major" /></div>
-          <div class="field"><label>Location</label><input id="location" /></div>
+          <div class="field"><label>Preferred Location</label><input id="preferredLocation" /></div>
+          <div class="field"><label>Preferred Job Type</label><input id="preferredJobType" placeholder="e.g. Internship, Part-time" /></div>
           <div class="field full"><label>Bio</label><textarea id="bio"></textarea></div>
         </div>
         <div class="btn-row">
@@ -143,30 +144,39 @@
     const result = await response.json();
     const data = result.data || result;
 
-    ["fullName", "email", "studentNumber", "phone", "major", "location", "bio"].forEach(key => {
+    ["university", "major", "degreeLevel", "graduationYear", "skills", "bio", "preferredLocation", "preferredJobType"].forEach(key => {
       const el = document.getElementById(key);
       if (el) el.value = data[key] ?? "";
     });
   }
 
   async function saveProfile() {
+    const graduationYearValue = document.getElementById("graduationYear").value.trim();
     const payload = {
-      fullName: document.getElementById("fullName").value.trim(),
-      email: document.getElementById("email").value.trim(),
-      studentNumber: document.getElementById("studentNumber").value.trim(),
-      phone: document.getElementById("phone").value.trim(),
+      university: document.getElementById("university").value.trim(),
       major: document.getElementById("major").value.trim(),
-      location: document.getElementById("location").value.trim(),
-      bio: document.getElementById("bio").value.trim()
+      degreeLevel: document.getElementById("degreeLevel").value.trim(),
+      graduationYear: graduationYearValue ? Number(graduationYearValue) : null,
+      skills: document.getElementById("skills").value.trim(),
+      bio: document.getElementById("bio").value.trim(),
+      preferredLocation: document.getElementById("preferredLocation").value.trim(),
+      preferredJobType: document.getElementById("preferredJobType").value.trim()
     };
 
-    await fetch(PROFILE_API, {
+    const response = await fetch(PROFILE_API, {
       method: "PUT",
       headers: authHeaders(),
       body: JSON.stringify(payload)
     });
 
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || (result.code && result.code !== 200)) {
+      alert(result.message || "Failed to save profile.");
+      return;
+    }
+
     await loadProfile();
+    alert("Profile saved.");
   }
 
   async function loadDocuments() {
