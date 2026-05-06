@@ -16,8 +16,9 @@
     .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
     .panel-hd { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .panel-hd h2 { margin: 0; font-size: 1rem; }
-    .layout { display: grid; grid-template-columns: 1.45fr 1fr; gap: 1rem; }
-    .application-list { padding: 0.5rem; }
+    .layout { display: grid; grid-template-columns: 1.45fr 1fr; gap: 1rem; align-items: stretch; }
+    .layout .panel { min-height: 430px; display: flex; flex-direction: column; }
+    .application-list { padding: 0.5rem; flex: 1; overflow-y: auto; }
     .application-item { border: 1px solid var(--border); border-radius: 10px; padding: 0.8rem; margin-bottom: 0.55rem; cursor: pointer; }
     .application-item.active { border-color: #9ce7de; background: #f5fffd; }
     .application-item h3 { margin: 0; font-size: 0.95rem; }
@@ -27,7 +28,7 @@
     .badge.submitted { background: #fef3c7; color: #b45309; }
     .badge.review { background: #dbeafe; color: #1d4ed8; }
     .badge.shortlisted { background: #d1fae5; color: #047857; }
-    .timeline-wrap { padding: 0.9rem 1rem; }
+    .timeline-wrap { padding: 0.9rem 1rem; flex: 1; overflow-y: auto; }
     .detail-title { margin: 0; font-size: 0.95rem; }
     .detail-sub { margin: 0.2rem 0 0.8rem; color: var(--muted); font-size: 0.82rem; }
     .timeline { border-left: 2px solid #cdeee9; margin-left: 0.35rem; padding-left: 0.85rem; }
@@ -37,9 +38,6 @@
     .timeline-note { color: var(--muted); font-size: 0.8rem; margin-top: 0.15rem; }
     .timeline-time { color: var(--muted); font-size: 0.75rem; margin-top: 0.1rem; }
     .empty { color: var(--muted); font-size: 0.85rem; padding: 1rem; }
-    .form-row { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; margin-bottom: 0.55rem; }
-    .input, .textarea { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.75rem; font-size: 0.85rem; }
-    .textarea { min-height: 86px; resize: vertical; }
     .btn { border: none; border-radius: 8px; padding: 0.58rem 0.85rem; cursor: pointer; font-weight: 600; }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-ghost { background: #fff; border: 1px solid var(--border); }
@@ -84,21 +82,6 @@
         <div class="sum-label">Pending Applications</div>
         <div class="sum-value" id="sum-pending">0</div>
       </article>
-    </section>
-
-    <section class="panel" style="margin-bottom:1rem">
-      <div class="panel-hd">
-        <h2>Quick Apply (API demo)</h2>
-        <span class="status-note">Use Job ID from Browse Jobs cards</span>
-      </div>
-      <div style="padding:0.9rem 1rem;">
-        <div class="form-row">
-          <input id="apply-job-id" class="input" placeholder="Job ID (e.g. 1)" />
-          <button id="apply-btn" class="btn btn-primary" type="button">Apply</button>
-        </div>
-        <input id="apply-resume" class="input" placeholder="Resume file name (e.g. Resume_Alex.pdf)" style="margin-bottom:0.55rem;" />
-        <textarea id="apply-note" class="textarea" placeholder="Short cover letter note"></textarea>
-      </div>
     </section>
 
     <section class="layout">
@@ -165,40 +148,6 @@
 
   function getApplicationStatus(item) {
     return item.status || item.applicationStatus || "";
-  }
-
-  async function resolveResumeDocumentId(preferredFileName = "") {
-    const response = await fetch(`${API_BASE}/students/profile/documents`, {
-      headers: authHeaders()
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to load resume documents.");
-    }
-
-    const result = await response.json();
-    const data = result && result.data !== undefined ? result.data : result;
-    const docs = Array.isArray(data) ? data : [];
-    const resumes = docs.filter(doc => String(doc.documentType || "").toLowerCase() === "resume");
-
-    if (!resumes.length) {
-      throw new Error("No resume found. Please upload a resume in Profile first.");
-    }
-
-    const preferred = preferredFileName.trim().toLowerCase();
-    if (preferred) {
-      const matched = resumes.find(doc => String(doc.fileName || "").toLowerCase() === preferred);
-      if (matched) return matched.documentId || matched.id;
-    }
-
-    const defaultResume = resumes.find(doc => doc.isDefault === true || doc.defaultDocument === true);
-    if (defaultResume) return defaultResume.documentId || defaultResume.id;
-
-    const latest = resumes
-      .slice()
-      .sort((a, b) => new Date(b.uploadedAt || b.createdAt || 0) - new Date(a.uploadedAt || a.createdAt || 0))[0];
-
-    return latest.documentId || latest.id;
   }
 
   async function loadSummary() {
@@ -306,44 +255,6 @@
     });
   }
 
-  async function applyJob() {
-    const jobId = Number(document.getElementById("apply-job-id").value);
-    if (!jobId) return;
-
-    const resumeFileName = document.getElementById("apply-resume").value.trim();
-    const coverLetterText =
-      document.getElementById("apply-note").value.trim() ||
-      "Looking forward to this opportunity.";
-
-    let resumeDocumentId;
-    try {
-      resumeDocumentId = await resolveResumeDocumentId(resumeFileName);
-    } catch (error) {
-      alert(error.message || "Cannot find resume document.");
-      return;
-    }
-
-    const response = await fetch(`${API_BASE}/applications`, {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({
-        jobId,
-        coverLetterText,
-        resumeDocumentId
-      })
-    });
-
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok || (result.code && result.code !== 200)) {
-      alert(result.message || "Failed to apply. Please check job id or token.");
-      return;
-    }
-
-    currentApplicationId = null;
-    await loadSummary();
-    await loadApplications();
-  }
-
   listEl.addEventListener("click", async (event) => {
     const card = event.target.closest(".application-item");
     if (!card) return;
@@ -359,8 +270,6 @@
 
     loadDetail(currentApplicationId, data);
   });
-
-  document.getElementById("apply-btn").addEventListener("click", applyJob);
 
   document.getElementById("refresh-btn").addEventListener("click", async () => {
     await loadSummary();
