@@ -78,6 +78,14 @@ function apiPutForm(path, params = {}) {
     });
 }
 
+function apiPatchForm(path, params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return apiRequest(query ? `${path}?${query}` : path, {
+        method: "PATCH",
+        headers: getAuthHeaders()
+    });
+}
+
 function saveAuth(data) {
     localStorage.setItem("token", data.token || "");
     localStorage.setItem("userId", String(data.userId || ""));
@@ -98,7 +106,13 @@ function requireRole(requiredRole) {
 
     if (!token || role !== requiredRole) {
         clearAuth();
-        window.location.href = requiredRole === "admin" ? "/login-admin.html" : "/login.html";
+
+        if (requiredRole === "admin") {
+            window.location.href = "/admin/login-admin.html";
+        } else {
+            window.location.href = "/admin/login.html";
+        }
+
         return false;
     }
 

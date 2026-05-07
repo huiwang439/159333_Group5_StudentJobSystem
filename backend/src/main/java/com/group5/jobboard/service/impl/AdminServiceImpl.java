@@ -314,13 +314,14 @@ public class AdminServiceImpl implements AdminService {
                 continue;
             }
 
-            activeUsers.add(log.getUserId());
-
             userRepository.findById(log.getUserId()).ifPresent(user -> {
                 if ("student".equals(user.getRole())) {
+                    activeUsers.add(user.getId());
                     activeStudents.add(user.getId());
                 }
+
                 if ("employer".equals(user.getRole())) {
+                    activeUsers.add(user.getId());
                     activeEmployers.add(user.getId());
                 }
             });
@@ -345,22 +346,35 @@ public class AdminServiceImpl implements AdminService {
             LocalDateTime end = start.plusHours(1);
 
             List<AnalyticsLog> logs = analyticsLogRepository.findByCreatedAtBetween(start, end);
+
             Set<Long> users = new HashSet<>();
+            int businessLogCount = 0;
 
             for (AnalyticsLog log : logs) {
-                if (log.getUserId() != null) {
+                if (log.getUserId() == null) {
+                    continue;
+                }
+
+                Optional<User> optionalUser = userRepository.findById(log.getUserId());
+
+                if (optionalUser.isPresent() && isBusinessUser(optionalUser.get())) {
                     users.add(log.getUserId());
+                    businessLogCount++;
                 }
             }
 
             Map<String, Object> item = new HashMap<>();
             item.put("hour", hour);
             item.put("activeUsers", users.size());
-            item.put("logCount", logs.size());
+            item.put("logCount", businessLogCount);
             result.add(item);
         }
 
         return result;
+    }
+
+    private boolean isBusinessUser(User user) {
+        return "student".equals(user.getRole()) || "employer".equals(user.getRole());
     }
 
     @Override
