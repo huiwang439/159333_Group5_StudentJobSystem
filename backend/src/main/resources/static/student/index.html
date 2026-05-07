@@ -1088,9 +1088,13 @@
 
         const keyword = document.getElementById("dash-keyword").value.trim();
         const location = document.getElementById("dash-location").value;
+        const industry = document.getElementById("dash-industry").value;
+        const jobType = document.getElementById("dash-job-type").value;
 
         if (keyword) params.set("keyword", keyword);
         if (location) params.set("location", location);
+        if (industry) params.set("fieldOfStudy", industry);
+        if (jobType) params.set("employmentType", jobType);
 
         window.location.href = `./browse-jobs.html?${params.toString()}`;
       });
