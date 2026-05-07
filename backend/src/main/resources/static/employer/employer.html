@@ -17,7 +17,10 @@
             <button class="nav-btn" id="navJobs">Job Management</button>
             <button class="nav-btn" id="navApplications">Application Management</button>
             <button class="nav-btn" id="navDashboard">Analytics Dashboard</button>
-            <button class="nav-btn" id="navMessages">My Messages</button>
+            <button class="nav-btn nav-message-btn" id="navMessages">
+                My Messages
+                <span class="message-unread-badge hidden" id="messageUnreadBadge">0</span>
+            </button>
         </div>
     </aside>
 
@@ -25,8 +28,7 @@
         <div class="topbar">
             <h1 class="page-title" id="pageTitle">Company Verification</h1>
             <div class="topbar-right">
-                <input id="loginEmail" class="top-input" placeholder="Email" />
-                <input id="loginPassword" class="top-input" type="password" placeholder="Password" />
+
                 <button class="outline-btn" id="loginBtn">Login</button>
                 <span class="status-tag" id="loginStatusTag">Not Logged In</span>
             </div>
@@ -35,7 +37,15 @@
         <section class="page-section active" id="verificationPage">
             <div class="card company-card">
                 <div class="company-left">
-                    <div class="company-logo"></div>
+                    <div class="company-logo">
+                        <img
+                                id="companyLogoPreview"
+                                src=""
+                                alt="Company Logo"
+                                style="display:none; width:100%; height:100%; object-fit:cover; border-radius:50%;"
+                        />
+                        <span id="companyLogoPlaceholder">Logo</span>
+                    </div>
                     <div>
                         <div class="company-name-row">
                             <div class="company-name" id="companyNameText">Company Name</div>
@@ -111,7 +121,33 @@
                         <input class="form-input" id="editContactEmail" />
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="form-label">Company Logo</label>
 
+                    <div class="logo-upload-box">
+                        <div class="logo-upload-preview">
+                            <img id="editLogoPreview" src="" alt="Company Logo Preview" />
+                            <span id="editLogoPlaceholder">Logo</span>
+                        </div>
+
+                        <div class="logo-upload-content">
+                            <label for="editLogoFile" class="outline-btn logo-upload-btn">
+                                Choose Logo
+                            </label>
+
+                            <input
+                                    id="editLogoFile"
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                                    hidden
+                            />
+
+                            <div class="logo-upload-text" id="editLogoFileName">
+                                PNG, JPG or WEBP. Recommended under 1MB.
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label class="form-label">Company Description</label>
                     <textarea class="form-textarea" id="editCompanyDescription"></textarea>
