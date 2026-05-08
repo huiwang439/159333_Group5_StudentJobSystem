@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>AI Assistant — Student</title>
+    <link rel="stylesheet" href="./css/student-shell.css" />
+    <link rel="stylesheet" href="./css/student-ai-page.css" />
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <p class="brand-title">Student Portal</p>
+            <p class="brand-sub">Internship & Job Board</p>
+        </div>
+
+        <ul class="nav">
+            <li><a href="./index.html"><span class="nav-ico">🏠</span>Dashboard</a></li>
+            <li><a href="./browse-jobs.html"><span class="nav-ico">🔎</span>Browse Jobs</a></li>
+            <li><a href="./my-favorites.html"><span class="nav-ico">⭐</span>My Favorites</a></li>
+            <li><a href="./my-applications.html"><span class="nav-ico">📄</span>My Applications</a></li>
+            <li><a href="./notifications.html"><span class="nav-ico">🔔</span>Notifications</a></li>
+            <li><a href="./profile.html"><span class="nav-ico">👤</span>Profile</a></li>
+            <li><a class="active" href="./student-ai.html"><span class="nav-ico">🤖</span>AI Assistant</a></li>
+            <li><a href="#" id="logout-btn"><span class="nav-ico">🚪</span>Logout</a></li>
+        </ul>
+    </aside>
+
+    <main class="main">
+        <div class="ai-page">
+            <h1>AI Assistant</h1>
+            <p>Ask DeepSeek about job search, resume improvement, applications, and interviews.</p>
+
+            <div id="aiMessages" class="ai-messages"></div>
+
+            <div class="ai-quick-actions">
+                <button data-question="Recommend suitable jobs for me">Recommend Jobs</button>
+                <button data-question="How can I improve my resume?">Resume Tips</button>
+                <button data-question="Help me prepare for an interview">Interview Prep</button>
+                <button data-question="How can I improve my application success rate?">Application Advice</button>
+                <button id="clearAiHistory">Clear</button>
+            </div>
+
+            <div class="ai-input-row">
+                <input id="aiInput" type="text" placeholder="Ask Qwen AI..." />
+                <button id="aiSend">Send</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="./js/student-shell.js"></script>
+<script src="./js/student-ai-page.js"></script>
+</body>
+</html>

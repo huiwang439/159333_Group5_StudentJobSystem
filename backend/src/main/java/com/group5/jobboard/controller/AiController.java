@@ -64,6 +64,20 @@ public class AiController {
         );
     }
 
+    @PostMapping("/student/chat")
+    public ApiResponse<Map<String, Object>> chatWithDeepSeek(
+            @RequestBody Map<String, String> body,
+            HttpServletRequest request
+    ) {
+        Long studentUserId = getUserIdByRole(request, "student");
+        String message = body.get("message");
+
+        return ApiResponse.success(
+                "Qwen AI response generated",
+                aiService.chatWithQwen(studentUserId, message)
+        );
+    }
+
     @GetMapping("/employer/jobs/{jobId}/ranked-candidates")
     public ApiResponse<Map<String, Object>> rankCandidates(
             @PathVariable Long jobId,
