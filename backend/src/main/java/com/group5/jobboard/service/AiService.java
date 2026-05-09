@@ -28,4 +28,6 @@ public interface AiService {
     Map<String, Object> getPlatformAnalytics(Long adminId);
 
     Map<String, Object> generateMonthlyReport(Long adminId);
+
+    Map<String, Object> chatWithQwen(Long studentUserId, String message);
 }

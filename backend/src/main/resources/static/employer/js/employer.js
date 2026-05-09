@@ -355,29 +355,83 @@ function renderProfile(profile, verification) {
 
   const companyNameText = document.getElementById("companyNameText");
   const companyMetaText = document.getElementById("companyMetaText");
+  const companyLogoPreview = document.getElementById("companyLogoPreview");
+  const companyLogoPlaceholder = document.getElementById("companyLogoPlaceholder");
   const contactPersonText = document.getElementById("contactPersonText");
   const contactEmailText = document.getElementById("contactEmailText");
   const companyDescriptionText = document.getElementById("companyDescriptionText");
   const businessLicenseText = document.getElementById("businessLicenseText");
   const supportDocumentText = document.getElementById("supportDocumentText");
-const verificationStatusBadge = document.getElementById("verificationStatusBadge");
+  const verificationStatusBadge = document.getElementById("verificationStatusBadge");
 
+  const logoUrl = profile.logoUrl || profile.logo_url || "";
+
+  if (companyLogoPreview) {
+    if (logoUrl) {
+      companyLogoPreview.src = logoUrl;
+      companyLogoPreview.style.display = "block";
+
+      if (companyLogoPlaceholder) {
+        companyLogoPlaceholder.style.display = "none";
+      }
+    } else {
+      companyLogoPreview.src = "";
+      companyLogoPreview.style.display = "none";
+
+      if (companyLogoPlaceholder) {
+        companyLogoPlaceholder.style.display = "inline";
+      }
+    }
+  }
 if (verificationStatusBadge) {
-  const status =
-    verification?.reviewStatus ||
-    verification?.verificationStatus ||
-    profile.verificationStatus ||
-    "pending";
+  const hasProfileInfo = Boolean(
+    profile.companyName ||
+    profile.industry ||
+    profile.companySize ||
+    profile.location ||
+    profile.contactPerson ||
+    profile.contactEmail ||
+    profile.companyDescription
+  );
 
-  verificationStatusBadge.textContent =
-    status === "approved" ? "Verified" :
-    status === "rejected" ? "Rejected" :
-    "Pending";
+ const hasVerificationSubmission = Boolean(
+   verification &&
+   (
+     verification.businessLicenseUrl ||
+     verification.supportingDocumentUrl
+   )
+ );
 
-  verificationStatusBadge.className =
-    status === "approved" ? "verify-badge status-active" :
-    status === "rejected" ? "verify-badge status-rejected" :
-    "verify-badge status-reviewing";
+  let badgeText = "Not Submitted";
+  let badgeClass = "verify-badge status-neutral";
+
+  if (!hasProfileInfo) {
+    badgeText = "Incomplete";
+    badgeClass = "verify-badge status-neutral";
+  } else if (!hasVerificationSubmission) {
+    badgeText = "Not Submitted";
+    badgeClass = "verify-badge status-neutral";
+  } else {
+    const status =
+      verification?.reviewStatus ||
+      verification?.verificationStatus ||
+      profile.verificationStatus ||
+      "";
+
+    if (status === "approved") {
+      badgeText = "Verified";
+      badgeClass = "verify-badge status-active";
+    } else if (status === "rejected") {
+      badgeText = "Rejected";
+      badgeClass = "verify-badge status-rejected";
+    } else {
+      badgeText = "Pending";
+      badgeClass = "verify-badge status-reviewing";
+    }
+  }
+
+  verificationStatusBadge.textContent = badgeText;
+  verificationStatusBadge.className = badgeClass;
 }
   if (companyNameText) companyNameText.textContent = profile.companyName || "-";
   if (companyMetaText) {
@@ -440,7 +494,42 @@ async function loadEmployerProfile() {
   fillProfileForm(profileRes.data, verificationData);
   renderProfile(profileRes.data, verificationData);
 }
+async function uploadCompanyLogo() {
+  const fileInput = document.getElementById("editLogoFile");
+  const file = fileInput?.files?.[0];
 
+  if (!file) {
+    return true;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await fetch("/employers/profile/logo", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${getToken()}`
+      },
+      body: formData
+    });
+
+    const result = await res.json();
+
+    if (result.code !== 200) {
+      showError(result.message || "Failed to upload company logo");
+      return false;
+    }
+
+    fileInput.value = "";
+    return true;
+
+  } catch (error) {
+    console.error("Logo upload failed:", error);
+    showError("Failed to upload company logo");
+    return false;
+  }
+}
 async function saveEmployerProfile() {
   if (!ensureLoggedIn()) return;
 
@@ -458,6 +547,12 @@ async function saveEmployerProfile() {
 
   if (profileResult.code !== 200) {
     showError(profileResult.message || "Failed to save company profile");
+    return;
+  }
+
+  const logoUploadSuccess = await uploadCompanyLogo();
+
+  if (!logoUploadSuccess) {
     return;
   }
 
@@ -483,9 +578,9 @@ async function saveEmployerProfile() {
   }
 
   await loadEmployerProfile();
+  showToast("Company profile saved successfully");
   showPage("verification");
 }
-
 // Jobs
 
 function renderJobSummary(jobList) {
@@ -882,6 +977,7 @@ if (confirmDeleteBtn) {
       resetConfirmState();
 
       await loadApplications();
+      await loadUnreadNotificationCount();
     }
   };
 }
@@ -1121,6 +1217,7 @@ window.updateApplicationStatus = async function(id, status) {
   }
 
   await loadApplications();
+  await loadUnreadNotificationCount();
 };
 
 // Dashboard charts
@@ -1348,6 +1445,56 @@ function stopApplicationAutoRefresh() {
 
 // Messages
 
+function getNotificationId(notification) {
+  return (
+    notification.notificationId ??
+    notification.id ??
+    notification.messageId ??
+    null
+  );
+}
+
+function getNotificationTitle(notification) {
+  return (
+    notification.title ||
+    notification.notificationTitle ||
+    notification.type ||
+    "System Notification"
+  );
+}
+
+function getNotificationContent(notification) {
+  return (
+    notification.content ||
+    notification.message ||
+    notification.notificationContent ||
+    notification.description ||
+    "-"
+  );
+}
+
+function getNotificationTime(notification) {
+  const time =
+    notification.createdAt ||
+    notification.created_at ||
+    notification.time ||
+    notification.sentAt ||
+    notification.updatedAt;
+
+  if (!time) return "-";
+
+  return String(time).replace("T", " ").substring(0, 19);
+}
+
+function isNotificationRead(notification) {
+  return (
+    notification.read === true ||
+    notification.isRead === true ||
+    notification.readStatus === true ||
+    notification.status === "read"
+  );
+}
+
 function renderMessages(list) {
   if (!Array.isArray(list)) list = [];
 
@@ -1367,18 +1514,73 @@ function renderMessages(list) {
     return;
   }
 
-  messagesList.innerHTML = list.map(message => `
-    <div class="card message-card">
-      <div class="message-main">
-        <div class="message-type">${message.type}</div>
-        <div class="message-title">${message.title}</div>
-        <div class="message-content">${message.content}</div>
+  messagesList.innerHTML = list.map(notification => {
+    const read = isNotificationRead(notification);
+
+    return `
+      <div class="card message-card ${read ? "" : "unread"}">
+        <div class="message-main">
+          <div class="message-type">${getNotificationTitle(notification)}</div>
+          <div class="message-title">${getNotificationTitle(notification)}</div>
+          <div class="message-content">${getNotificationContent(notification)}</div>
+        </div>
+        <div class="message-time">${getNotificationTime(notification)}</div>
       </div>
-      <div class="message-time">${message.time}</div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 }
 
+async function loadUnreadNotificationCount() {
+  if (!ensureLoggedIn()) return;
+
+  const result = await apiFetch("/notifications/unread");
+
+  const badge = document.getElementById("messageUnreadBadge");
+  if (!badge) return;
+
+  if (result.code !== 200 || !Array.isArray(result.data)) {
+    badge.textContent = "0";
+    badge.classList.add("hidden");
+    return;
+  }
+
+  const unreadCount = result.data.length;
+
+  if (unreadCount > 0) {
+    badge.textContent = unreadCount > 99 ? "99+" : unreadCount;
+    badge.classList.remove("hidden");
+  } else {
+    badge.textContent = "0";
+    badge.classList.add("hidden");
+  }
+}
+
+async function loadNotifications() {
+  if (!ensureLoggedIn()) return;
+
+  const result = await apiFetch("/notifications");
+
+  if (result.code !== 200 || !Array.isArray(result.data)) {
+    showError(result.message || "Failed to load notifications");
+    renderMessages([]);
+    return;
+  }
+
+  renderMessages(result.data);
+}
+
+async function markAllNotificationsAsRead() {
+  if (!ensureLoggedIn()) return;
+
+  const result = await apiFetch("/notifications/read-all", "PUT");
+
+  if (result.code !== 200) {
+    showError(result.message || "Failed to mark notifications as read");
+    return;
+  }
+
+  await loadUnreadNotificationCount();
+}
 async function loadDynamicMessages() {
   if (!ensureLoggedIn()) return;
 
@@ -1445,6 +1647,7 @@ if (navApplications) {
       await loadJobs();
       loadJobOptions();
       await loadApplications();
+      await loadUnreadNotificationCount();
       startApplicationAutoRefresh();
     }
   });
@@ -1463,7 +1666,12 @@ if (navDashboard) {
 if (navMessages) {
   navMessages.addEventListener("click", async () => {
     showPage("messages");
-    await loadDynamicMessages();
+
+    if (localStorage.getItem("employerToken")) {
+      await loadNotifications();
+      await markAllNotificationsAsRead();
+      await loadNotifications();
+    }
   });
 }
 
@@ -1499,7 +1707,36 @@ const saveProfileBtn = document.getElementById("saveProfileBtn");
 if (saveProfileBtn) {
   saveProfileBtn.addEventListener("click", saveEmployerProfile);
 }
+const editLogoFile = document.getElementById("editLogoFile");
 
+if (editLogoFile) {
+  editLogoFile.addEventListener("change", () => {
+    const file = editLogoFile.files?.[0];
+    const preview = document.getElementById("editLogoPreview");
+    const placeholder = document.getElementById("editLogoPlaceholder");
+    const fileName = document.getElementById("editLogoFileName");
+
+    if (!file) {
+      if (fileName) {
+        fileName.textContent = "PNG, JPG or WEBP. Recommended under 1MB.";
+      }
+      return;
+    }
+
+    if (fileName) {
+      fileName.textContent = file.name;
+    }
+
+    if (preview) {
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+    }
+
+    if (placeholder) {
+      placeholder.style.display = "none";
+    }
+  });
+}
 const cancelEditProfileBtn = document.getElementById("cancelEditProfileBtn");
 if (cancelEditProfileBtn) {
   cancelEditProfileBtn.addEventListener("click", () => showPage("verification"));
@@ -1549,7 +1786,7 @@ if (loginBtn) {
 
   loginBtn.addEventListener("click", () => {
     localStorage.removeItem("employerToken");
-    window.location.href = "/admin/login.html";
+  window.location.href = "/admin/login-employer.html";
   });
 }
 // Initialization
@@ -1566,15 +1803,5 @@ setLoginStatus(Boolean(employerToken));
 
 if (employerToken) {
   loadEmployerProfile();
-
-  setInterval(() => {
-    const token = localStorage.getItem("employerToken");
-
-    if (!token) {
-      setLoginStatus(false);
-      return;
-    }
-
-    loadEmployerProfile();
-  }, 5000);
+  loadUnreadNotificationCount();
 }

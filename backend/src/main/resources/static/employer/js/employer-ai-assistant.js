@@ -1,4 +1,8 @@
 (function () {
+    const API_BASE_URL = "http://localhost:8080";
+    const STORAGE_KEY = "employerAiChatHistory";
+    const WELCOME_MESSAGE = "Hi! I can connect to backend AI services for resume screening, candidate recommendations, job description improvement, and hiring analytics.";
+
     const assistantHTML = `
     <button class="employer-ai-button" id="employerAiButton" title="Employer AI Assistant">
       <img src="images/robot.png" alt="AI Assistant">
@@ -10,17 +14,14 @@
         <button class="employer-ai-close" id="employerAiClose">×</button>
       </div>
 
-      <div class="employer-ai-messages" id="employerAiMessages">
-        <div class="employer-ai-message bot">
-          Hi! I can help with resume screening, candidate recommendations, job description improvement, and hiring analytics.
-        </div>
-      </div>
+      <div class="employer-ai-messages" id="employerAiMessages"></div>
 
       <div class="employer-ai-actions">
-        <button data-question="Screen resumes">Resume Screening</button>
-        <button data-question="Recommend candidates">Candidate Recommendation</button>
+        <button data-question="Screen resumes for job 1">Resume Screening</button>
+        <button data-question="Recommend candidates for job 1">Candidate Recommendation</button>
         <button data-question="Improve job description">Improve Job Description</button>
         <button data-question="Show hiring analytics">Hiring Analytics</button>
+        <button data-clear="true">Clear</button>
       </div>
 
       <div class="employer-ai-input-area">
@@ -39,154 +40,223 @@
     const aiInput = document.getElementById("employerAiInput");
     const aiSend = document.getElementById("employerAiSend");
 
+    loadChatHistory();
+
     aiButton.addEventListener("click", function () {
         aiWindow.classList.toggle("open");
+        aiMessages.scrollTop = aiMessages.scrollHeight;
     });
 
     aiClose.addEventListener("click", function () {
         aiWindow.classList.remove("open");
+        saveChatHistory();
     });
 
     aiSend.addEventListener("click", sendMessage);
 
     aiInput.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") {
-            sendMessage();
-        }
+        if (event.key === "Enter") sendMessage();
     });
 
     document.querySelectorAll(".employer-ai-actions button").forEach(function (button) {
         button.addEventListener("click", function () {
-            const question = button.getAttribute("data-question");
-            addMessage(question, "user");
-
-            setTimeout(function () {
-                addMessage(generateEmployerAIResponse(question), "bot");
-            }, 400);
+            if (button.dataset.clear === "true") {
+                clearChatHistory();
+                return;
+            }
+            handleQuestion(button.getAttribute("data-question"));
         });
     });
 
     function sendMessage() {
         const message = aiInput.value.trim();
-
-        if (!message) {
-            return;
-        }
-
-        addMessage(message, "user");
+        if (!message) return;
         aiInput.value = "";
-
-        setTimeout(function () {
-            addMessage(generateEmployerAIResponse(message), "bot");
-        }, 400);
+        handleQuestion(message);
     }
 
-    function addMessage(text, sender) {
+    async function handleQuestion(message) {
+        addMessage(escapeHtml(message), "user", true);
+        const loading = addMessage("AI is loading data from backend...", "bot", true);
+
+        try {
+            const responseHtml = await getBackendAIResponse(message);
+            loading.innerHTML = responseHtml;
+            saveChatHistory();
+        } catch (error) {
+            loading.innerHTML = `<strong>Connection failed</strong><br>${escapeHtml(error.message)}<br><br>Please make sure Spring Boot is running on port 8080 and you have logged in as an employer.`;
+            saveChatHistory();
+        }
+    }
+
+    function addMessage(text, sender, shouldSave) {
         const messageElement = document.createElement("div");
         messageElement.className = "employer-ai-message " + sender;
         messageElement.innerHTML = text;
         aiMessages.appendChild(messageElement);
         aiMessages.scrollTop = aiMessages.scrollHeight;
+        if (shouldSave) saveChatHistory();
+        return messageElement;
     }
 
-    function generateEmployerAIResponse(message) {
+    function loadChatHistory() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) {
+            addMessage(escapeHtml(WELCOME_MESSAGE), "bot", true);
+            return;
+        }
+        try {
+            const messages = JSON.parse(saved);
+            aiMessages.innerHTML = "";
+            messages.forEach(function (item) { addMessage(item.html, item.sender, false); });
+            if (messages.length === 0) addMessage(escapeHtml(WELCOME_MESSAGE), "bot", true);
+        } catch (e) {
+            localStorage.removeItem(STORAGE_KEY);
+            addMessage(escapeHtml(WELCOME_MESSAGE), "bot", true);
+        }
+    }
+
+    function saveChatHistory() {
+        const messages = Array.from(aiMessages.querySelectorAll(".employer-ai-message")).map(function (el) {
+            return { sender: el.classList.contains("user") ? "user" : "bot", html: el.innerHTML };
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    }
+
+    function clearChatHistory() {
+        localStorage.removeItem(STORAGE_KEY);
+        aiMessages.innerHTML = "";
+        addMessage(escapeHtml(WELCOME_MESSAGE), "bot", true);
+    }
+
+    async function getBackendAIResponse(message) {
         const lowerMessage = message.toLowerCase();
 
-        if (
-            lowerMessage.includes("resume") ||
-            lowerMessage.includes("screen") ||
-            lowerMessage.includes("cv") ||
-            lowerMessage.includes("简历") ||
-            lowerMessage.includes("筛选")
-        ) {
-            return `
-        <strong>AI Resume Screening</strong><br>
-        I can rank applicants based on skills, academic background, and project experience.<br><br>
-        Example result:<br>
-        1. Candidate A - 88% match<br>
-        2. Candidate B - 76% match<br>
-        3. Candidate C - 65% match<br><br>
-        Suggestion: Prioritise candidates with matching skills and relevant project experience.
-      `;
+        if (lowerMessage.includes("analytics") || lowerMessage.includes("trend") || lowerMessage.includes("dashboard") || lowerMessage.includes("分析") || lowerMessage.includes("数据")) {
+            const data = await apiGet("/ai/employer/hiring-analytics");
+            return renderHiringAnalytics(data);
         }
 
-        if (
-            lowerMessage.includes("candidate") ||
-            lowerMessage.includes("recommend") ||
-            lowerMessage.includes("student") ||
-            lowerMessage.includes("候选人") ||
-            lowerMessage.includes("推荐")
-        ) {
-            return `
-        <strong>AI Candidate Recommendation</strong><br>
-        Based on the job requirements, I can recommend students who match the required skills, study background, and application history.<br><br>
-        Example recommended students:<br>
-        • Student A - Java and MySQL skills<br>
-        • Student B - web development project experience<br>
-        • Student C - relevant internship background<br><br>
-        This helps employers find suitable candidates faster.
-      `;
+        if (lowerMessage.includes("description") || lowerMessage.includes("job post") || lowerMessage.includes("improve") || lowerMessage.includes("岗位描述") || lowerMessage.includes("优化")) {
+            const body = collectJobDescriptionInput(message);
+            const data = await apiPost("/ai/employer/job-description/improve", body);
+            return renderImprovedDescription(data);
         }
 
-        if (
-            lowerMessage.includes("description") ||
-            lowerMessage.includes("job post") ||
-            lowerMessage.includes("improve") ||
-            lowerMessage.includes("岗位描述") ||
-            lowerMessage.includes("优化")
-        ) {
-            return `
-        <strong>AI Job Description Assistant</strong><br>
-        I can improve job descriptions by making them clearer and more attractive.<br><br>
-        Before:<br>
-        Need developer.<br><br>
-        After:<br>
-        We are seeking a motivated Web Developer Intern with knowledge of HTML, CSS, JavaScript, Java, and MySQL. The role involves supporting website development, testing features, and working with the development team.<br><br>
-        Suggestion: Include responsibilities, required skills, location, deadline, and company information.
-      `;
+        if (lowerMessage.includes("resume") || lowerMessage.includes("screen") || lowerMessage.includes("cv") || lowerMessage.includes("简历") || lowerMessage.includes("筛选")) {
+            const jobId = getJobIdFromTextOrPage(message);
+            if (!jobId) return "<strong>AI Resume Screening</strong><br>Please type a job id, for example: <strong>screen resumes for job 1</strong>.";
+            const data = await apiGet(`/ai/employer/jobs/${jobId}/ranked-candidates`);
+            return renderRankedCandidates(data);
         }
 
-        if (
-            lowerMessage.includes("analytics") ||
-            lowerMessage.includes("trend") ||
-            lowerMessage.includes("dashboard") ||
-            lowerMessage.includes("分析") ||
-            lowerMessage.includes("数据")
-        ) {
-            return `
-        <strong>AI Hiring Analytics</strong><br>
-        I can summarise recruitment data for employers.<br><br>
-        Example insights:<br>
-        • Total applicants: 24<br>
-        • Best-fit candidates: 6<br>
-        • Most common applicant skill: JavaScript<br>
-        • Application trend: increasing this week<br><br>
-        This helps employers make better recruitment decisions.
-      `;
-        }
-
-        if (
-            lowerMessage.includes("interview") ||
-            lowerMessage.includes("面试")
-        ) {
-            return `
-        <strong>AI Interview Support</strong><br>
-        Suggested interview questions:<br>
-        • Can you describe one project related to this role?<br>
-        • What technical skills are you most confident in?<br>
-        • How do you solve problems when working in a team?<br>
-        • Why are you interested in this position?
-      `;
+        if (lowerMessage.includes("candidate") || lowerMessage.includes("recommend") || lowerMessage.includes("student") || lowerMessage.includes("候选人") || lowerMessage.includes("推荐")) {
+            const jobId = getJobIdFromTextOrPage(message);
+            if (!jobId) return "<strong>AI Candidate Recommendation</strong><br>Please type a job id, for example: <strong>recommend candidates for job 1</strong>.";
+            const data = await apiGet(`/ai/employer/jobs/${jobId}/recommended-students`);
+            return renderRecommendedStudents(data);
         }
 
         return `
-      I can help employers with:<br>
-      • AI resume screening<br>
-      • Candidate recommendations<br>
-      • Job description improvement<br>
-      • Hiring analytics<br>
-      • Interview question suggestions<br><br>
-      Try asking: <strong>“Screen resumes”</strong> or <strong>“Improve job description”</strong>.
-    `;
+          I can call backend AI APIs for:<br>
+          • <strong>Show hiring analytics</strong><br>
+          • <strong>Improve job description</strong><br>
+          • <strong>Screen resumes for job 1</strong><br>
+          • <strong>Recommend candidates for job 1</strong>
+        `;
+    }
+
+    async function apiGet(path) { return apiRequest(path, { method: "GET" }); }
+
+    async function apiPost(path, body) {
+        return apiRequest(path, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+    }
+
+    async function apiRequest(path, options) {
+        const token = localStorage.getItem("employerToken") || localStorage.getItem("token") || "";
+        const headers = Object.assign({}, options.headers || {});
+        if (token) headers.Authorization = "Bearer " + token;
+        const response = await fetch(API_BASE_URL + path, Object.assign({}, options, { headers }));
+        const result = await response.json();
+        if (!response.ok || result.code !== 200) throw new Error(result.message || "Backend request failed.");
+        return result.data;
+    }
+
+    function getJobIdFromTextOrPage(text) {
+        const match = text.match(/\d+/);
+        if (match) return match[0];
+        const selectedJob = document.querySelector("#applicationJobFilter, #jobSelect, select[name='jobId']");
+        if (selectedJob && selectedJob.value && selectedJob.value !== "all") return selectedJob.value;
+        return null;
+    }
+
+    function collectJobDescriptionInput(message) {
+        const titleInput = document.querySelector("#jobTitle, #title, input[name='title']");
+        const descriptionInput = document.querySelector("#jobDescription, #description, textarea[name='description']");
+        const requirementsInput = document.querySelector("#jobRequirements, #requirements, textarea[name='requirements']");
+        return {
+            title: titleInput ? titleInput.value : "Student Job Position",
+            description: descriptionInput ? descriptionInput.value : message,
+            requirements: requirementsInput ? requirementsInput.value : "communication, teamwork, relevant skills"
+        };
+    }
+
+    function renderHiringAnalytics(data) {
+        return `
+          <strong>AI Hiring Analytics</strong><br>
+          Total jobs: ${data.totalJobs}<br>
+          Approved jobs: ${data.approvedJobs}<br>
+          Closed jobs: ${data.closedJobs}<br>
+          Total applicants: ${data.totalApplicants}<br>
+          Average applicants per job: ${Number(data.averageApplicantsPerJob || 0).toFixed(2)}<br><br>
+          <strong>Job analytics:</strong><br>
+          ${(data.jobAnalytics || []).map(j => `• ${escapeHtml(j.title)}: ${j.numberOfApplicants} applicants, ${j.bestFitCandidates} best-fit candidates`).join("<br>") || "No job data."}
+        `;
+    }
+
+    function renderRankedCandidates(data) {
+        const candidates = data.topCandidates || [];
+        return `
+          <strong>AI Resume Screening</strong><br>
+          Job: ${escapeHtml(data.jobTitle)}<br>
+          Total applicants: ${data.totalApplicants}<br><br>
+          ${candidates.map((c, i) => `${i + 1}. ${escapeHtml(c.studentName || "Student")} - <strong>${c.matchScore}%</strong> (${escapeHtml(c.matchLevel)})<br>${renderList(c.whyMatch)}`).join("<br><br>") || "No applicants found."}
+        `;
+    }
+
+    function renderRecommendedStudents(data) {
+        const students = data.recommendedStudents || [];
+        return `
+          <strong>AI Candidate Recommendation</strong><br>
+          Job: ${escapeHtml(data.jobTitle)}<br><br>
+          ${students.map((s, i) => `${i + 1}. ${escapeHtml(s.studentName || "Student")} - <strong>${s.matchScore}%</strong> (${escapeHtml(s.matchLevel)})<br>Skills: ${escapeHtml(s.skills)}`).join("<br><br>") || "No recommended students found."}
+        `;
+    }
+
+    function renderImprovedDescription(data) {
+        return `
+          <strong>AI Job Description Assistant</strong><br>
+          <strong>Improved description:</strong><br>${escapeHtml(data.improvedDescription)}<br><br>
+          <strong>Recommended keywords:</strong><br>${renderList(data.recommendedKeywords)}<br><br>
+          <strong>Suggestions:</strong><br>${renderList(data.suggestions)}
+        `;
+    }
+
+    function renderList(items) {
+        if (!items || items.length === 0) return "None";
+        return items.map(item => `• ${escapeHtml(String(item))}`).join("<br>");
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 })();

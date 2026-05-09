@@ -95,6 +95,11 @@
         <li><a href="./my-applications.html"><span class="nav-ico">→</span> My Applications</a></li>
         <li><a href="./profile.html"><span class="nav-ico">◎</span> Profile</a></li>
         <li><a href="./notifications.html"><span class="nav-ico">◆</span> Notifications</a></li>
+        <li>
+          <a href="./student-ai.html">
+            <span class="nav-ico">🤖</span>AI Assistant
+          </a>
+        </li>
         <li><a href="javascript:void(0)" id="logout-btn"><span class="nav-ico">↩</span> Logout</a></li>
       </ul>
     </aside>
@@ -123,6 +128,8 @@
           <select id="industry">
             <option value="">Industry</option>
             <option value="Software Engineering">Software Engineering</option>
+            <option value="Data Analysis">Data Analysis</option>
+            <option value="Design">Design</option>
             <option value="Technology">Technology</option>
             <option value="Finance">Finance</option>
             <option value="Education">Education</option>
@@ -167,6 +174,7 @@
     const jobsContainer = document.getElementById("jobs-container");
     const pagination = document.getElementById("pagination");
     const resultInfo = document.getElementById("result-info");
+    const industrySelect = document.getElementById("industry");
 
     function authHeaders() {
       return {
@@ -189,10 +197,55 @@
       const filters = getFilters();
       if (filters.keyword) params.set("keyword", filters.keyword);
       if (filters.location) params.set("location", filters.location);
-      if (filters.industry) params.set("fieldOfStudy", filters.industry);
       if (filters.jobType) params.set("employmentType", filters.jobType);
 
       return params.toString();
+    }
+
+    async function populateIndustryOptions(preferredIndustry = "") {
+      const existing = new Set(
+        Array.from(industrySelect.options).map(opt => opt.value).filter(Boolean)
+      );
+
+      try {
+        const response = await fetch(`${API_BASE}/jobs`, {
+          headers: authHeaders()
+        });
+        if (!response.ok) return;
+
+        const result = await response.json();
+        const data = result.data || result;
+        const jobs = Array.isArray(data) ? data : (data.content || []);
+        const industries = new Set();
+
+        jobs.forEach(job => {
+          const val = firstNonEmpty(job.industry, job.categoryName, job.fieldOfStudy);
+          if (val) industries.add(val);
+        });
+
+        Array.from(industries)
+          .sort((a, b) => a.localeCompare(b))
+          .forEach(value => {
+            if (existing.has(value)) return;
+            const option = document.createElement("option");
+            option.value = value;
+            option.textContent = value;
+            industrySelect.appendChild(option);
+            existing.add(value);
+          });
+      } catch (_) {
+        // Keep static options when dynamic fetch fails.
+      }
+
+      if (preferredIndustry) {
+        if (!existing.has(preferredIndustry)) {
+          const option = document.createElement("option");
+          option.value = preferredIndustry;
+          option.textContent = preferredIndustry;
+          industrySelect.appendChild(option);
+        }
+        industrySelect.value = preferredIndustry;
+      }
     }
 
   function firstNonEmpty(...values) {
@@ -305,7 +358,15 @@
       const result = await response.json();
       const data = result.data || result;
 
-      const jobs = Array.isArray(data) ? data : (data.content || []);
+      let jobs = Array.isArray(data) ? data : (data.content || []);
+      const selectedIndustry = document.getElementById("industry").value;
+      if (selectedIndustry) {
+        const target = selectedIndustry.trim().toLowerCase();
+        jobs = jobs.filter(job => {
+          const industryText = firstNonEmpty(job.industry, job.categoryName, job.fieldOfStudy).toLowerCase();
+          return industryText === target;
+        });
+      }
 
       renderJobs(jobs);
       renderPagination();
@@ -342,6 +403,18 @@
         window.location.href = "../login-jobseeker.html";
         return;
       }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const keyword = urlParams.get("keyword") || "";
+      const location = urlParams.get("location") || "";
+      const industry = urlParams.get("fieldOfStudy") || urlParams.get("industry") || "";
+      const jobType = urlParams.get("employmentType") || urlParams.get("jobType") || "";
+
+      document.getElementById("keyword").value = keyword;
+      document.getElementById("location").value = location;
+      document.getElementById("jobType").value = jobType;
+
+      await populateIndustryOptions(industry);
 
       await loadFavoriteIds();
       await fetchJobs();
