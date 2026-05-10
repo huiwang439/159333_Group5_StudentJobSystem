@@ -2,31 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AI Assistant — Student</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./css/student-shell.css" />
     <link rel="stylesheet" href="./css/student-ai-page.css" />
 </head>
 <body>
 <div class="app">
-    <aside class="sidebar">
+    <aside class="sidebar" aria-label="Main navigation">
         <div class="brand">
-            <p class="brand-title">Student Portal</p>
-            <p class="brand-sub">Internship & Job Board</p>
+            <p class="brand-title">Job Board</p>
+            <p class="brand-sub">Massey · Student</p>
         </div>
-
         <ul class="nav">
-            <li><a href="./index.html"><span class="nav-ico">🏠</span>Dashboard</a></li>
-            <li><a href="./browse-jobs.html"><span class="nav-ico">🔎</span>Browse Jobs</a></li>
-            <li><a href="./my-favorites.html"><span class="nav-ico">⭐</span>My Favorites</a></li>
-            <li><a href="./my-applications.html"><span class="nav-ico">📄</span>My Applications</a></li>
-            <li><a href="./notifications.html"><span class="nav-ico">🔔</span>Notifications</a></li>
-            <li><a href="./profile.html"><span class="nav-ico">👤</span>Profile</a></li>
-            <li><a class="active" href="./student-ai.html"><span class="nav-ico">🤖</span>AI Assistant</a></li>
-            <li><a href="#" id="logout-btn"><span class="nav-ico">🚪</span>Logout</a></li>
+            <li><a href="./index.html"><span class="nav-ico">⌂</span> Dashboard</a></li>
+            <li><a href="./browse-jobs.html"><span class="nav-ico">◎</span> Browse Jobs</a></li>
+            <li><a href="./my-favorites.html"><span class="nav-ico">★</span> My Favorites</a></li>
+            <li><a href="./my-applications.html"><span class="nav-ico">→</span> My Applications</a></li>
+            <li><a href="./profile.html"><span class="nav-ico">◎</span> Profile</a></li>
+            <li><a href="./notifications.html"><span class="nav-ico">◆</span><span class="nav-text">Notifications</span><span class="nav-notif-badge" id="nav-notif-badge" hidden></span></a></li>
+            <li>
+                <a class="active" href="./student-ai.html">
+                    <span class="nav-ico">🤖</span>AI Assistant
+                </a>
+            </li>
+            <li><a href="javascript:void(0)" id="logout-btn"><span class="nav-ico">↩</span> Logout</a></li>
         </ul>
     </aside>
 
-    <main class="main">
+    <div>
+        <nav class="mobile-nav" aria-label="Mobile navigation">
+            <span class="brand-title" style="font-size:0.9rem">Student Dashboard</span>
+            <div style="display:flex;gap:0.35rem">
+                <button type="button" class="btn btn-ghost" style="padding:0.4rem 0.65rem;font-size:0.75rem">Jobs</button>
+                <button type="button" class="btn btn-primary" style="padding:0.4rem 0.65rem;font-size:0.75rem">Applications</button>
+            </div>
+        </nav>
+        <main class="main">
         <div class="ai-page">
             <h1>AI Assistant</h1>
             <p>Ask DeepSeek about job search, resume improvement, applications, and interviews.</p>
@@ -46,10 +61,12 @@
                 <button id="aiSend">Send</button>
             </div>
         </div>
-    </main>
+        </main>
+    </div>
 </div>
 
 <script src="./js/student-shell.js"></script>
+<script src="./js/student-notif-badge.js"></script>
 <script src="./js/student-ai-page.js"></script>
 </body>
 </html>

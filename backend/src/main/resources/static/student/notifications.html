@@ -44,7 +44,7 @@
       <li><a href="./my-favorites.html"><span class="nav-ico">★</span> My Favorites</a></li>
       <li><a href="./my-applications.html"><span class="nav-ico">→</span> My Applications</a></li>
       <li><a href="./profile.html"><span class="nav-ico">◎</span> Profile</a></li>
-      <li><a class="active" href="./notifications.html"><span class="nav-ico">◆</span> Notifications</a></li>
+      <li><a class="active" href="./notifications.html"><span class="nav-ico">◆</span><span class="nav-text">Notifications</span><span class="nav-notif-badge" id="nav-notif-badge" hidden></span></a></li>
       <li>
         <a href="./student-ai.html">
           <span class="nav-ico">🤖</span>AI Assistant
@@ -92,23 +92,32 @@
 </div>
 
 <script src="./js/student-shell.js"></script>
+<script src="./js/student-notif-badge.js"></script>
 <script>
   const API_BASE = "http://localhost:8080";
   const token = localStorage.getItem("token");
 
   function authHeaders() {
+    return { Authorization: "Bearer " + token };
+  }
+
+  function normalizeItem(raw) {
     return {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      notificationId: raw.notificationId,
+      title: raw.title || "",
+      message: raw.message || "",
+      read: !!raw.isRead,
+      type: raw.notificationType || "",
+      createdAt: raw.createdAt
     };
   }
 
-  function renderItems(items, targetId, countId, type) {
+  function renderItems(items, targetId, countId, emptyLabel) {
     const container = document.getElementById(targetId);
     document.getElementById(countId).textContent = `${items.length} items`;
 
     if (!items.length) {
-      container.innerHTML = `<div class="empty">No ${type} notifications yet.</div>`;
+      container.innerHTML = `<div class="empty">No ${emptyLabel} yet.</div>`;
       return;
     }
 
@@ -117,7 +126,7 @@
         <div>
           <div style="display:flex;gap:.4rem;align-items:center;">
             <h3>${item.title || ""}</h3>
-            <span class="tag ${item.type || type}">${item.type || type}</span>
+            <span class="tag ${item.type === "APPLICATION_STATUS" ? "application" : "job"}">${item.type || "notice"}</span>
           </div>
           <p class="meta">${item.message || ""}</p>
           <p class="time">
@@ -126,7 +135,7 @@
         </div>
 
         ${item.read ? "" : `
-          <button class="btn btn-ghost" data-read-id="${item.id}" style="padding:.35rem .6rem;">
+          <button class="btn btn-ghost" data-read-id="${item.notificationId}" style="padding:.35rem .6rem;">
             Mark Read
           </button>
         `}
@@ -135,52 +144,58 @@
   }
 
   async function loadNotifications() {
-    const [jobResponse, appResponse] = await Promise.all([
-      fetch(`${API_BASE}/notifications?type=job`, {
-        headers: authHeaders()
-      }),
-      fetch(`${API_BASE}/notifications?type=application`, {
-        headers: authHeaders()
-      })
-    ]);
+    const response = await fetch(API_BASE + "/notifications", { headers: authHeaders() });
+    const result = response.ok ? await response.json() : { data: [] };
+    const rawList = Array.isArray(result.data) ? result.data : [];
 
-    const jobResult = jobResponse.ok ? await jobResponse.json() : [];
-    const appResult = appResponse.ok ? await appResponse.json() : [];
+    const all = rawList.map(normalizeItem);
+    const apps = all.filter(i => i.type === "APPLICATION_STATUS");
+    const jobs = all.filter(i => i.type !== "APPLICATION_STATUS");
 
-    const jobs = jobResult.data || jobResult || [];
-    const apps = appResult.data || appResult || [];
+    renderItems(jobs, "job-list", "job-count", "other alerts");
+    renderItems(apps, "application-list", "application-count", "application status updates");
 
-    renderItems(jobs, "job-list", "job-count", "job");
-    renderItems(apps, "application-list", "application-count", "application");
+    if (typeof window.refreshStudentNotifBadge === "function") {
+      window.refreshStudentNotifBadge();
+    }
   }
 
   async function markRead(notificationId) {
-    await fetch(`${API_BASE}/notifications/${notificationId}/read`, {
-      method: "PATCH",
+    await fetch(API_BASE + "/notifications/" + notificationId + "/read", {
+      method: "PUT",
       headers: authHeaders()
     });
-
     await loadNotifications();
   }
 
-  async function markAll(type) {
-    await fetch(`${API_BASE}/notifications/read-all?type=${type}`, {
-      method: "PATCH",
-      headers: authHeaders()
-    });
-
+  async function markAllInCategory(isApplication) {
+    const response = await fetch(API_BASE + "/notifications", { headers: authHeaders() });
+    const result = response.ok ? await response.json() : { data: [] };
+    const rawList = Array.isArray(result.data) ? result.data : [];
+    const all = rawList.map(normalizeItem);
+    const subset = all.filter(i =>
+      isApplication ? i.type === "APPLICATION_STATUS" : i.type !== "APPLICATION_STATUS"
+    );
+    const unread = subset.filter(i => !i.read);
+    await Promise.all(
+      unread.map(i =>
+        fetch(API_BASE + "/notifications/" + i.notificationId + "/read", {
+          method: "PUT",
+          headers: authHeaders()
+        })
+      )
+    );
     await loadNotifications();
   }
 
   document.body.addEventListener("click", (event) => {
     const button = event.target.closest("[data-read-id]");
     if (!button) return;
-
     markRead(Number(button.dataset.readId));
   });
 
-  document.getElementById("mark-all-jobs").addEventListener("click", () => markAll("job"));
-  document.getElementById("mark-all-apps").addEventListener("click", () => markAll("application"));
+  document.getElementById("mark-all-jobs").addEventListener("click", () => markAllInCategory(false));
+  document.getElementById("mark-all-apps").addEventListener("click", () => markAllInCategory(true));
 
   if (!token) {
     alert("Please login first.");
