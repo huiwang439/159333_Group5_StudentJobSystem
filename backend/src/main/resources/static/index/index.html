@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Job System - Home</title>
+    <link rel="stylesheet" href="./index.css" />
+</head>
+<body>
+
+<header class="site-header">
+    <div class="header-inner">
+        <div class="logo" onclick="window.location.href='index.html'">
+            StudentJob
+        </div>
+
+        <nav class="main-nav">
+            <a href="index.html" class="active">Home</a>
+            <a href="#latestJobsSection">Jobs</a>
+            <a href="#" data-type="internship" class="employment-link">Internships</a>
+            <a href="#featuredEmployersSection">Companies</a>
+        </nav>
+
+        <div class="header-actions">
+            <button class="primary-btn" id="loginBtn">Login / Register</button>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+
+    <section class="city-bar card">
+        <span class="city-title">🔥 Popular Cities</span>
+        <div class="city-list" id="cityList"></div>
+        <button class="text-btn" id="clearFiltersBtn">Clear</button>
+    </section>
+
+    <section class="hero-layout">
+        <aside class="category-card card">
+            <div class="category-list" id="categoryList"></div>
+        </aside>
+
+        <section class="hero-banner card">
+            <div class="hero-content">
+                <span class="hero-tag">Student Job System</span>
+                <h1>Find your first job in New Zealand</h1>
+                <p>
+                    Explore internships, part-time jobs, graduate roles, and real opportunities posted by verified employers.
+                </p>
+
+                <div class="search-box">
+                    <input id="keywordInput" type="text" placeholder="Search job title, location, or field..." />
+                    <button id="searchBtn">Search</button>
+                </div>
+
+                <div class="hero-actions">
+                    <button class="primary-btn large" id="browseJobsBtn">Browse Jobs</button>
+                    <button class="secondary-btn large" id="postJobBtn">Post a Job</button>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="visual-card">
+                    <div class="visual-number" id="jobCountText">0</div>
+                    <div class="visual-label">Available Jobs</div>
+                </div>
+            </div>
+        </section>
+    </section>
+
+    <section class="section" id="featuredEmployersSection">
+        <div class="section-header">
+            <h2>Featured Employers</h2>
+            <p>Companies and organisations hiring students</p>
+        </div>
+
+        <div class="employer-grid" id="employerGrid"></div>
+    </section>
+
+    <section class="section" id="latestJobsSection">
+        <div class="section-header">
+            <h2>Latest Jobs</h2>
+            <p id="filterSummary">Showing current public jobs from the database</p>
+        </div>
+
+        <div class="job-grid" id="jobGrid"></div>
+
+        <div class="empty-state hidden" id="emptyState">
+            <h3>No jobs found</h3>
+            <p>Try changing the keyword, city, employment type, or field of study.</p>
+        </div>
+    </section>
+
+</main>
+
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div>
+            <div class="footer-logo">StudentJob</div>
+            <p>
+                Connecting students with trusted employers through internships,
+                part-time jobs, and graduate opportunities.
+            </p>
+        </div>
+
+        <div class="footer-links">
+            <a href="index.html">Home</a>
+            <a href="#latestJobsSection">Jobs</a>
+            <a href="#featuredEmployersSection">Companies</a>
+            <a href="/admin/login.html">Login / Register</a>
+        </div>
+    </div>
+</footer>
+
+<div class="modal hidden" id="jobDetailModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="detailTitle">Job Detail</h3>
+            <button id="closeDetailBtn" class="close-btn">×</button>
+        </div>
+
+        <div class="detail-grid">
+            <div><b>Company:</b> <span id="detailCompanyName">-</span></div>
+            <div><b>Job ID:</b> <span id="detailJobId">-</span></div>
+            <div><b>Location:</b> <span id="detailLocation">-</span></div>
+            <div><b>Employment Type:</b> <span id="detailEmploymentType">-</span></div>
+            <div><b>Work Mode:</b> <span id="detailWorkMode">-</span></div>
+            <div><b>Field of Study:</b> <span id="detailFieldOfStudy">-</span></div>
+            <div><b>Salary:</b> <span id="detailSalary">-</span></div>
+            <div><b>Deadline:</b> <span id="detailDeadline">-</span></div>
+            <div><b>Status:</b> <span id="detailStatus">-</span></div>
+        </div>
+
+        <div class="detail-description">
+            <h4>Description</h4>
+            <p id="detailDescription">-</p>
+        </div>
+
+        <div class="modal-actions">
+            <button class="primary-btn" id="applyNowBtn">Apply Now</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="./index.js"></script>
+</body>
+</html>
