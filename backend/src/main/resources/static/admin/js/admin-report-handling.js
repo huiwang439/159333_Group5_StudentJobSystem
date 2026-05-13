@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
     async function loadReports() {
         try {
             const status = statusFilter.value;
-            const path = status ? `/reports/admin?reportStatus=${status}` : "/reports/admin";
+            const path = status ? `/reports/admin?status=${encodeURIComponent(status)}` : "/reports/admin";
             const data = await apiGet(path);
             renderReports(data);
             showMessage("Reports loaded.");
@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function handleReport(id, status) {
         try {
-            await apiPutForm(`/reports/admin/${id}/handle`, { reportStatus: status });
+            await apiPatchForm(`/reports/admin/${id}/handle`, { status: status });
             showMessage(`Report ${id} updated to ${status}.`);
             await loadReports();
         } catch (error) {

@@ -4,13 +4,32 @@ import com.group5.jobboard.entity.*;
 import com.group5.jobboard.repository.*;
 import com.group5.jobboard.service.AiService;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.*;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 @Service
 public class AiServiceImpl implements AiService {
+
+    @Value("${qwen.api.key}")
+    private String qwenApiKey;
+
+    @Value("${qwen.api.url}")
+    private String qwenApiUrl;
+
+    @Value("${qwen.model}")
+    private String qwenModel;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final HttpClient httpClient = HttpClient.newHttpClient();
 
     private final JobRepository jobRepository;
     private final StudentProfileRepository studentProfileRepository;
@@ -768,7 +787,102 @@ public class AiServiceImpl implements AiService {
         return "Low";
     }
 
+    @Override
+    public Map<String, Object> chatWithQwen(Long studentUserId, String message) {
+        if (message == null || message.trim().isEmpty()) {
+            throw new RuntimeException("Message cannot be empty");
+        }
+
+        try {
+            StudentProfile student = getStudentProfileByUserId(studentUserId);
+
+            String prompt = """
+You are an AI assistant for a student internship and job board system.
+
+Help the student with:
+- internship search
+- resume improvement
+- interview preparation
+- job applications
+- career advice
+
+Student profile:
+Major: %s
+Skills: %s
+Preferred Location: %s
+Preferred Job Type: %s
+Bio: %s
+
+Student question:
+%s
+
+Please answer clearly and practically.
+""".formatted(
+                    safe(student.getMajor()),
+                    safe(student.getSkills()),
+                    safe(student.getPreferredLocation()),
+                    safe(student.getPreferredJobType()),
+                    safe(student.getBio()),
+                    message
+            );
+
+            Map<String, Object> requestBody = Map.of(
+                    "model", qwenModel,
+                    "messages", List.of(
+                            Map.of("role", "system", "content", "You are a helpful career assistant."),
+                            Map.of("role", "user", "content", prompt)
+                    ),
+                    "stream", false
+            );
+
+            String jsonBody = objectMapper.writeValueAsString(requestBody);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(qwenApiUrl))
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + qwenApiKey)
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            if (response.statusCode() == 429) {
+                Map<String, Object> fallback = new HashMap<>();
+                fallback.put(
+                        "answer",
+                        "DeepSeek quota exceeded. This is a simulated AI response for demonstration purposes.\n\n" +
+                                "Based on your profile, you should improve your resume, highlight technical skills, " +
+                                "prepare interview examples, and apply for internships related to your major."
+                );
+                fallback.put("model", "DeepSeek fallback");
+                return fallback;
+            }
+
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                throw new RuntimeException("Qwen API error: " + response.body());
+            }
+
+            JsonNode root = objectMapper.readTree(response.body());
+            String answer = root.path("choices")
+                    .path(0)
+                    .path("message")
+                    .path("content")
+                    .asText("Sorry, DeepSeek did not return a valid response.");
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("answer", answer);
+            result.put("model", "DeepSeek");
+            return result;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to call DeepSeek AI: " + e.getMessage());
+        }
+    }
+
     private String safe(String value) {
-        return value == null ? "" : value;
+        return value == null || value.isBlank() ? "Not provided" : value;
     }
 }

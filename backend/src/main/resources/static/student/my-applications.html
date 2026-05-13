@@ -16,9 +16,21 @@
     .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
     .panel-hd { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .panel-hd h2 { margin: 0; font-size: 1rem; }
-    .layout { display: grid; grid-template-columns: 1.45fr 1fr; gap: 1rem; align-items: stretch; }
-    .layout .panel { min-height: 430px; display: flex; flex-direction: column; }
-    .application-list { padding: 0.5rem; flex: 1; overflow-y: auto; }
+    .layout { display: grid; grid-template-columns: 1.45fr 1fr; gap: 1rem; align-items: stretch; min-height: 0; }
+    /* Cap panel height so Application Records / timeline scroll inside instead of stretching the whole page */
+    .layout .panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 280px;
+      max-height: min(70vh, 680px);
+    }
+    .application-list {
+      padding: 0.5rem;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
     .application-item { border: 1px solid var(--border); border-radius: 10px; padding: 0.8rem; margin-bottom: 0.55rem; cursor: pointer; }
     .application-item.active { border-color: #9ce7de; background: #f5fffd; }
     .application-item h3 { margin: 0; font-size: 0.95rem; }
@@ -28,7 +40,7 @@
     .badge.submitted { background: #fef3c7; color: #b45309; }
     .badge.review { background: #dbeafe; color: #1d4ed8; }
     .badge.shortlisted { background: #d1fae5; color: #047857; }
-    .timeline-wrap { padding: 0.9rem 1rem; flex: 1; overflow-y: auto; }
+    .timeline-wrap { padding: 0.9rem 1rem; flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .detail-title { margin: 0; font-size: 0.95rem; }
     .detail-sub { margin: 0.2rem 0 0.8rem; color: var(--muted); font-size: 0.82rem; }
     .timeline { border-left: 2px solid #cdeee9; margin-left: 0.35rem; padding-left: 0.85rem; }
@@ -60,7 +72,12 @@
       <li><a href="./my-favorites.html"><span class="nav-ico">★</span> My Favorites</a></li>
       <li><a class="active" href="./my-applications.html"><span class="nav-ico">→</span> My Applications</a></li>
       <li><a href="./profile.html"><span class="nav-ico">◎</span> Profile</a></li>
-      <li><a href="./notifications.html"><span class="nav-ico">◆</span> Notifications</a></li>
+      <li><a href="./notifications.html"><span class="nav-ico">◆</span><span class="nav-text">Notifications</span><span class="nav-notif-badge" id="nav-notif-badge" hidden></span></a></li>
+      <li>
+        <a href="./student-ai.html">
+          <span class="nav-ico">🤖</span>AI Assistant
+        </a>
+      </li>
       <li><a href="javascript:void(0)" id="logout-btn"><span class="nav-ico">↩</span> Logout</a></li>
     </ul>
   </aside>
@@ -110,6 +127,7 @@
 </div>
 
 <script src="./js/student-shell.js"></script>
+<script src="./js/student-notif-badge.js"></script>
 <script>
   const API_BASE = "http://localhost:8080";
   const token = localStorage.getItem("token");
@@ -118,6 +136,7 @@
   const listEl = document.getElementById("application-list");
   const timelineEl = document.getElementById("timeline");
   const listNote = document.getElementById("list-note");
+  let cachedApplications = [];
 
   function authHeaders() {
     return {
@@ -148,6 +167,108 @@
 
   function getApplicationStatus(item) {
     return item.status || item.applicationStatus || "";
+  }
+
+  function statusHeadline(status) {
+    const s = String(status || "submitted").toLowerCase();
+    if (s === "submitted") return "Application submitted";
+    if (s === "reviewing") return "Under review";
+    if (s === "accepted") return "Accepted";
+    if (s === "rejected") return "Not selected";
+    return `Status: ${status || "submitted"}`;
+  }
+
+  /** Real steps only: submit time + employer status change (uses appliedAt / updatedAt from API). */
+  function buildStatusTimeline(item) {
+    const status = String(getApplicationStatus(item) || "submitted").toLowerCase();
+    const applied = item.appliedAt;
+    const updated = item.updatedAt;
+    const nodes = [];
+
+    nodes.push({
+      title: "Application submitted",
+      note: "Your application was sent to the employer.",
+      at: applied
+    });
+
+    if (status !== "submitted") {
+      const tUpdated = updated ? new Date(updated).getTime() : 0;
+      const tApplied = applied ? new Date(applied).getTime() : 0;
+      const sameMoment = tUpdated && tApplied && Math.abs(tUpdated - tApplied) < 2000;
+      nodes.push({
+        title: statusHeadline(status),
+        note: sameMoment
+          ? "Employer has set this status (time matches your submission record)."
+          : "The employer updated your application status.",
+        at: updated || applied
+      });
+    }
+
+    return nodes;
+  }
+
+  async function enrichApplicationRecords(items) {
+    if (!items.length) return items;
+
+    const jobById = new Map();
+    try {
+      const jobRes = await fetch(`${API_BASE}/jobs`, { headers: authHeaders() });
+      if (jobRes.ok) {
+        const jobResult = await jobRes.json();
+        const jobs = jobResult.data || jobResult || [];
+        for (const job of jobs) {
+          const pk = job.jobId != null ? Number(job.jobId) : Number(job.id);
+          if (pk && !Number.isNaN(pk)) jobById.set(pk, job);
+        }
+      }
+    } catch (e) {
+      /* ignore */
+    }
+
+    const missingIds = [
+      ...new Set(
+        items
+          .map((item) => Number(item.jobId))
+          .filter((jid) => jid && !jobById.has(jid))
+      )
+    ];
+
+    await Promise.all(
+      missingIds.map(async (jid) => {
+        try {
+          const res = await fetch(`${API_BASE}/jobs/${jid}`, { headers: authHeaders() });
+          if (!res.ok) return;
+          const r = await res.json();
+          const job = r.data || r;
+          if (job) jobById.set(jid, job);
+        } catch (e) {
+          /* ignore */
+        }
+      })
+    );
+
+    return items.map((item) => {
+      const jid = Number(item.jobId);
+      const job = jid ? jobById.get(jid) : null;
+      const companyFromJob =
+        job &&
+        (job.companyName ||
+          (job.employerProfile && job.employerProfile.companyName) ||
+          "");
+      return {
+        ...item,
+        jobTitle:
+          item.jobTitle ||
+          (job && job.title) ||
+          (jid ? `Job #${jid}` : "Application"),
+        companyName: item.companyName || companyFromJob || "",
+        location: item.location || (job && job.location) || "",
+        jobType:
+          item.jobType ||
+          (job && (job.jobType || job.employmentType)) ||
+          ""
+      };
+    });
   }
 
   async function loadSummary() {
@@ -184,14 +305,25 @@
     }
 
     const result = await response.json();
-    const data = extractApplications(result);
+    const raw = extractApplications(result);
+    listNote.textContent = "Resolving job details…";
+    const data = await enrichApplicationRecords(raw);
+    cachedApplications = data;
 
     listNote.textContent = `${data.length} records`;
 
     if (!data.length) {
       listEl.innerHTML = "<div class='empty'>No applications yet.</div>";
       timelineEl.innerHTML = "";
+      currentApplicationId = null;
       return;
+    }
+
+    if (
+      !currentApplicationId ||
+      !data.some((d) => Number(d.applicationId || d.id) === Number(currentApplicationId))
+    ) {
+      currentApplicationId = data[0].applicationId || data[0].id;
     }
 
     listEl.innerHTML = data.map(item => {
@@ -199,11 +331,9 @@
 
       return `
         <article class="application-item ${currentApplicationId === appId ? "active" : ""}" data-app-id="${appId}">
-          <h3>${item.jobTitle || item.job?.title || "Unknown Job"}</h3>
+          <h3>${item.jobTitle || item.job?.title || "Application"}</h3>
           <p class="meta">
-            ${item.companyName || item.job?.companyName || ""} ·
-            ${item.location || item.job?.location || ""} ·
-            ${item.jobType || item.job?.jobType || item.job?.employmentType || ""}
+            ${[item.companyName || item.job?.companyName || "", item.location || item.job?.location || "", item.jobType || item.job?.jobType || item.job?.employmentType || ""].filter(Boolean).join(" · ") || "—"}
           </p>
           <div class="row">
             <span class="badge ${statusClass(getApplicationStatus(item))}">${getApplicationStatus(item) || "submitted"}</span>
@@ -235,40 +365,43 @@
     }
 
     document.getElementById("detail-title").textContent =
-      item.jobTitle || item.job?.title || "Unknown Job";
+      item.jobTitle || item.job?.title || "Application";
 
+    const metaBits = [
+      item.companyName || item.job?.companyName || "",
+      item.location || item.job?.location || "",
+      item.jobType || item.job?.jobType || item.job?.employmentType || ""
+    ].filter(Boolean);
     document.getElementById("detail-sub").textContent =
-      `${item.companyName || item.job?.companyName || ""} · Status: ${getApplicationStatus(item) || "submitted"}`;
+      (metaBits.length ? metaBits.join(" · ") + " · " : "") +
+      `Status: ${getApplicationStatus(item) || "submitted"}`;
 
-    timelineEl.innerHTML = `
+    const steps = buildStatusTimeline(item);
+    timelineEl.innerHTML = steps
+      .map(
+        (step) => `
       <div class="timeline-item">
-        <div class="timeline-status">Application submitted</div>
-        <div class="timeline-note">Your application status is ${getApplicationStatus(item) || "submitted"}.</div>
+        <div class="timeline-status">${step.title}</div>
+        <div class="timeline-note">${step.note}</div>
         <div class="timeline-time">
-          ${item.appliedAt ? new Date(item.appliedAt).toLocaleString() : ""}
+          ${step.at ? new Date(step.at).toLocaleString() : ""}
         </div>
       </div>
-    `;
+    `
+      )
+      .join("");
 
     document.querySelectorAll(".application-item").forEach(node => {
       node.classList.toggle("active", Number(node.dataset.appId) === Number(applicationId));
     });
   }
 
-  listEl.addEventListener("click", async (event) => {
+  listEl.addEventListener("click", (event) => {
     const card = event.target.closest(".application-item");
     if (!card) return;
 
     currentApplicationId = Number(card.dataset.appId);
-
-    const response = await fetch(`${API_BASE}/applications/my`, {
-      headers: authHeaders()
-    });
-
-    const result = await response.json();
-    const data = extractApplications(result);
-
-    loadDetail(currentApplicationId, data);
+    loadDetail(currentApplicationId, cachedApplications);
   });
 
   document.getElementById("refresh-btn").addEventListener("click", async () => {

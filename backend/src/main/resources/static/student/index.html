@@ -770,6 +770,30 @@
       background: #d1fae5;
       color: #047857;
     }
+
+    .nav a .nav-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .nav-notif-badge {
+      margin-left: auto;
+      min-width: 1.15rem;
+      height: 1.15rem;
+      padding: 0 0.32rem;
+      border-radius: 999px;
+      background: #ef4444;
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      line-height: 1.15rem;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .nav-notif-badge[hidden] {
+      display: none !important;
+    }
   </style>
   <link rel="stylesheet" href="./css/student-ai-assistant.css">
 </head>
@@ -786,7 +810,12 @@
         <li><a href="./my-favorites.html"><span class="nav-ico">★</span> My Favorites</a></li>
         <li><a href="./my-applications.html"><span class="nav-ico">→</span> My Applications</a></li>
         <li><a href="./profile.html"><span class="nav-ico">◎</span> Profile</a></li>
-        <li><a href="./notifications.html"><span class="nav-ico">◆</span> Notifications</a></li>
+        <li><a href="./notifications.html"><span class="nav-ico">◆</span><span class="nav-text">Notifications</span><span class="nav-notif-badge" id="nav-notif-badge" hidden></span></a></li>
+        <li>
+          <a href="./student-ai.html">
+            <span class="nav-ico">🤖</span>AI Assistant
+          </a>
+        </li>
         <li><a href="javascript:void(0)" id="logout-btn"><span class="nav-ico">↩</span> Logout</a></li>
       </ul>
     </aside>
@@ -931,6 +960,21 @@
       };
     }
 
+    function jobRecordPk(job) {
+      if (!job) return null;
+      const id = job.jobId != null ? job.jobId : job.id;
+      if (id === null || id === undefined || id === "") return null;
+      const n = Number(id);
+      return Number.isNaN(n) ? null : n;
+    }
+
+    function companyNameFromJob(job) {
+      if (!job) return "";
+      if (job.companyName) return job.companyName;
+      if (job.employerProfile && job.employerProfile.companyName) return job.employerProfile.companyName;
+      return "";
+    }
+
     async function logout() {
   try {
     await fetch(`${API_BASE}/auth/logout`, {
@@ -1015,21 +1059,61 @@
         `).join("");
 
         const recentApps = document.getElementById("recent-app-list");
+        const jobById = new Map();
+        for (const job of jobs) {
+          const pk = jobRecordPk(job);
+          if (pk != null) jobById.set(pk, job);
+        }
 
-        if (!applications.length) {
+        const recent = Array.isArray(applications) ? applications.slice(0, 3) : [];
+        const missingJobIds = [
+          ...new Set(
+            recent
+              .map((item) => Number(item.jobId))
+              .filter((jid) => jid && !jobById.has(jid))
+          )
+        ];
+
+        await Promise.all(
+          missingJobIds.map(async (jid) => {
+            try {
+              const res = await fetch(`${API_BASE}/jobs/${jid}`, { headers: authHeaders() });
+              if (!res.ok) return;
+              const r = await res.json();
+              const job = r.data || r;
+              if (job) jobById.set(jid, job);
+            } catch (e) {
+              /* ignore */
+            }
+          })
+        );
+
+        if (!recent.length) {
           recentApps.innerHTML = "<li>No applications yet</li>";
         } else {
-          recentApps.innerHTML = applications.slice(0, 3).map(item => `
+          recentApps.innerHTML = recent
+            .map((item) => {
+              const jid = Number(item.jobId);
+              const job = jid ? jobById.get(jid) : null;
+              const title =
+                item.jobTitle ||
+                (job && job.title) ||
+                (jid ? `Job #${jid}` : "Application");
+              const company = item.companyName || companyNameFromJob(job) || "";
+              const status = item.status || "submitted";
+              return `
             <li>
               <div class="item-row">
                 <div>
-                  <strong>${item.jobTitle || "Job"}</strong>
-                  <span>${item.companyName || ""}</span>
+                  <strong>${title}</strong>
+                  <span>${company}</span>
                 </div>
-                <span class="mini-badge">${item.status || "submitted"}</span>
+                <span class="mini-badge">${status}</span>
               </div>
             </li>
-          `).join("");
+          `;
+            })
+            .join("");
         }
 
       } catch (e) {
@@ -1122,6 +1206,7 @@
       setInterval(() => go(index + 1), 5000);
     })();
   </script>
+  <script src="./js/student-notif-badge.js"></script>
   <script src="./js/student-ai-assistant.js"></script>
 </body>
 </html>

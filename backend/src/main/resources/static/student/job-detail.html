@@ -35,6 +35,7 @@
     .modal label { display:block; font-size:.82rem; font-weight:600; color:#334155; margin:.65rem 0 .3rem; }
     .modal select, .modal textarea { width:100%; padding:.55rem .65rem; border-radius:8px; border:1px solid var(--border); font:inherit; font-size:.88rem; }
     .modal textarea { min-height:88px; resize:vertical; }
+    #apply-modal .modal textarea { min-height:140px; }
     .modal-actions { display:flex; gap:.5rem; justify-content:flex-end; margin-top:1rem; flex-wrap:wrap; }
     .modal-hint { font-size:.78rem; color:var(--muted); margin:.5rem 0 0; line-height:1.45; }
     @media (max-width: 860px){ .chips { grid-template-columns:1fr 1fr; } }
@@ -54,7 +55,12 @@
       <li><a href="./my-favorites.html"><span class="nav-ico">★</span> My Favorites</a></li>
       <li><a href="./my-applications.html"><span class="nav-ico">→</span> My Applications</a></li>
       <li><a href="./profile.html"><span class="nav-ico">◎</span> Profile</a></li>
-      <li><a href="./notifications.html"><span class="nav-ico">◆</span> Notifications</a></li>
+      <li><a href="./notifications.html"><span class="nav-ico">◆</span><span class="nav-text">Notifications</span><span class="nav-notif-badge" id="nav-notif-badge" hidden></span></a></li>
+      <li>
+        <a href="./student-ai.html">
+          <span class="nav-ico">🤖</span>AI Assistant
+        </a>
+      </li>
       <li><a href="javascript:void(0)" id="logout-btn"><span class="nav-ico">↩</span> Logout</a></li>
     </ul>
   </aside>
@@ -107,6 +113,20 @@
   </div>
 </div>
 
+<div id="apply-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="apply-modal-title">
+  <div class="modal">
+    <h2 id="apply-modal-title">Apply for this role</h2>
+    <p class="modal-hint">Optional: add a short message to the employer for this application. Your default resume from Profile will be sent with the application.</p>
+    <label for="apply-cover-letter">Cover letter / application note</label>
+    <textarea id="apply-cover-letter" maxlength="8000" placeholder="Briefly explain your interest, relevant skills, or availability (optional)."></textarea>
+    <p class="modal-hint" id="apply-modal-status" role="status"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="apply-cancel-btn">Cancel</button>
+      <button type="button" class="btn btn-primary" id="apply-submit-btn">Submit application</button>
+    </div>
+  </div>
+</div>
+
 <div id="report-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="report-modal-title">
   <div class="modal">
     <h2 id="report-modal-title">Report this job</h2>
@@ -131,6 +151,7 @@
 </div>
 
 <script src="./js/student-shell.js"></script>
+<script src="./js/student-notif-badge.js"></script>
 <script>
   const API_BASE = "http://localhost:8080";
   const token = localStorage.getItem("token");
@@ -256,17 +277,48 @@
     reportBtn.disabled = getReportedEmployerUserId(currentJob) == null;
   }
 
-  async function applyNow() {
+  function defaultCoverLetterText() {
+    const company =
+      currentJob.companyName ||
+      (currentJob.employerProfile && currentJob.employerProfile.companyName) ||
+      "";
+    const title = currentJob.title || "this role";
+    return `I am interested in ${title}${company ? " at " + company : ""}.`;
+  }
+
+  const applyModal = document.getElementById("apply-modal");
+  const applyModalStatus = document.getElementById("apply-modal-status");
+  const applyCoverLetter = document.getElementById("apply-cover-letter");
+  const applySubmitBtn = document.getElementById("apply-submit-btn");
+
+  function openApplyModal() {
+    if (!currentJob) return;
+    applyCoverLetter.value = defaultCoverLetterText();
+    applyModalStatus.textContent = "";
+    applyModal.classList.add("open");
+    applyCoverLetter.focus();
+  }
+
+  function closeApplyModal() {
+    applyModal.classList.remove("open");
+  }
+
+  async function submitApplicationFromModal() {
     if (!currentJob) return;
 
     const statusEl = document.getElementById("apply-status");
-    statusEl.textContent = "Submitting application...";
+    const rawLetter = applyCoverLetter.value.trim();
+    const coverLetterText = rawLetter || defaultCoverLetterText();
+
+    applyModalStatus.textContent = "Submitting…";
+    applySubmitBtn.disabled = true;
 
     let resumeDocumentId;
     try {
       resumeDocumentId = await resolveResumeDocumentId();
     } catch (error) {
-      statusEl.textContent = error.message || "Cannot find resume document.";
+      applySubmitBtn.disabled = false;
+      applyModalStatus.textContent = error.message || "Cannot find resume document.";
       return;
     }
 
@@ -275,21 +327,30 @@
       headers: authHeaders(),
       body: JSON.stringify({
         jobId: getJobPk(currentJob),
-        coverLetterText: `Interested in ${currentJob.title} at ${currentJob.companyName || ""}.`,
+        coverLetterText,
         resumeDocumentId
       })
     });
 
     const result = await response.json().catch(() => ({}));
+    applySubmitBtn.disabled = false;
+
     if (!response.ok || (result.code && result.code !== 200)) {
-      statusEl.textContent = result.message || "Failed to apply. Please check backend API or token.";
+      applyModalStatus.textContent = result.message || "Failed to apply. Please check backend API or token.";
       return;
     }
 
+    closeApplyModal();
     statusEl.textContent = "Application submitted. You can track it in My Applications.";
   }
 
-  document.getElementById("apply-btn").addEventListener("click", applyNow);
+  document.getElementById("apply-btn").addEventListener("click", openApplyModal);
+  document.getElementById("apply-cancel-btn").addEventListener("click", closeApplyModal);
+  document.getElementById("apply-submit-btn").addEventListener("click", submitApplicationFromModal);
+
+  applyModal.addEventListener("click", (e) => {
+    if (e.target === applyModal) closeApplyModal();
+  });
 
   const reportModal = document.getElementById("report-modal");
   const reportModalStatus = document.getElementById("report-modal-status");
