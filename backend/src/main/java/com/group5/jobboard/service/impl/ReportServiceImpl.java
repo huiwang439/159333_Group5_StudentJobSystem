@@ -1,9 +1,7 @@
 package com.group5.jobboard.service.impl;
 
 import com.group5.jobboard.entity.AnalyticsLog;
-import com.group5.jobboard.entity.Job;
 import com.group5.jobboard.entity.Report;
-import com.group5.jobboard.entity.User;
 import com.group5.jobboard.repository.AnalyticsLogRepository;
 import com.group5.jobboard.repository.JobRepository;
 import com.group5.jobboard.repository.ReportRepository;
@@ -37,8 +35,11 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public Map<String, Object> createReport(Long reporterUserId, Long reportedUserId, Long relatedJobId,
-                                            String reason, String description) {
+    public Map<String, Object> createReport(Long reporterUserId,
+                                            Long reportedUserId,
+                                            Long relatedJobId,
+                                            String reason,
+                                            String description) {
         userRepository.findById(reporterUserId)
                 .orElseThrow(() -> new RuntimeException("Reporter not found"));
 
@@ -60,11 +61,11 @@ public class ReportServiceImpl implements ReportService {
         report.setReportDetails(description);
         report.setReportStatus("pending");
 
-        reportRepository.save(report);
+        Report saved = reportRepository.save(report);
 
-        log(reporterUserId, "CREATE_REPORT", "REPORT", report.getId());
+        log(reporterUserId, "CREATE_REPORT", "REPORT", saved.getId());
 
-        Map<String, Object> result = reportToMap(report);
+        Map<String, Object> result = reportToMap(saved);
         result.put("created", true);
 
         return result;
@@ -72,14 +73,10 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<Map<String, Object>> getMyReports(Long reporterUserId) {
-        List<Report> reports = reportRepository.findByReporterUserId(reporterUserId);
-        List<Map<String, Object>> result = new ArrayList<>();
-
-        for (Report report : reports) {
-            result.add(reportToMap(report));
-        }
-
-        return result;
+        return reportRepository.findByReporterUserId(reporterUserId)
+                .stream()
+                .map(this::reportToMap)
+                .toList();
     }
 
     @Override
@@ -92,51 +89,50 @@ public class ReportServiceImpl implements ReportService {
             reports = reportRepository.findByReportStatus(reportStatus);
         }
 
-        List<Map<String, Object>> result = new ArrayList<>();
-
-        for (Report report : reports) {
-            result.add(reportToMap(report));
-        }
-
-        return result;
+        return reports.stream()
+                .map(this::reportToMap)
+                .toList();
     }
 
     @Override
-    public Map<String, Object> handleReport(Long reportId, String reportStatus, Long adminId) {
+    public Map<String, Object> handleReport(Long reportId, String reportStatus, Long operatorId) {
         if (!"resolved".equals(reportStatus)
                 && !"rejected".equals(reportStatus)
                 && !"pending".equals(reportStatus)) {
             throw new RuntimeException("Invalid report status");
         }
 
+        userRepository.findById(operatorId)
+                .orElseThrow(() -> new RuntimeException("Handler not found"));
+
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
         report.setReportStatus(reportStatus);
-        report.setHandledBy(adminId);
+        report.setHandledBy(operatorId);
         report.setHandledAt(LocalDateTime.now());
 
-        reportRepository.save(report);
+        Report saved = reportRepository.save(report);
 
-        log(adminId, "HANDLE_REPORT", "REPORT", reportId);
+        log(operatorId, "HANDLE_REPORT", "REPORT", reportId);
 
         notificationService.createNotification(
-                report.getReporterUserId(),
+                saved.getReporterUserId(),
                 "REPORT_RESULT",
                 "Report handled",
                 "Your report has been handled. Status: " + reportStatus
         );
 
-        if (report.getReportedUserId() != null && "resolved".equals(reportStatus)) {
+        if (saved.getReportedUserId() != null && "resolved".equals(reportStatus)) {
             notificationService.createNotification(
-                    report.getReportedUserId(),
+                    saved.getReportedUserId(),
                     "REPORT_WARNING",
                     "You have been reported",
-                    "A report related to your account has been handled by admin."
+                    "A report related to your account has been handled."
             );
         }
 
-        Map<String, Object> result = reportToMap(report);
+        Map<String, Object> result = reportToMap(saved);
         result.put("handled", true);
 
         return result;
@@ -156,28 +152,44 @@ public class ReportServiceImpl implements ReportService {
         item.put("createdAt", report.getCreatedAt());
         item.put("handledAt", report.getHandledAt());
 
-        userRepository.findById(report.getReporterUserId())
-                .ifPresent(user -> item.put("reporterName", user.getFullName()));
+        userRepository.findById(report.getReporterUserId()).ifPresent(user -> {
+            item.put("reporterName", user.getFullName());
+            item.put("reporterEmail", user.getEmail());
+            item.put("reporterRole", user.getRole());
+        });
 
         if (report.getReportedUserId() != null) {
-            userRepository.findById(report.getReportedUserId())
-                    .ifPresent(user -> item.put("reportedUserName", user.getFullName()));
+            userRepository.findById(report.getReportedUserId()).ifPresent(user -> {
+                item.put("reportedUserName", user.getFullName());
+                item.put("reportedUserEmail", user.getEmail());
+                item.put("reportedUserRole", user.getRole());
+                item.put("reportedUserStatus", user.getAccountStatus());
+            });
         } else {
             item.put("reportedUserName", null);
+            item.put("reportedUserEmail", null);
+            item.put("reportedUserRole", null);
+            item.put("reportedUserStatus", null);
         }
 
         if (report.getRelatedJobId() != null) {
-            jobRepository.findById(report.getRelatedJobId())
-                    .ifPresent(job -> item.put("relatedJobTitle", job.getTitle()));
+            jobRepository.findById(report.getRelatedJobId()).ifPresent(job -> {
+                item.put("relatedJobTitle", job.getTitle());
+                item.put("relatedJobStatus", job.getStatus());
+            });
         } else {
             item.put("relatedJobTitle", null);
+            item.put("relatedJobStatus", null);
         }
 
         if (report.getHandledBy() != null) {
-            userRepository.findById(report.getHandledBy())
-                    .ifPresent(user -> item.put("handledByName", user.getFullName()));
+            userRepository.findById(report.getHandledBy()).ifPresent(user -> {
+                item.put("handledByName", user.getFullName());
+                item.put("handledByRole", user.getRole());
+            });
         } else {
             item.put("handledByName", null);
+            item.put("handledByRole", null);
         }
 
         return item;

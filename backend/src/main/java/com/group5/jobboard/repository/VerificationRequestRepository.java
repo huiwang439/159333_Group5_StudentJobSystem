@@ -12,5 +12,9 @@ public interface VerificationRequestRepository extends JpaRepository<Verificatio
 
     List<VerificationRequest> findByReviewStatus(String reviewStatus);
 
+    List<VerificationRequest> findByReviewStatusOrderBySubmittedAtDesc(String reviewStatus);
+
+    List<VerificationRequest> findAllByOrderBySubmittedAtDesc();
+
     long countByReviewStatus(String reviewStatus);
 }

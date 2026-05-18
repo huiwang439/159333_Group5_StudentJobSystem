@@ -25,42 +25,33 @@ public class AuthController {
 
     @PostMapping("/register")
     public ApiResponse<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) {
-        Map<String, Object> result = authService.register(request);
-        return ApiResponse.success("register success", result);
+        return ApiResponse.success("register success", authService.register(request));
     }
 
     @PostMapping("/login")
     public ApiResponse<Map<String, Object>> login(@Valid @RequestBody LoginRequest request) {
-        Map<String, Object> result = authService.login(request);
-        return ApiResponse.success("login success", result);
+        return ApiResponse.success("login success", authService.login(request));
     }
 
     @PostMapping("/logout")
     public ApiResponse<Map<String, Object>> logout(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing or invalid Authorization header");
-        }
-
-        String token = authHeader.substring(7);
-        Long userId = jwtUtil.getUserId(token);
-
+        Long userId = jwtUtil.getUserId(getToken(request));
         return ApiResponse.success("logout success", authService.logout(userId));
     }
 
     @GetMapping("/me")
     public ApiResponse<Map<String, Object>> me(HttpServletRequest request) {
+        Long userId = jwtUtil.getUserId(getToken(request));
+        return ApiResponse.success(authService.getCurrentUser(userId));
+    }
+
+    private String getToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new RuntimeException("Missing or invalid Authorization header");
         }
 
-        String token = authHeader.substring(7);
-        Long userId = jwtUtil.getUserId(token);
-
-        Map<String, Object> result = authService.getCurrentUser(userId);
-        return ApiResponse.success(result);
+        return authHeader.substring(7);
     }
 }

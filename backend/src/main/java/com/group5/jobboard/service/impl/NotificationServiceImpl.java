@@ -5,7 +5,6 @@ import com.group5.jobboard.repository.NotificationRepository;
 import com.group5.jobboard.service.NotificationService;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,40 +20,27 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<Map<String, Object>> getMyNotifications(Long userId) {
-        List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        List<Map<String, Object>> result = new ArrayList<>();
-
-        for (Notification notification : notifications) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("notificationId", notification.getId());
-            item.put("userId", notification.getUserId());
-            item.put("notificationType", notification.getNotificationType());
-            item.put("title", notification.getTitle());
-            item.put("message", notification.getMessage());
-            item.put("isRead", notification.getIsRead());
-            item.put("createdAt", notification.getCreatedAt());
-            result.add(item);
-        }
-
-        return result;
+        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(this::toMap)
+                .toList();
     }
 
     @Override
     public List<Map<String, Object>> getUnreadNotifications(Long userId) {
-        List<Notification> notifications = notificationRepository.findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId);
-        List<Map<String, Object>> result = new ArrayList<>();
+        return notificationRepository.findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(this::toMap)
+                .toList();
+    }
 
-        for (Notification notification : notifications) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("notificationId", notification.getId());
-            item.put("userId", notification.getUserId());
-            item.put("notificationType", notification.getNotificationType());
-            item.put("title", notification.getTitle());
-            item.put("message", notification.getMessage());
-            item.put("isRead", notification.getIsRead());
-            item.put("createdAt", notification.getCreatedAt());
-            result.add(item);
-        }
+    @Override
+    public Map<String, Object> getUnreadCount(Long userId) {
+        long unreadCount = notificationRepository.countByUserIdAndIsReadFalse(userId);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("userId", userId);
+        result.put("unreadCount", unreadCount);
 
         return result;
     }
@@ -69,19 +55,17 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         notification.setIsRead(true);
-        notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("notificationId", notification.getId());
-        result.put("isRead", notification.getIsRead());
+        Map<String, Object> result = toMap(saved);
         result.put("updated", true);
-
         return result;
     }
 
     @Override
     public Map<String, Object> markAllAsRead(Long userId) {
-        List<Notification> notifications = notificationRepository.findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId);
+        List<Notification> notifications =
+                notificationRepository.findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId);
 
         for (Notification notification : notifications) {
             notification.setIsRead(true);
@@ -106,17 +90,19 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setMessage(message);
         notification.setIsRead(false);
 
-        notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+        return toMap(saved);
+    }
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("notificationId", notification.getId());
-        result.put("userId", notification.getUserId());
-        result.put("notificationType", notification.getNotificationType());
-        result.put("title", notification.getTitle());
-        result.put("message", notification.getMessage());
-        result.put("isRead", notification.getIsRead());
-        result.put("createdAt", notification.getCreatedAt());
-
-        return result;
+    private Map<String, Object> toMap(Notification notification) {
+        Map<String, Object> item = new HashMap<>();
+        item.put("notificationId", notification.getId());
+        item.put("userId", notification.getUserId());
+        item.put("notificationType", notification.getNotificationType());
+        item.put("title", notification.getTitle());
+        item.put("message", notification.getMessage());
+        item.put("isRead", notification.getIsRead());
+        item.put("createdAt", notification.getCreatedAt());
+        return item;
     }
 }

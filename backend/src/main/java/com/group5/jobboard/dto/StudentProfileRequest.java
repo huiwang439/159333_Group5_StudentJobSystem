@@ -19,6 +19,14 @@ public class StudentProfileRequest {
     private String preferredLocation;
     private String preferredJobType;
 
+    /**
+     * 可选值：
+     * UNDERGRADUATE
+     * GRADUATE
+     * RECENT_GRADUATE
+     */
+    private String studentType;
+
     public StudentProfileRequest() {
     }
 
@@ -84,5 +92,13 @@ public class StudentProfileRequest {
 
     public void setPreferredJobType(String preferredJobType) {
         this.preferredJobType = preferredJobType;
+    }
+
+    public String getStudentType() {
+        return studentType;
+    }
+
+    public void setStudentType(String studentType) {
+        this.studentType = studentType;
     }
 }

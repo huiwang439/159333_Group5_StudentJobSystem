@@ -10,10 +10,7 @@ import com.group5.jobboard.repository.JobRepository;
 import com.group5.jobboard.service.JobService;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class JobServiceImpl implements JobService {
@@ -36,29 +33,18 @@ public class JobServiceImpl implements JobService {
     @Override
     public Map<String, Object> createJob(Long employerId, JobCreateRequest request) {
         Job job = new Job();
-        job.setEmployerId(employerId);
-        job.setTitle(request.getTitle());
-        job.setCategoryId(request.getCategoryId());
-        job.setDescription(request.getDescription());
-        job.setRequirements(request.getRequirements());
-        job.setEmploymentType(request.getEmploymentType());
-        job.setWorkMode(request.getWorkMode());
-        job.setLocation(request.getLocation());
-        job.setFieldOfStudy(request.getFieldOfStudy());
-        job.setSalaryMin(request.getSalaryMin());
-        job.setSalaryMax(request.getSalaryMax());
-        job.setDeadline(request.getDeadline());
-
+        fillJobFromRequest(job, employerId, request);
         job.setStatus("pending");
 
-        jobRepository.save(job);
+        Job saved = jobRepository.save(job);
 
-        log(employerId, "CREATE_JOB", "JOB", job.getId());
+        log(employerId, "CREATE_JOB", "JOB", saved.getId());
 
         Map<String, Object> result = new HashMap<>();
-        result.put("jobId", job.getId());
-        result.put("title", job.getTitle());
-        result.put("status", job.getStatus());
+        result.put("jobId", saved.getId());
+        result.put("title", saved.getTitle());
+        result.put("status", saved.getStatus());
+        result.put("targetStudentType", saved.getTargetStudentType());
         result.put("message", "Job submitted and waiting for admin review");
 
         return result;
@@ -66,14 +52,28 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public List<Map<String, Object>> getPublicJobs() {
-        List<Job> jobs = jobRepository.findByStatus("approved");
-        List<Map<String, Object>> result = new ArrayList<>();
+        return jobRepository.findByStatusOrderByCreatedAtDesc("approved")
+                .stream()
+                .map(this::jobToMap)
+                .toList();
+    }
 
-        for (Job job : jobs) {
-            result.add(jobToMap(job));
+    @Override
+    public List<Map<String, Object>> getPublicJobsByStudentType(String studentType) {
+        String normalizedStudentType = normalizeStudentTypeForFilter(studentType);
+
+        if ("ALL".equals(normalizedStudentType)) {
+            return getPublicJobs();
         }
 
-        return result;
+        List<String> allowedTypes = new ArrayList<>();
+        allowedTypes.add("ALL");
+        allowedTypes.add(normalizedStudentType);
+
+        return jobRepository.findByStatusAndTargetStudentTypeInOrderByCreatedAtDesc("approved", allowedTypes)
+                .stream()
+                .map(this::jobToMap)
+                .toList();
     }
 
     @Override
@@ -81,7 +81,28 @@ public class JobServiceImpl implements JobService {
                                                       String location,
                                                       String employmentType,
                                                       String fieldOfStudy) {
-        List<Job> jobs = jobRepository.findByStatus("approved");
+        return searchPublicJobs(keyword, location, employmentType, fieldOfStudy, "ALL");
+    }
+
+    @Override
+    public List<Map<String, Object>> searchPublicJobs(String keyword,
+                                                      String location,
+                                                      String employmentType,
+                                                      String fieldOfStudy,
+                                                      String studentType) {
+        String normalizedStudentType = normalizeStudentTypeForFilter(studentType);
+
+        List<Job> jobs;
+
+        if ("ALL".equals(normalizedStudentType)) {
+            jobs = jobRepository.findByStatusOrderByCreatedAtDesc("approved");
+        } else {
+            jobs = jobRepository.findByStatusAndTargetStudentTypeInOrderByCreatedAtDesc(
+                    "approved",
+                    Arrays.asList("ALL", normalizedStudentType)
+            );
+        }
+
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (Job job : jobs) {
@@ -97,7 +118,8 @@ public class JobServiceImpl implements JobService {
                                 || containsIgnoreCase(job.getLocation(), k)
                                 || containsIgnoreCase(job.getFieldOfStudy(), k)
                                 || containsIgnoreCase(job.getEmploymentType(), k)
-                                || containsIgnoreCase(job.getWorkMode(), k);
+                                || containsIgnoreCase(job.getWorkMode(), k)
+                                || containsIgnoreCase(job.getTargetStudentType(), k);
 
                 if (!keywordMatch) {
                     match = false;
@@ -145,28 +167,25 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public List<Map<String, Object>> getEmployerJobs(Long employerId) {
-        List<Job> jobs = jobRepository.findByEmployerId(employerId);
-        List<Map<String, Object>> result = new ArrayList<>();
-
-        for (Job job : jobs) {
-            result.add(jobToMap(job));
-        }
-
-        return result;
+        return jobRepository.findByEmployerId(employerId)
+                .stream()
+                .map(this::jobToMap)
+                .toList();
     }
 
     @Override
     public List<Map<String, Object>> getEmployerJobs(Long employerId, String status) {
-        List<Job> jobs = jobRepository.findByEmployerId(employerId);
-        List<Map<String, Object>> result = new ArrayList<>();
+        List<Job> jobs;
 
-        for (Job job : jobs) {
-            if (status == null || status.isBlank() || status.equals(job.getStatus())) {
-                result.add(jobToMap(job));
-            }
+        if (status == null || status.isBlank()) {
+            jobs = jobRepository.findByEmployerId(employerId);
+        } else {
+            jobs = jobRepository.findByEmployerIdAndStatus(employerId, status);
         }
 
-        return result;
+        return jobs.stream()
+                .map(this::jobToMap)
+                .toList();
     }
 
     @Override
@@ -178,26 +197,17 @@ public class JobServiceImpl implements JobService {
             throw new RuntimeException("You are not allowed to update this job");
         }
 
-        job.setTitle(request.getTitle());
-        job.setCategoryId(request.getCategoryId());
-        job.setDescription(request.getDescription());
-        job.setRequirements(request.getRequirements());
-        job.setEmploymentType(request.getEmploymentType());
-        job.setWorkMode(request.getWorkMode());
-        job.setLocation(request.getLocation());
-        job.setFieldOfStudy(request.getFieldOfStudy());
-        job.setSalaryMin(request.getSalaryMin());
-        job.setSalaryMax(request.getSalaryMax());
-        job.setDeadline(request.getDeadline());
+        fillJobFromRequest(job, employerId, request);
 
-        jobRepository.save(job);
+        Job saved = jobRepository.save(job);
 
-        log(employerId, "UPDATE_JOB", "JOB", job.getId());
+        log(employerId, "UPDATE_JOB", "JOB", saved.getId());
 
         Map<String, Object> result = new HashMap<>();
-        result.put("jobId", job.getId());
-        result.put("title", job.getTitle());
-        result.put("status", job.getStatus());
+        result.put("jobId", saved.getId());
+        result.put("title", saved.getTitle());
+        result.put("status", saved.getStatus());
+        result.put("targetStudentType", saved.getTargetStudentType());
         result.put("updated", true);
 
         return result;
@@ -213,12 +223,12 @@ public class JobServiceImpl implements JobService {
         }
 
         job.setStatus("deleted");
-        jobRepository.save(job);
+        Job saved = jobRepository.save(job);
 
-        log(employerId, "DELETE_JOB", "JOB", job.getId());
+        log(employerId, "DELETE_JOB", "JOB", saved.getId());
 
         Map<String, Object> result = new HashMap<>();
-        result.put("jobId", job.getId());
+        result.put("jobId", saved.getId());
         result.put("deleted", true);
 
         return result;
@@ -234,16 +244,32 @@ public class JobServiceImpl implements JobService {
         }
 
         job.setStatus("closed");
-        jobRepository.save(job);
+        Job saved = jobRepository.save(job);
 
-        log(employerId, "CLOSE_JOB", "JOB", job.getId());
+        log(employerId, "CLOSE_JOB", "JOB", saved.getId());
 
         Map<String, Object> result = new HashMap<>();
-        result.put("jobId", job.getId());
-        result.put("status", job.getStatus());
+        result.put("jobId", saved.getId());
+        result.put("status", saved.getStatus());
         result.put("closed", true);
 
         return result;
+    }
+
+    private void fillJobFromRequest(Job job, Long employerId, JobCreateRequest request) {
+        job.setEmployerId(employerId);
+        job.setTitle(request.getTitle());
+        job.setCategoryId(request.getCategoryId());
+        job.setDescription(request.getDescription());
+        job.setRequirements(request.getRequirements());
+        job.setEmploymentType(request.getEmploymentType());
+        job.setWorkMode(request.getWorkMode());
+        job.setLocation(request.getLocation());
+        job.setFieldOfStudy(request.getFieldOfStudy());
+        job.setSalaryMin(request.getSalaryMin());
+        job.setSalaryMax(request.getSalaryMax());
+        job.setDeadline(request.getDeadline());
+        job.setTargetStudentType(normalizeTargetStudentType(request.getTargetStudentType()));
     }
 
     private Map<String, Object> jobToMap(Job job) {
@@ -263,6 +289,7 @@ public class JobServiceImpl implements JobService {
         item.put("salaryMax", job.getSalaryMax());
         item.put("deadline", job.getDeadline());
         item.put("status", job.getStatus());
+        item.put("targetStudentType", job.getTargetStudentType());
         item.put("createdAt", job.getCreatedAt());
         item.put("updatedAt", job.getUpdatedAt());
 
@@ -272,6 +299,9 @@ public class JobServiceImpl implements JobService {
         }
 
         employerProfileRepository.findByUserId(job.getEmployerId()).ifPresent(profile -> {
+            item.put("companyName", profile.getCompanyName());
+            item.put("companyLogoUrl", profile.getLogoUrl());
+
             Map<String, Object> employerProfile = new HashMap<>();
             employerProfile.put("employerProfileId", profile.getId());
             employerProfile.put("userId", profile.getUserId());
@@ -290,6 +320,40 @@ public class JobServiceImpl implements JobService {
         });
 
         return item;
+    }
+
+    private String normalizeTargetStudentType(String targetStudentType) {
+        if (targetStudentType == null || targetStudentType.isBlank()) {
+            return "ALL";
+        }
+
+        String value = targetStudentType.trim().toUpperCase();
+
+        if (!"ALL".equals(value)
+                && !"UNDERGRADUATE".equals(value)
+                && !"GRADUATE".equals(value)
+                && !"RECENT_GRADUATE".equals(value)) {
+            throw new RuntimeException("Invalid targetStudentType. Allowed values: ALL, UNDERGRADUATE, GRADUATE, RECENT_GRADUATE");
+        }
+
+        return value;
+    }
+
+    private String normalizeStudentTypeForFilter(String studentType) {
+        if (studentType == null || studentType.isBlank()) {
+            return "ALL";
+        }
+
+        String value = studentType.trim().toUpperCase();
+
+        if (!"ALL".equals(value)
+                && !"UNDERGRADUATE".equals(value)
+                && !"GRADUATE".equals(value)
+                && !"RECENT_GRADUATE".equals(value)) {
+            throw new RuntimeException("Invalid studentType. Allowed values: ALL, UNDERGRADUATE, GRADUATE, RECENT_GRADUATE");
+        }
+
+        return value;
     }
 
     private boolean containsIgnoreCase(String source, String keyword) {

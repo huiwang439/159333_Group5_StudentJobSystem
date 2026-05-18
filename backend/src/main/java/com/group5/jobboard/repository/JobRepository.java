@@ -14,6 +14,8 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     List<Job> findByStatus(String status);
 
+    List<Job> findByStatusOrderByCreatedAtDesc(String status);
+
     List<Job> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
     long countByStatus(String status);
@@ -26,6 +28,10 @@ public interface JobRepository extends JpaRepository<Job, Long> {
             String status2,
             String location
     );
+
+    List<Job> findByStatusAndTargetStudentTypeInOrderByCreatedAtDesc(String status, List<String> targetStudentTypes);
+
+    List<Job> findByStatusAndTargetStudentTypeOrderByCreatedAtDesc(String status, String targetStudentType);
 
     long countByEmployerId(Long employerId);
 

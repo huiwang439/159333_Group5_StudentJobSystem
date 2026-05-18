@@ -38,28 +38,25 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Email already exists");
         }
 
-        if (!"student".equals(request.getRole()) && !"employer".equals(request.getRole())) {
-            throw new RuntimeException("Only student and employer can register");
+        String role = normalizeRole(request.getRole());
+
+        if (!"student".equals(role) && !"employer".equals(role)) {
+            throw new RuntimeException("Only student and employer can register. Admin and staff accounts must be created by admin.");
         }
 
         User user = new User();
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole());
+        user.setRole(role);
         user.setPhone(request.getPhone());
         user.setAccountStatus("active");
 
-        userRepository.save(user);
+        User saved = userRepository.save(user);
 
-        log(user.getId(), "REGISTER", "USER", user.getId());
+        log(saved.getId(), "REGISTER", "USER", saved.getId());
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("userId", user.getId());
-        result.put("role", user.getRole());
-        result.put("accountStatus", user.getAccountStatus());
-
-        return result;
+        return userToMap(saved);
     }
 
     @Override
@@ -79,12 +76,8 @@ public class AuthServiceImpl implements AuthService {
 
         log(user.getId(), "LOGIN", "USER", user.getId());
 
-        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> result = userToMap(user);
         result.put("token", token);
-        result.put("userId", user.getId());
-        result.put("role", user.getRole());
-        result.put("fullName", user.getFullName());
-        result.put("accountStatus", user.getAccountStatus());
 
         return result;
     }
@@ -106,6 +99,18 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        return userToMap(user);
+    }
+
+    private String normalizeRole(String role) {
+        if (role == null || role.isBlank()) {
+            throw new RuntimeException("Role cannot be blank");
+        }
+
+        return role.trim().toLowerCase();
+    }
+
+    private Map<String, Object> userToMap(User user) {
         Map<String, Object> result = new HashMap<>();
         result.put("userId", user.getId());
         result.put("fullName", user.getFullName());
@@ -113,7 +118,8 @@ public class AuthServiceImpl implements AuthService {
         result.put("role", user.getRole());
         result.put("phone", user.getPhone());
         result.put("accountStatus", user.getAccountStatus());
-
+        result.put("createdAt", user.getCreatedAt());
+        result.put("updatedAt", user.getUpdatedAt());
         return result;
     }
 

@@ -51,6 +51,9 @@ public class Job {
     @Column(nullable = false, length = 30)
     private String status = "pending";
 
+    @Column(name = "target_student_type", nullable = false, length = 30)
+    private String targetStudentType = "ALL";
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -128,6 +131,7 @@ public class Job {
     public String getLocation() {
         return location;
     }
+
     public String getJobType() {
         return this.employmentType;
     }
@@ -174,6 +178,14 @@ public class Job {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getTargetStudentType() {
+        return targetStudentType;
+    }
+
+    public void setTargetStudentType(String targetStudentType) {
+        this.targetStudentType = targetStudentType;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -27,9 +27,12 @@ public class StudentDocumentController {
     public ApiResponse<Map<String, Object>> uploadDocument(@RequestParam MultipartFile file,
                                                            @RequestParam String documentType,
                                                            HttpServletRequest request) {
-        String token = getToken(request);
-        Long studentId = jwtUtil.getUserId(token);
-        String role = jwtUtil.getRole(token);
+        Long studentId = getUserId(request);
+        String role = getRole(request);
+
+        if (!"student".equals(role)) {
+            throw new RuntimeException("Only student can upload documents");
+        }
 
         return ApiResponse.success(
                 "document uploaded",
@@ -39,9 +42,12 @@ public class StudentDocumentController {
 
     @GetMapping
     public ApiResponse<List<Map<String, Object>>> getMyDocuments(HttpServletRequest request) {
-        String token = getToken(request);
-        Long studentId = jwtUtil.getUserId(token);
-        String role = jwtUtil.getRole(token);
+        Long studentId = getUserId(request);
+        String role = getRole(request);
+
+        if (!"student".equals(role)) {
+            throw new RuntimeException("Only student can view documents");
+        }
 
         return ApiResponse.success(studentDocumentService.getMyDocuments(studentId, role));
     }
@@ -49,9 +55,12 @@ public class StudentDocumentController {
     @PatchMapping("/{id}/default-resume")
     public ApiResponse<Map<String, Object>> setDefaultResume(@PathVariable Long id,
                                                              HttpServletRequest request) {
-        String token = getToken(request);
-        Long studentId = jwtUtil.getUserId(token);
-        String role = jwtUtil.getRole(token);
+        Long studentId = getUserId(request);
+        String role = getRole(request);
+
+        if (!"student".equals(role)) {
+            throw new RuntimeException("Only student can set default resume");
+        }
 
         return ApiResponse.success(
                 "default resume updated",
@@ -67,5 +76,13 @@ public class StudentDocumentController {
         }
 
         return authHeader.substring(7);
+    }
+
+    private Long getUserId(HttpServletRequest request) {
+        return jwtUtil.getUserId(getToken(request));
+    }
+
+    private String getRole(HttpServletRequest request) {
+        return jwtUtil.getRole(getToken(request));
     }
 }
