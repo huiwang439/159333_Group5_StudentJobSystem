@@ -10,7 +10,7 @@
 
     <div class="admin-ai-window" id="adminAiWindow">
       <div class="admin-ai-header">
-        <span>Admin AI Assistant</span>
+        <span>Admin Assistant</span>
         <button class="admin-ai-close" id="adminAiClose">×</button>
       </div>
 
@@ -77,7 +77,7 @@
 
     async function handleQuestion(message) {
         addMessage(escapeHtml(message), "user", true);
-        const loading = addMessage("AI is loading data from backend...", "bot", true);
+        const loading = addMessage("Assistant is loading data from backend...", "bot", true);
 
         try {
             const responseHtml = await getBackendAIResponse(message);
@@ -132,22 +132,22 @@
     async function getBackendAIResponse(message) {
         const lowerMessage = message.toLowerCase();
 
-        if (lowerMessage.includes("fraud") || lowerMessage.includes("spam") || lowerMessage.includes("user") || lowerMessage.includes("异常") || lowerMessage.includes("虚假") || lowerMessage.includes("用户")) {
+        if (lowerMessage.includes("fraud") || lowerMessage.includes("spam") || lowerMessage.includes("user")) {
             const data = await apiGet("/ai/admin/fraud-detection");
             return renderFraudDetection(data);
         }
 
-        if (lowerMessage.includes("analytics") || lowerMessage.includes("platform") || lowerMessage.includes("dashboard") || lowerMessage.includes("trend") || lowerMessage.includes("分析") || lowerMessage.includes("数据")) {
+        if (lowerMessage.includes("analytics") || lowerMessage.includes("platform") || lowerMessage.includes("dashboard") || lowerMessage.includes("trend")) {
             const data = await apiGet("/ai/admin/platform-analytics");
             return renderPlatformAnalytics(data);
         }
 
-        if (lowerMessage.includes("report") || lowerMessage.includes("monthly") || lowerMessage.includes("generate") || lowerMessage.includes("报告") || lowerMessage.includes("生成")) {
+        if (lowerMessage.includes("report") || lowerMessage.includes("monthly") || lowerMessage.includes("generate")) {
             const data = await apiGet("/ai/admin/monthly-report");
             return renderMonthlyReport(data);
         }
 
-        if (lowerMessage.includes("moderation") || lowerMessage.includes("job") || lowerMessage.includes("审核") || lowerMessage.includes("岗位")) {
+        if (lowerMessage.includes("moderation") || lowerMessage.includes("job")) {
             const jobId = getJobIdFromTextOrPage(message);
             if (!jobId) return "<strong>AI Job Moderation</strong><br>Please type a job id, for example: <strong>moderate job 1</strong>.";
             const data = await apiGet(`/ai/admin/jobs/${jobId}/moderation`);

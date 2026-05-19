@@ -10,7 +10,7 @@
 
     <div class="student-ai-window" id="studentAiWindow">
       <div class="student-ai-header">
-        <span>Student AI Assistant</span>
+        <span>Student Assistant</span>
         <button class="student-ai-close" id="studentAiClose">×</button>
       </div>
 
@@ -78,7 +78,7 @@
 
     async function handleQuestion(message) {
         addMessage(escapeHtml(message), "user", true);
-        const loading = addMessage("AI is loading data from backend...", "bot", true);
+        const loading = addMessage("Assistant is loading data from backend...", "bot", true);
 
         try {
             const responseHtml = await getBackendAIResponse(message);
@@ -138,22 +138,22 @@
     async function getBackendAIResponse(message) {
         const lowerMessage = message.toLowerCase();
 
-        if (lowerMessage.includes("recommend") || lowerMessage.includes("推荐")) {
+        if (lowerMessage.includes("recommend")) {
             const data = await apiGet("/ai/jobs/recommendations");
             return renderRecommendations(data);
         }
 
-        if (lowerMessage.includes("alert") || lowerMessage.includes("notification") || lowerMessage.includes("提醒") || lowerMessage.includes("通知")) {
+        if (lowerMessage.includes("alert") || lowerMessage.includes("notification")) {
             const data = await apiGet("/ai/jobs/alerts");
             return renderAlerts(data);
         }
 
-        if (lowerMessage.includes("resume") || lowerMessage.includes("cv") || lowerMessage.includes("简历")) {
+        if (lowerMessage.includes("resume") || lowerMessage.includes("cv")) {
             const data = await apiGet("/ai/resume-improvement");
             return renderResumeSuggestions(data);
         }
 
-        if (lowerMessage.includes("fit") || lowerMessage.includes("match") || lowerMessage.includes("success") || lowerMessage.includes("probability") || lowerMessage.includes("rate") || lowerMessage.includes("匹配") || lowerMessage.includes("成功率")) {
+        if (lowerMessage.includes("fit") || lowerMessage.includes("match") || lowerMessage.includes("success") || lowerMessage.includes("probability") || lowerMessage.includes("rate")) {
             const jobId = getJobIdFromPageOrText(message);
             if (!jobId) {
                 return "<strong>AI Job Fit Analysis</strong><br>Please open a job detail page or type a job id, for example: <strong>fit job 1</strong>.";

@@ -10,7 +10,7 @@
 
     <div class="employer-ai-window" id="employerAiWindow">
       <div class="employer-ai-header">
-        <span>Employer AI Assistant</span>
+        <span>Employer Assistant</span>
         <button class="employer-ai-close" id="employerAiClose">×</button>
       </div>
 
@@ -77,7 +77,7 @@
 
     async function handleQuestion(message) {
         addMessage(escapeHtml(message), "user", true);
-        const loading = addMessage("AI is loading data from backend...", "bot", true);
+        const loading = addMessage("Assistant is loading data from backend...", "bot", true);
 
         try {
             const responseHtml = await getBackendAIResponse(message);
@@ -132,25 +132,25 @@
     async function getBackendAIResponse(message) {
         const lowerMessage = message.toLowerCase();
 
-        if (lowerMessage.includes("analytics") || lowerMessage.includes("trend") || lowerMessage.includes("dashboard") || lowerMessage.includes("分析") || lowerMessage.includes("数据")) {
+        if (lowerMessage.includes("analytics") || lowerMessage.includes("trend") || lowerMessage.includes("dashboard")) {
             const data = await apiGet("/ai/employer/hiring-analytics");
             return renderHiringAnalytics(data);
         }
 
-        if (lowerMessage.includes("description") || lowerMessage.includes("job post") || lowerMessage.includes("improve") || lowerMessage.includes("岗位描述") || lowerMessage.includes("优化")) {
+        if (lowerMessage.includes("description") || lowerMessage.includes("job post") || lowerMessage.includes("improve")) {
             const body = collectJobDescriptionInput(message);
             const data = await apiPost("/ai/employer/job-description/improve", body);
             return renderImprovedDescription(data);
         }
 
-        if (lowerMessage.includes("resume") || lowerMessage.includes("screen") || lowerMessage.includes("cv") || lowerMessage.includes("简历") || lowerMessage.includes("筛选")) {
+        if (lowerMessage.includes("resume") || lowerMessage.includes("screen") || lowerMessage.includes("cv")) {
             const jobId = getJobIdFromTextOrPage(message);
             if (!jobId) return "<strong>AI Resume Screening</strong><br>Please type a job id, for example: <strong>screen resumes for job 1</strong>.";
             const data = await apiGet(`/ai/employer/jobs/${jobId}/ranked-candidates`);
             return renderRankedCandidates(data);
         }
 
-        if (lowerMessage.includes("candidate") || lowerMessage.includes("recommend") || lowerMessage.includes("student") || lowerMessage.includes("候选人") || lowerMessage.includes("推荐")) {
+        if (lowerMessage.includes("candidate") || lowerMessage.includes("recommend") || lowerMessage.includes("student")) {
             const jobId = getJobIdFromTextOrPage(message);
             if (!jobId) return "<strong>AI Candidate Recommendation</strong><br>Please type a job id, for example: <strong>recommend candidates for job 1</strong>.";
             const data = await apiGet(`/ai/employer/jobs/${jobId}/recommended-students`);

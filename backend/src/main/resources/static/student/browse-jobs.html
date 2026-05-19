@@ -341,11 +341,11 @@
   });
 
   if (!res.ok) {
-    alert("收藏失败 ❌");
+    alert("Failed to save job ❌");
     return;
   }
 
-  alert("收藏成功 ✅");
+  alert("Job saved successfully ✅");
 }
     async function fetchJobs() {
       resultInfo.textContent = "Loading...";
@@ -405,7 +405,7 @@
   if (!btn) return;
 
   const jobId = Number(btn.dataset.jobId);
-  console.log("点击收藏 jobId =", jobId);
+  console.log("Save job clicked, jobId =", jobId);
 
   toggleFavorite(jobId);
 });

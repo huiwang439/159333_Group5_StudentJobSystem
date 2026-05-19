@@ -20,7 +20,7 @@ public class StudentProfileRequest {
     private String preferredJobType;
 
     /**
-     * 可选值：
+     * Optional values:
      * UNDERGRADUATE
      * GRADUATE
      * RECENT_GRADUATE
