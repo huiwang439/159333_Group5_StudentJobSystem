@@ -1,11 +1,11 @@
 (function () {
     const API_BASE_URL = "http://localhost:8080";
     const STORAGE_KEY = "adminAiChatHistory";
-    const WELCOME_MESSAGE = "Hi! I can connect to backend AI services for job moderation, fraud detection, platform analytics, and monthly reports.";
+    const WELCOME_MESSAGE = "Hi! I can help with job moderation, fraud detection, platform analytics, and monthly reports.";
 
     const assistantHTML = `
-    <button class="admin-ai-button" id="adminAiButton" title="Admin AI Assistant">
-      <img src="images/robot.png" alt="AI Assistant">
+    <button class="admin-ai-button" id="adminAiButton" title="Admin Assistant">
+      <img src="images/robot.png" alt="Admin Assistant">
     </button>
 
     <div class="admin-ai-window" id="adminAiWindow">
@@ -25,7 +25,7 @@
       </div>
 
       <div class="admin-ai-input-area">
-        <input id="adminAiInput" type="text" placeholder="Ask Admin AI..." />
+        <input id="adminAiInput" type="text" placeholder="Ask Admin Assistant..." />
         <button id="adminAiSend">Send</button>
       </div>
     </div>
@@ -149,7 +149,7 @@
 
         if (lowerMessage.includes("moderation") || lowerMessage.includes("job")) {
             const jobId = getJobIdFromTextOrPage(message);
-            if (!jobId) return "<strong>AI Job Moderation</strong><br>Please type a job id, for example: <strong>moderate job 1</strong>.";
+            if (!jobId) return "<strong>Job Moderation</strong><br>Please type a job id, for example: <strong>moderate job 1</strong>.";
             const data = await apiGet(`/ai/admin/jobs/${jobId}/moderation`);
             return renderJobModeration(data);
         }
@@ -183,7 +183,7 @@
 
     function renderJobModeration(data) {
         return `
-          <strong>AI Job Moderation</strong><br>
+          <strong>Job Moderation</strong><br>
           Job: ${escapeHtml(data.title)}<br>
           Risk Score: <strong>${data.riskScore}</strong><br>
           Risk Level: <strong>${escapeHtml(data.riskLevel)}</strong><br>
@@ -194,7 +194,7 @@
 
     function renderFraudDetection(data) {
         return `
-          <strong>AI Fraud Detection</strong><br>
+          <strong>Fraud Detection</strong><br>
           Risky users: ${data.totalRiskyUsers}<br>
           Risky jobs: ${data.totalRiskyJobs}<br><br>
           <strong>Risky users:</strong><br>
@@ -206,7 +206,7 @@
 
     function renderPlatformAnalytics(data) {
         return `
-          <strong>AI Platform Analytics</strong><br>
+          <strong>Platform Analytics</strong><br>
           Total jobs: ${data.totalJobs}<br>
           Approved jobs: ${data.approvedJobs}<br>
           Pending jobs: ${data.pendingJobs}<br>
@@ -220,7 +220,7 @@
 
     function renderMonthlyReport(data) {
         return `
-          <strong>AI Auto Report</strong><br>
+          <strong>Auto Report</strong><br>
           Month: ${escapeHtml(data.month)}<br>
           New jobs: ${data.newJobs}<br>
           Monthly applications: ${data.monthlyApplications}<br><br>

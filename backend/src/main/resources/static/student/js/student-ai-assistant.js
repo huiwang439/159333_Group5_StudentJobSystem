@@ -1,11 +1,11 @@
 (function () {
     const API_BASE_URL = "http://localhost:8080";
     const STORAGE_KEY = "studentAiChatHistory";
-    const WELCOME_MESSAGE = "Hi! I can connect to the backend AI service for job fit analysis, job recommendations, job alerts, resume improvement, and success prediction.";
+    const WELCOME_MESSAGE = "Hi! I can help with job fit analysis, job recommendations, alerts, resume improvement, and success prediction.";
 
     const assistantHTML = `
-    <button class="student-ai-button" id="studentAiButton" title="Student AI Assistant">
-      <img src="./images/robot.png" alt="AI Assistant">
+    <button class="student-ai-button" id="studentAiButton" title="Student Assistant">
+      <img src="./images/robot.png" alt="Student Assistant">
     </button>
 
     <div class="student-ai-window" id="studentAiWindow">
@@ -26,7 +26,7 @@
       </div>
 
       <div class="student-ai-input-area">
-        <input id="studentAiInput" type="text" placeholder="Ask Student AI..." />
+        <input id="studentAiInput" type="text" placeholder="Ask Student Assistant..." />
         <button id="studentAiSend">Send</button>
       </div>
     </div>
@@ -156,7 +156,7 @@
         if (lowerMessage.includes("fit") || lowerMessage.includes("match") || lowerMessage.includes("success") || lowerMessage.includes("probability") || lowerMessage.includes("rate")) {
             const jobId = getJobIdFromPageOrText(message);
             if (!jobId) {
-                return "<strong>AI Job Fit Analysis</strong><br>Please open a job detail page or type a job id, for example: <strong>fit job 1</strong>.";
+                return "<strong>Job Fit Analysis</strong><br>Please open a job detail page or type a job id, for example: <strong>fit job 1</strong>.";
             }
             const data = await apiGet(`/ai/jobs/${jobId}/fit`);
             return renderJobFit(data);
@@ -193,7 +193,7 @@
 
     function renderJobFit(data) {
         return `
-          <strong>AI Job Fit Analysis</strong><br>
+          <strong>Job Fit Analysis</strong><br>
           Job: ${escapeHtml(data.jobTitle)}<br>
           Match Score: <strong>${data.matchScore}%</strong><br>
           Match Level: <strong>${escapeHtml(data.matchLevel)}</strong><br>
@@ -205,9 +205,9 @@
 
     function renderRecommendations(data) {
         const jobs = data.recommendedJobs || [];
-        if (jobs.length === 0) return "<strong>AI Job Recommendation</strong><br>No approved matching jobs found.";
+        if (jobs.length === 0) return "<strong>Job Recommendation</strong><br>No approved matching jobs found.";
         return `
-          <strong>AI Job Recommendation</strong><br>
+          <strong>Job Recommendation</strong><br>
           ${jobs.map((job, index) => `${index + 1}. ${escapeHtml(job.title)} - <strong>${job.matchScore}%</strong> (${escapeHtml(job.matchLevel)})<br>Location: ${escapeHtml(job.location)}<br>`).join("<br>")}
           <strong>Resume suggestions:</strong><br>${renderList(data.resumeSuggestions)}
         `;
@@ -215,16 +215,16 @@
 
     function renderAlerts(data) {
         const alerts = data.alerts || [];
-        if (alerts.length === 0) return "<strong>AI Job Alert</strong><br>No matching job alerts right now.";
+        if (alerts.length === 0) return "<strong>Job Alert</strong><br>No matching job alerts right now.";
         return `
-          <strong>AI Job Alert</strong><br>
+          <strong>Job Alert</strong><br>
           Total alerts: ${data.totalAlerts}<br><br>
           ${alerts.map(alert => `• ${escapeHtml(alert.title)} - ${alert.matchScore}% match<br>${escapeHtml(alert.message)}<br>`).join("<br>")}
         `;
     }
 
     function renderResumeSuggestions(data) {
-        return `<strong>AI Resume Improvement</strong><br>${renderList(data)}`;
+        return `<strong>Resume Improvement</strong><br>${renderList(data)}`;
     }
 
     function renderList(items) {
