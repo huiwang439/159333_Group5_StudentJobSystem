@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const majorInput = document.getElementById("jobseeker-major");
     const degreeLevelInput = document.getElementById("jobseeker-degree-level");
     const graduationYearInput = document.getElementById("jobseeker-graduation-year");
+    const studentTypeInput = document.getElementById("jobseeker-student-type");
     const preferredJobTypeInput = document.getElementById("jobseeker-preferred-job-type");
     const preferredLocationInput = document.getElementById("jobseeker-preferred-location");
     const skillsInput = document.getElementById("jobseeker-skills");
@@ -44,6 +45,11 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        if (!studentTypeInput.value) {
+            showText("authMessage", "Please select your student type.", true);
+            return;
+        }
+
         showText("authMessage", "Registering...");
 
         try {
@@ -69,6 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 major: majorInput.value.trim(),
                 degreeLevel: degreeLevelInput.value,
                 graduationYear: graduationYear,
+                studentType: studentTypeInput.value,
                 preferredJobType: preferredJobTypeInput.value.trim(),
                 preferredLocation: preferredLocationInput.value.trim(),
                 bio: bioInput.value.trim(),

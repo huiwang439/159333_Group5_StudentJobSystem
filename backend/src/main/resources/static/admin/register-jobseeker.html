@@ -77,6 +77,17 @@
             </div>
 
             <div class="form-group">
+                <label class="form-label" for="jobseeker-student-type">Student type <span style="font-weight:400;color:#64748b">(required)</span></label>
+                <select class="form-select" id="jobseeker-student-type" required>
+                    <option value="">Select your status</option>
+                    <option value="UNDERGRADUATE">University Student (currently enrolled)</option>
+                    <option value="GRADUATE">Graduate Student (currently enrolled)</option>
+                    <option value="RECENT_GRADUATE">Recent Graduate</option>
+                </select>
+                <p style="font-size:0.8rem;color:#64748b;margin:0.35rem 0 0">Used to match jobs to your profile. You can update this in Profile later.</p>
+            </div>
+
+            <div class="form-group">
                 <label class="form-label" for="jobseeker-preferred-job-type">Preferred Job Type</label>
                 <input class="form-input" id="jobseeker-preferred-job-type" type="text" placeholder="e.g. Full-time, Part-time, Internship">
             </div>

@@ -25,6 +25,11 @@
     .card { border:1px solid var(--border); border-radius:10px; padding:.75rem; color:#334155; line-height:1.55; }
     .actions { padding:0 1rem 1rem; display:flex; flex-wrap:wrap; justify-content:center; gap:.55rem; align-items:center; }
     .status { font-size:.82rem; color:var(--muted); margin-top:.5rem; text-align:center; min-height:1.2rem; }
+    .job-header-row { display:flex; gap:0.85rem; align-items:flex-start; }
+    .job-header-row .job-logo { width:52px; height:52px; }
+    .job-header-text { flex:1; min-width:0; }
+    .job-header-text h1 { margin:0; }
+    .audience-line { margin:0.35rem 0 0; font-size:0.82rem; color:var(--muted); }
     .btn-report { background:#fff; border:1px solid #cbd5e1; color:#64748b; }
     .btn-report:hover { border-color:#94a3b8; color:#334155; background:#f8fafc; }
     .report-status { font-size:.82rem; color:var(--muted); margin-top:.35rem; text-align:center; min-height:1.2rem; }
@@ -56,6 +61,7 @@
       <li><a href="./my-applications.html"><span class="nav-ico">→</span> My Applications</a></li>
       <li><a href="./profile.html"><span class="nav-ico">◎</span> Profile</a></li>
       <li><a href="./notifications.html"><span class="nav-ico">◆</span><span class="nav-text">Notifications</span><span class="nav-notif-badge" id="nav-notif-badge" hidden></span></a></li>
+      <li><a href="./career-events.html"><span class="nav-ico">◇</span> Career Events</a></li>
       <li>
         <a href="./student-ai.html">
           <span class="nav-ico">🤖</span>AI Assistant
@@ -81,8 +87,14 @@
 
   <section class="panel">
     <header class="header">
-      <h1 id="job-title">Loading job...</h1>
-      <p id="company-name">Please wait</p>
+      <div class="job-header-row">
+        <div id="company-logo-wrap"></div>
+        <div class="job-header-text">
+          <h1 id="job-title">Loading job...</h1>
+          <p id="company-name">Please wait</p>
+          <p class="audience-line" id="target-audience-line"></p>
+        </div>
+      </div>
     </header>
 
     <div class="chips">
@@ -150,16 +162,19 @@
   </div>
 </div>
 
+<script src="./js/student-api.js"></script>
 <script src="./js/student-shell.js"></script>
 <script src="./js/student-notif-badge.js"></script>
 <script>
-  const API_BASE = "http://localhost:8080";
+  const API = window.StudentApi;
+  const API_BASE = API.API_BASE;
   const token = localStorage.getItem("token");
 
   const params = new URLSearchParams(window.location.search);
   const jobId = Number(params.get("jobId"));
 
   let currentJob = null;
+  let profileStudentType = "UNDERGRADUATE";
 
   function getJobPk(job) {
     if (!job) return jobId;
@@ -262,8 +277,15 @@
     document.getElementById("job-location").textContent = currentJob.location || "";
     document.getElementById("job-salary").textContent = formatSalary(currentJob);
     document.getElementById("job-type").textContent = currentJob.jobType || currentJob.employmentType || "";
-    document.getElementById("job-industry").textContent = currentJob.industry || currentJob.categoryName || "";
+    document.getElementById("job-industry").textContent = currentJob.industry || currentJob.categoryName || currentJob.fieldOfStudy || "";
     document.getElementById("job-description").textContent = currentJob.description || "";
+
+    document.getElementById("company-logo-wrap").innerHTML = API.renderLogoHtml(currentJob, "job-logo");
+    const audienceEl = document.getElementById("target-audience-line");
+    if (audienceEl) {
+      audienceEl.textContent =
+        "Open to: " + API.labelForTargetStudentType(currentJob.targetStudentType);
+    }
 
     const companyDescription =
       currentJob.companyDescription ||
@@ -293,6 +315,13 @@
 
   function openApplyModal() {
     if (!currentJob) return;
+    if (!API.canApplyToJob(currentJob, profileStudentType)) {
+      document.getElementById("apply-status").textContent =
+        "This job is not open to your student type (" +
+        API.labelForStudentType(profileStudentType) +
+        "). You can still browse other roles.";
+      return;
+    }
     applyCoverLetter.value = defaultCoverLetterText();
     applyModalStatus.textContent = "";
     applyModal.classList.add("open");
@@ -419,7 +448,17 @@
     if (e.target === reportModal) closeReportModal();
   });
 
-  loadJobDetail();
+  async function initPage() {
+    if (token) {
+      const profile = await API.fetchStudentProfile(token);
+      if (profile && profile.studentType) {
+        profileStudentType = profile.studentType;
+      }
+    }
+    loadJobDetail();
+  }
+
+  initPage();
 </script>
 <script src="./js/student-ai-assistant.js"></script>
 </body>
