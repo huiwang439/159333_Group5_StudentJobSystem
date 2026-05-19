@@ -82,10 +82,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 skills: skillsInput.value.trim()
             });
 
-            showText("authMessage", "Registration successful.");
-            setTimeout(() => {
-                window.location.href = "/login-jobseeker.html";
-            }, 800);
+            clearAuth();
+            showText("authMessage", "Registration successful. Redirecting to login...");
+            window.location.href = "./login-jobseeker.html";
         } catch (error) {
             clearAuth();
             showText("authMessage", error.message, true);
