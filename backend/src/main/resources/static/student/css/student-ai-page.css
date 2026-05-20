@@ -1,18 +1,19 @@
 .ai-page {
     background: #ffffff;
-    border: 1px solid #e2e6ef;
+    border: 1px solid #e5e7eb;
     border-radius: 16px;
     padding: 24px;
     max-width: 900px;
-    box-shadow: 0 8px 24px rgba(26, 29, 38, 0.06);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
 }
 
 .ai-page h1 {
     margin: 0 0 8px;
+    color: #173f86;
 }
 
 .ai-page p {
-    color: #5c6478;
+    color: #6b7280;
     margin-bottom: 20px;
 }
 
@@ -20,7 +21,7 @@
     height: 420px;
     overflow-y: auto;
     background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 16px;
@@ -37,13 +38,13 @@
 
 .ai-message.user {
     margin-left: auto;
-    background: #14b8a6;
+    background: #173f86;
     color: white;
 }
 
 .ai-message.bot {
     background: white;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #e5e7eb;
     color: #334155;
 }
 
@@ -55,12 +56,13 @@
 }
 
 .ai-quick-actions button {
-    border: 1px solid #14b8a6;
-    background: #e6fbf8;
-    color: #0f766e;
+    border: 1px solid #173f86;
+    background: #eef3fb;
+    color: #173f86;
     border-radius: 999px;
     padding: 8px 12px;
     cursor: pointer;
+    font-weight: 600;
 }
 
 .ai-input-row {
@@ -70,17 +72,21 @@
 
 .ai-input-row input {
     flex: 1;
-    border: 1px solid #cbd5e1;
-    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
     padding: 12px;
 }
 
 .ai-input-row button {
     border: none;
-    background: #14b8a6;
-    color: white;
-    border-radius: 10px;
+    background: #facc15;
+    color: #111827;
+    border-radius: 12px;
     padding: 0 20px;
-    font-weight: 700;
+    font-weight: 800;
     cursor: pointer;
+}
+
+.ai-input-row button:hover {
+    background: #eab308;
 }

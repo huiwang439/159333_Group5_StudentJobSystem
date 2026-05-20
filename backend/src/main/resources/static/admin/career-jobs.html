@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Career Services Staff - Job Management</title>
+
+    <link rel="stylesheet" href="./css/admin-common.css">
+    <link rel="stylesheet" href="./css/admin-jobs.css">
+    <link rel="stylesheet" href="./css/admin-ai-assistant.css">
+</head>
+
+<body data-page="career-jobs">
+
+<div class="topbar">
+    <div class="topbar-left">
+        <button id="menuToggleBtn" class="menu-toggle-btn">▶</button>
+        <div class="topbar-title">Career Services Staff Panel</div>
+    </div>
+
+    <button id="adminLogoutBtn" class="logout-btn">Logout</button>
+</div>
+
+<div class="layout">
+
+    <aside id="sidebar" class="sidebar hidden">
+        <div class="sidebar-menu">
+            <div class="menu-item" onclick="location.href='./career-dashboard.html'">Dashboard</div>
+            <div class="menu-item active" onclick="location.href='./career-jobs.html'">Job Management</div>
+            <div class="menu-item" onclick="location.href='./career-company-info.html'">Company Information</div>
+            <div class="menu-item" onclick="location.href='./career-analytics.html'">Analytics</div>
+            <div class="menu-item" onclick="location.href='./career-events.html'">Career Events</div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <div class="container">
+
+            <section id="jobListView">
+
+                <h1>Job Management</h1>
+
+                <div class="toolbar">
+
+                    <div>
+                        <label for="keyword">Keyword</label><br>
+                        <input id="keyword" type="text" placeholder="Search by title or location">
+                    </div>
+
+                    <div>
+                        <label for="statusFilter">Status</label><br>
+                        <select id="statusFilter">
+                            <option value="">All</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="removed">Removed</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <button id="loadJobsBtn">Search</button>
+                    </div>
+
+                </div>
+
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Company</th>
+                        <th>Category</th>
+                        <th>Location</th>
+                        <th>Employment</th>
+                        <th>Salary</th>
+                        <th>Deadline</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+
+                    <tbody id="jobsTableBody"></tbody>
+                </table>
+
+            </section>
+
+            <section id="jobDetailView" class="hidden">
+
+                <button id="backToJobsBtn" class="back-btn">
+                    Back
+                </button>
+
+                <h1>Job Details</h1>
+
+                <div id="jobDetailCard" class="detail-card"></div>
+
+            </section>
+
+            <pre id="jobsMessage"></pre>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="./js/api-client.js"></script>
+<script src="./js/admin-sidebar.js"></script>
+<script src="./js/career-jobs.js"></script>
+<script src="./js/admin-ai-assistant.js"></script>
+<script src="./js/admin-logout.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Career Services Staff - Career Events</title>
+
+    <link rel="stylesheet" href="./css/admin-common.css">
+    <link rel="stylesheet" href="./css/career-events.css">
+    <link rel="stylesheet" href="./css/admin-ai-assistant.css">
+</head>
+
+<body data-page="career-events">
+
+<div class="topbar">
+    <div class="topbar-left">
+        <button id="menuToggleBtn" class="menu-toggle-btn">▶</button>
+        <div class="topbar-title">Career Services Staff Panel</div>
+    </div>
+
+    <button id="adminLogoutBtn" class="logout-btn">Logout</button>
+</div>
+
+<div class="layout">
+
+    <aside id="sidebar" class="sidebar hidden">
+        <div class="sidebar-menu">
+            <div class="menu-item" onclick="location.href='./career-dashboard.html'">Dashboard</div>
+            <div class="menu-item" onclick="location.href='./career-jobs.html'">Job Management</div>
+            <div class="menu-item" onclick="location.href='./career-company-info.html'">Company Information</div>
+            <div class="menu-item" onclick="location.href='./career-analytics.html'">Analytics</div>
+            <div class="menu-item active" onclick="location.href='./career-events.html'">Career Events</div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <div class="events-page">
+
+            <div class="events-header">
+                <div>
+                    <p class="page-label">Career Services</p>
+                    <h1>Career Events</h1>
+                    <p class="page-subtitle">
+                        Create and manage career fairs, workshops, employer talks, and internship sessions.
+                    </p>
+                </div>
+            </div>
+
+            <div class="events-layout">
+
+                <section class="event-form-card">
+                    <div class="card-header">
+                        <div>
+                            <h2 id="formTitle">Create Event</h2>
+                            <p>Add a new career service event for students.</p>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="eventId">
+
+                    <div class="form-grid">
+
+                        <div class="form-field full-width">
+                            <label for="eventTitle">Event Title</label>
+                            <input id="eventTitle" type="text" placeholder="e.g. Graduate Recruitment Talk">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="eventType">Event Type</label>
+                            <select id="eventType">
+                                <option value="Career Fair">Career Fair</option>
+                                <option value="Workshop">Workshop</option>
+                                <option value="Employer Talk">Employer Talk</option>
+                                <option value="Internship Session">Internship Session</option>
+                                <option value="Interview Preparation">Interview Preparation</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="eventOrganizer">Organizer</label>
+                            <input id="eventOrganizer" type="text" placeholder="Career Services Office">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="eventDate">Date</label>
+                            <input id="eventDate" type="date">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="eventTime">Time</label>
+                            <input id="eventTime" type="time">
+                        </div>
+
+                        <div class="form-field full-width">
+                            <label for="eventLocation">Location / Online Link</label>
+                            <input id="eventLocation" type="text" placeholder="Room A101 or online meeting link">
+                        </div>
+
+                        <div class="form-field full-width">
+                            <label for="eventDescription">Description</label>
+                            <textarea id="eventDescription" rows="5" placeholder="Describe the event purpose, target students, and key details."></textarea>
+                        </div>
+
+                    </div>
+
+                    <div class="form-actions">
+                        <button id="saveEventBtn" class="primary-btn">Create Event</button>
+                        <button id="cancelEditBtn" class="secondary-btn" type="button">Cancel</button>
+                    </div>
+
+                    <pre id="eventsMessage"></pre>
+                </section>
+
+                <section class="event-list-card">
+                    <div class="card-header">
+                        <div>
+                            <h2>Event List</h2>
+                            <p>View, edit, or delete existing career events.</p>
+                        </div>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Type</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Location</th>
+                                <th>Organizer</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+
+                            <tbody id="eventsTableBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="./js/api-client.js"></script>
+<script src="./js/admin-sidebar.js"></script>
+<script src="./js/career-events.js"></script>
+<script src="./js/admin-ai-assistant.js"></script>
+<script src="./js/admin-logout.js"></script>
+
+</body>
+</html>

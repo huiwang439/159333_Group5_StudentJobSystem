@@ -9,18 +9,24 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #f3f5f8;
+      --bg: #f5f6f8;
       --surface: #ffffff;
-      --text: #1a1d26;
-      --muted: #5c6478;
-      --border: #e2e6ef;
-      --accent: #14b8a6;
-      --accent-dark: #0f766e;
-      --accent-soft: #e6fbf8;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --brand: #173f86;
+      --brand-dark: #12356f;
+      --brand-soft: #eef3fb;
+      --primary: #facc15;
+      --primary-hover: #eab308;
+      --primary-text: #111827;
+      --accent: #173f86;
+      --accent-dark: #12356f;
+      --accent-soft: #eef3fb;
       --success: #0d7a5c;
       --warning: #b45309;
       --radius: 12px;
-      --shadow: 0 1px 3px rgba(26, 29, 38, 0.06), 0 8px 24px rgba(26, 29, 38, 0.06);
+      --shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
     }
 
     * {
@@ -29,7 +35,7 @@
 
     body {
       margin: 0;
-      font-family: "DM Sans", system-ui, sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
@@ -83,9 +89,9 @@
     }
 
     .brand-title {
-      font-weight: 700;
+      font-weight: 800;
       font-size: 0.95rem;
-      color: var(--text);
+      color: var(--brand);
       margin: 0;
     }
 
@@ -186,12 +192,12 @@
     }
 
     .btn-primary {
-      background: var(--accent);
-      color: #fff;
+      background: var(--primary);
+      color: var(--primary-text);
     }
 
     .btn-primary:hover {
-      filter: brightness(1.05);
+      background: var(--primary-hover);
     }
 
     .btn-ghost {
@@ -516,7 +522,7 @@
     .meter-fill {
       height: 100%;
       width: 72%;
-      background: linear-gradient(90deg, var(--accent), #2a7ab8);
+      background: linear-gradient(90deg, var(--brand), #2563eb);
       border-radius: 4px;
     }
 
@@ -817,8 +823,8 @@
       font-size: 0.68rem;
       padding: 0.18rem 0.45rem;
       border-radius: 6px;
-      background: #eef2ff;
-      color: #4338ca;
+      background: var(--brand-soft);
+      color: var(--brand);
       font-weight: 600;
       margin-top: 0.25rem;
     }
