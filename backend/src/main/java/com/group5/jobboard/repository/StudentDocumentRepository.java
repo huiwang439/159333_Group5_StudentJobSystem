@@ -13,4 +13,6 @@ public interface StudentDocumentRepository extends JpaRepository<StudentDocument
     Optional<StudentDocument> findByIdAndStudentId(Long id, Long studentId);
 
     List<StudentDocument> findByStudentIdAndDocumentType(Long studentId, String documentType);
+
+    Optional<StudentDocument> findByStudentIdAndDocumentTypeAndDefaultResumeTrue(Long studentId, String documentType);
 }

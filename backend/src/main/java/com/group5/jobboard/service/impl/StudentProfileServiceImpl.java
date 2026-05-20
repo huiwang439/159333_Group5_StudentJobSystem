@@ -34,10 +34,12 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         profile.setPreferredLocation(request.getPreferredLocation());
         profile.setPreferredJobType(request.getPreferredJobType());
 
-        studentProfileRepository.save(profile);
+        String studentType = normalizeStudentType(request.getStudentType());
+        profile.setStudentType(studentType);
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("studentProfileId", profile.getId());
+        StudentProfile saved = studentProfileRepository.save(profile);
+
+        Map<String, Object> result = toMap(saved);
         result.put("updated", true);
 
         return result;
@@ -48,6 +50,26 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         StudentProfile profile = studentProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Student profile not found"));
 
+        return toMap(profile);
+    }
+
+    private String normalizeStudentType(String studentType) {
+        if (studentType == null || studentType.isBlank()) {
+            return "UNDERGRADUATE";
+        }
+
+        String value = studentType.trim().toUpperCase();
+
+        if (!"UNDERGRADUATE".equals(value)
+                && !"GRADUATE".equals(value)
+                && !"RECENT_GRADUATE".equals(value)) {
+            throw new RuntimeException("Invalid studentType. Allowed values: UNDERGRADUATE, GRADUATE, RECENT_GRADUATE");
+        }
+
+        return value;
+    }
+
+    private Map<String, Object> toMap(StudentProfile profile) {
         Map<String, Object> result = new HashMap<>();
         result.put("studentProfileId", profile.getId());
         result.put("userId", profile.getUserId());
@@ -59,7 +81,9 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         result.put("bio", profile.getBio());
         result.put("preferredLocation", profile.getPreferredLocation());
         result.put("preferredJobType", profile.getPreferredJobType());
-
+        result.put("studentType", profile.getStudentType());
+        result.put("createdAt", profile.getCreatedAt());
+        result.put("updatedAt", profile.getUpdatedAt());
         return result;
     }
 }

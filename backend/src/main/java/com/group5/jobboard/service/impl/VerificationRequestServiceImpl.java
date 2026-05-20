@@ -2,7 +2,6 @@ package com.group5.jobboard.service.impl;
 
 import com.group5.jobboard.entity.AnalyticsLog;
 import com.group5.jobboard.entity.EmployerProfile;
-import com.group5.jobboard.entity.User;
 import com.group5.jobboard.entity.VerificationRequest;
 import com.group5.jobboard.repository.AnalyticsLogRepository;
 import com.group5.jobboard.repository.EmployerProfileRepository;
@@ -11,9 +10,16 @@ import com.group5.jobboard.repository.VerificationRequestRepository;
 import com.group5.jobboard.service.NotificationService;
 import com.group5.jobboard.service.VerificationRequestService;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class VerificationRequestServiceImpl implements VerificationRequestService {
@@ -41,25 +47,45 @@ public class VerificationRequestServiceImpl implements VerificationRequestServic
         EmployerProfile employerProfile = employerProfileRepository.findByUserId(employerId)
                 .orElseThrow(() -> new RuntimeException("Employer profile not found"));
 
-        verificationRequestRepository.findByEmployerProfileId(employerProfile.getId())
-                .ifPresent(request -> {
-                    throw new RuntimeException("Verification request already exists");
-                });
+        Optional<VerificationRequest> existingRequest =
+                verificationRequestRepository.findByEmployerProfileId(employerProfile.getId());
 
-        VerificationRequest verificationRequest = new VerificationRequest();
+        VerificationRequest verificationRequest = existingRequest.orElseGet(VerificationRequest::new);
+
         verificationRequest.setEmployerProfileId(employerProfile.getId());
         verificationRequest.setBusinessLicenseUrl(businessLicenseUrl);
         verificationRequest.setSupportingDocumentUrl(supportingDocumentUrl);
         verificationRequest.setReviewStatus("pending");
+        verificationRequest.setReviewedBy(null);
+        verificationRequest.setReviewNote(null);
+        verificationRequest.setReviewedAt(null);
 
-        verificationRequestRepository.save(verificationRequest);
+        VerificationRequest saved = verificationRequestRepository.save(verificationRequest);
 
         employerProfile.setVerificationStatus("pending");
         employerProfileRepository.save(employerProfile);
 
-        log(employerId, "SUBMIT_VERIFICATION", "VERIFICATION", verificationRequest.getId());
+        log(employerId, "SUBMIT_VERIFICATION", "VERIFICATION", saved.getId());
 
-        return verificationToMap(verificationRequest);
+        return verificationToMap(saved);
+    }
+
+    @Override
+    public Map<String, Object> submitRequestByFile(Long employerId,
+                                                   MultipartFile businessLicenseFile,
+                                                   MultipartFile supportingDocumentFile) {
+        if (businessLicenseFile == null || businessLicenseFile.isEmpty()) {
+            throw new RuntimeException("Business license file is required");
+        }
+
+        String businessLicenseUrl = saveVerificationFile(businessLicenseFile);
+
+        String supportingDocumentUrl = null;
+        if (supportingDocumentFile != null && !supportingDocumentFile.isEmpty()) {
+            supportingDocumentUrl = saveVerificationFile(supportingDocumentFile);
+        }
+
+        return submitRequest(employerId, businessLicenseUrl, supportingDocumentUrl);
     }
 
     @Override
@@ -67,7 +93,8 @@ public class VerificationRequestServiceImpl implements VerificationRequestServic
         EmployerProfile employerProfile = employerProfileRepository.findByUserId(employerId)
                 .orElseThrow(() -> new RuntimeException("Employer profile not found"));
 
-        VerificationRequest verificationRequest = verificationRequestRepository.findByEmployerProfileId(employerProfile.getId())
+        VerificationRequest verificationRequest = verificationRequestRepository
+                .findByEmployerProfileId(employerProfile.getId())
                 .orElseThrow(() -> new RuntimeException("Verification request not found"));
 
         return verificationToMap(verificationRequest);
@@ -78,21 +105,21 @@ public class VerificationRequestServiceImpl implements VerificationRequestServic
         List<VerificationRequest> requests;
 
         if (reviewStatus == null || reviewStatus.isBlank()) {
-            requests = verificationRequestRepository.findAll();
+            requests = verificationRequestRepository.findAllByOrderBySubmittedAtDesc();
         } else {
-            requests = verificationRequestRepository.findByReviewStatus(reviewStatus);
+            requests = verificationRequestRepository.findByReviewStatusOrderBySubmittedAtDesc(reviewStatus);
         }
 
-        List<Map<String, Object>> result = new ArrayList<>();
-        for (VerificationRequest request : requests) {
-            result.add(verificationToMap(request));
-        }
-
-        return result;
+        return requests.stream()
+                .map(this::verificationToMap)
+                .toList();
     }
 
     @Override
-    public Map<String, Object> reviewRequest(Long verificationRequestId, Long adminId, String reviewStatus, String reviewNote) {
+    public Map<String, Object> reviewRequest(Long verificationRequestId,
+                                             Long reviewerId,
+                                             String reviewStatus,
+                                             String reviewNote) {
         if (!"approved".equals(reviewStatus) && !"rejected".equals(reviewStatus)) {
             throw new RuntimeException("Invalid review status");
         }
@@ -104,16 +131,16 @@ public class VerificationRequestServiceImpl implements VerificationRequestServic
                 .orElseThrow(() -> new RuntimeException("Employer profile not found"));
 
         request.setReviewStatus(reviewStatus);
-        request.setReviewedBy(adminId);
+        request.setReviewedBy(reviewerId);
         request.setReviewNote(reviewNote);
         request.setReviewedAt(LocalDateTime.now());
 
-        verificationRequestRepository.save(request);
+        VerificationRequest saved = verificationRequestRepository.save(request);
 
         employerProfile.setVerificationStatus(reviewStatus);
         employerProfileRepository.save(employerProfile);
 
-        log(adminId, "REVIEW_VERIFICATION", "VERIFICATION", verificationRequestId);
+        log(reviewerId, "REVIEW_VERIFICATION", "VERIFICATION", verificationRequestId);
 
         notificationService.createNotification(
                 employerProfile.getUserId(),
@@ -123,7 +150,40 @@ public class VerificationRequestServiceImpl implements VerificationRequestServic
                         + (reviewNote == null || reviewNote.isBlank() ? "" : ". Note: " + reviewNote)
         );
 
-        return verificationToMap(request);
+        return verificationToMap(saved);
+    }
+
+    private String saveVerificationFile(MultipartFile file) {
+        try {
+            String uploadDir = System.getProperty("user.dir")
+                    + File.separator + "backend"
+                    + File.separator + "src"
+                    + File.separator + "main"
+                    + File.separator + "resources"
+                    + File.separator + "static"
+                    + File.separator + "uploads"
+                    + File.separator + "verification";
+
+            File directory = new File(uploadDir);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = "";
+
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+
+            String fileName = UUID.randomUUID() + extension;
+            File dest = new File(directory, fileName);
+            file.transferTo(dest);
+
+            return "/uploads/verification/" + fileName;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to upload verification file: " + e.getMessage());
+        }
     }
 
     private Map<String, Object> verificationToMap(VerificationRequest request) {
@@ -156,10 +216,13 @@ public class VerificationRequestServiceImpl implements VerificationRequestServic
         });
 
         if (request.getReviewedBy() != null) {
-            userRepository.findById(request.getReviewedBy())
-                    .ifPresent(admin -> result.put("reviewedByName", admin.getFullName()));
+            userRepository.findById(request.getReviewedBy()).ifPresent(reviewer -> {
+                result.put("reviewedByName", reviewer.getFullName());
+                result.put("reviewedByRole", reviewer.getRole());
+            });
         } else {
             result.put("reviewedByName", null);
+            result.put("reviewedByRole", null);
         }
 
         return result;

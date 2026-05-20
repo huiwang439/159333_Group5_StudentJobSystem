@@ -47,6 +47,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         result.put("totalUsers", userRepository.count());
         result.put("totalStudents", studentProfileRepository.count());
         result.put("totalEmployers", employerProfileRepository.count());
+        result.put("totalStaff", userRepository.countByRole("staff"));
         result.put("totalJobs", jobRepository.count());
         result.put("totalApplications", applicationRepository.count());
         return result;
@@ -80,9 +81,10 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     public Map<String, Object> getUserStatistics() {
         Map<String, Object> result = new HashMap<>();
         result.put("totalUsers", userRepository.count());
-        result.put("studentUsers", userRepository.findByRole("student").size());
-        result.put("employerUsers", userRepository.findByRole("employer").size());
-        result.put("adminUsers", userRepository.findByRole("admin").size());
+        result.put("studentUsers", userRepository.countByRole("student"));
+        result.put("employerUsers", userRepository.countByRole("employer"));
+        result.put("adminUsers", userRepository.countByRole("admin"));
+        result.put("staffUsers", userRepository.countByRole("staff"));
         return result;
     }
 

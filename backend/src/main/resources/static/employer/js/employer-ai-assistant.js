@@ -1,16 +1,16 @@
 (function () {
     const API_BASE_URL = "http://localhost:8080";
     const STORAGE_KEY = "employerAiChatHistory";
-    const WELCOME_MESSAGE = "Hi! I can connect to backend AI services for resume screening, candidate recommendations, job description improvement, and hiring analytics.";
+    const WELCOME_MESSAGE = "Hi! I can help with candidate recommendations, job description improvement, and hiring analytics.";
 
     const assistantHTML = `
-    <button class="employer-ai-button" id="employerAiButton" title="Employer AI Assistant">
-      <img src="images/robot.png" alt="AI Assistant">
+    <button class="employer-ai-button" id="employerAiButton" title="Employer Assistant">
+      <img src="images/robot.png" alt="Employer Assistant">
     </button>
 
     <div class="employer-ai-window" id="employerAiWindow">
       <div class="employer-ai-header">
-        <span>Employer AI Assistant</span>
+        <span>Employer Assistant</span>
         <button class="employer-ai-close" id="employerAiClose">×</button>
       </div>
 
@@ -25,7 +25,7 @@
       </div>
 
       <div class="employer-ai-input-area">
-        <input id="employerAiInput" type="text" placeholder="Ask Employer AI..." />
+        <input id="employerAiInput" type="text" placeholder="Ask Employer Assistant..." />
         <button id="employerAiSend">Send</button>
       </div>
     </div>
@@ -77,7 +77,7 @@
 
     async function handleQuestion(message) {
         addMessage(escapeHtml(message), "user", true);
-        const loading = addMessage("AI is loading data from backend...", "bot", true);
+        const loading = addMessage("Assistant is loading data from backend...", "bot", true);
 
         try {
             const responseHtml = await getBackendAIResponse(message);
@@ -132,27 +132,27 @@
     async function getBackendAIResponse(message) {
         const lowerMessage = message.toLowerCase();
 
-        if (lowerMessage.includes("analytics") || lowerMessage.includes("trend") || lowerMessage.includes("dashboard") || lowerMessage.includes("分析") || lowerMessage.includes("数据")) {
+        if (lowerMessage.includes("analytics") || lowerMessage.includes("trend") || lowerMessage.includes("dashboard")) {
             const data = await apiGet("/ai/employer/hiring-analytics");
             return renderHiringAnalytics(data);
         }
 
-        if (lowerMessage.includes("description") || lowerMessage.includes("job post") || lowerMessage.includes("improve") || lowerMessage.includes("岗位描述") || lowerMessage.includes("优化")) {
+        if (lowerMessage.includes("description") || lowerMessage.includes("job post") || lowerMessage.includes("improve")) {
             const body = collectJobDescriptionInput(message);
             const data = await apiPost("/ai/employer/job-description/improve", body);
             return renderImprovedDescription(data);
         }
 
-        if (lowerMessage.includes("resume") || lowerMessage.includes("screen") || lowerMessage.includes("cv") || lowerMessage.includes("简历") || lowerMessage.includes("筛选")) {
+        if (lowerMessage.includes("resume") || lowerMessage.includes("screen") || lowerMessage.includes("cv")) {
             const jobId = getJobIdFromTextOrPage(message);
-            if (!jobId) return "<strong>AI Resume Screening</strong><br>Please type a job id, for example: <strong>screen resumes for job 1</strong>.";
+            if (!jobId) return "<strong>Resume Screening</strong><br>Please type a job id, for example: <strong>screen resumes for job 1</strong>.";
             const data = await apiGet(`/ai/employer/jobs/${jobId}/ranked-candidates`);
             return renderRankedCandidates(data);
         }
 
-        if (lowerMessage.includes("candidate") || lowerMessage.includes("recommend") || lowerMessage.includes("student") || lowerMessage.includes("候选人") || lowerMessage.includes("推荐")) {
+        if (lowerMessage.includes("candidate") || lowerMessage.includes("recommend") || lowerMessage.includes("student")) {
             const jobId = getJobIdFromTextOrPage(message);
-            if (!jobId) return "<strong>AI Candidate Recommendation</strong><br>Please type a job id, for example: <strong>recommend candidates for job 1</strong>.";
+            if (!jobId) return "<strong>Candidate Recommendation</strong><br>Please type a job id, for example: <strong>recommend candidates for job 1</strong>.";
             const data = await apiGet(`/ai/employer/jobs/${jobId}/recommended-students`);
             return renderRecommendedStudents(data);
         }
@@ -207,7 +207,7 @@
 
     function renderHiringAnalytics(data) {
         return `
-          <strong>AI Hiring Analytics</strong><br>
+          <strong>Hiring Analytics</strong><br>
           Total jobs: ${data.totalJobs}<br>
           Approved jobs: ${data.approvedJobs}<br>
           Closed jobs: ${data.closedJobs}<br>
@@ -221,7 +221,7 @@
     function renderRankedCandidates(data) {
         const candidates = data.topCandidates || [];
         return `
-          <strong>AI Resume Screening</strong><br>
+          <strong>Resume Screening</strong><br>
           Job: ${escapeHtml(data.jobTitle)}<br>
           Total applicants: ${data.totalApplicants}<br><br>
           ${candidates.map((c, i) => `${i + 1}. ${escapeHtml(c.studentName || "Student")} - <strong>${c.matchScore}%</strong> (${escapeHtml(c.matchLevel)})<br>${renderList(c.whyMatch)}`).join("<br><br>") || "No applicants found."}
@@ -231,7 +231,7 @@
     function renderRecommendedStudents(data) {
         const students = data.recommendedStudents || [];
         return `
-          <strong>AI Candidate Recommendation</strong><br>
+          <strong>Candidate Recommendation</strong><br>
           Job: ${escapeHtml(data.jobTitle)}<br><br>
           ${students.map((s, i) => `${i + 1}. ${escapeHtml(s.studentName || "Student")} - <strong>${s.matchScore}%</strong> (${escapeHtml(s.matchLevel)})<br>Skills: ${escapeHtml(s.skills)}`).join("<br><br>") || "No recommended students found."}
         `;
@@ -239,7 +239,7 @@
 
     function renderImprovedDescription(data) {
         return `
-          <strong>AI Job Description Assistant</strong><br>
+          <strong>Job Description Assistant</strong><br>
           <strong>Improved description:</strong><br>${escapeHtml(data.improvedDescription)}<br><br>
           <strong>Recommended keywords:</strong><br>${renderList(data.recommendedKeywords)}<br><br>
           <strong>Suggestions:</strong><br>${renderList(data.suggestions)}

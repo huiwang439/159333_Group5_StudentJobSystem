@@ -9,6 +9,8 @@ public interface NotificationService {
 
     List<Map<String, Object>> getUnreadNotifications(Long userId);
 
+    Map<String, Object> getUnreadCount(Long userId);
+
     Map<String, Object> markAsRead(Long notificationId, Long userId);
 
     Map<String, Object> markAllAsRead(Long userId);

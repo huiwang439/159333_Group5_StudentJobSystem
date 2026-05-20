@@ -27,6 +27,8 @@ public class JobCreateRequest {
     private BigDecimal salaryMax;
     private LocalDateTime deadline;
 
+    private String targetStudentType;
+
     public JobCreateRequest() {
     }
 
@@ -116,5 +118,13 @@ public class JobCreateRequest {
 
     public void setDeadline(LocalDateTime deadline) {
         this.deadline = deadline;
+    }
+
+    public String getTargetStudentType() {
+        return targetStudentType;
+    }
+
+    public void setTargetStudentType(String targetStudentType) {
+        this.targetStudentType = targetStudentType;
     }
 }

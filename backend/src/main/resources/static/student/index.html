@@ -9,18 +9,24 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #f3f5f8;
+      --bg: #f5f6f8;
       --surface: #ffffff;
-      --text: #1a1d26;
-      --muted: #5c6478;
-      --border: #e2e6ef;
-      --accent: #14b8a6;
-      --accent-dark: #0f766e;
-      --accent-soft: #e6fbf8;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --brand: #173f86;
+      --brand-dark: #12356f;
+      --brand-soft: #eef3fb;
+      --primary: #facc15;
+      --primary-hover: #eab308;
+      --primary-text: #111827;
+      --accent: #173f86;
+      --accent-dark: #12356f;
+      --accent-soft: #eef3fb;
       --success: #0d7a5c;
       --warning: #b45309;
       --radius: 12px;
-      --shadow: 0 1px 3px rgba(26, 29, 38, 0.06), 0 8px 24px rgba(26, 29, 38, 0.06);
+      --shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
     }
 
     * {
@@ -29,7 +35,7 @@
 
     body {
       margin: 0;
-      font-family: "DM Sans", system-ui, sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
@@ -83,9 +89,9 @@
     }
 
     .brand-title {
-      font-weight: 700;
+      font-weight: 800;
       font-size: 0.95rem;
-      color: var(--text);
+      color: var(--brand);
       margin: 0;
     }
 
@@ -186,12 +192,12 @@
     }
 
     .btn-primary {
-      background: var(--accent);
-      color: #fff;
+      background: var(--primary);
+      color: var(--primary-text);
     }
 
     .btn-primary:hover {
-      filter: brightness(1.05);
+      background: var(--primary-hover);
     }
 
     .btn-ghost {
@@ -516,7 +522,7 @@
     .meter-fill {
       height: 100%;
       width: 72%;
-      background: linear-gradient(90deg, var(--accent), #2a7ab8);
+      background: linear-gradient(90deg, var(--brand), #2563eb);
       border-radius: 4px;
     }
 
@@ -794,6 +800,34 @@
     .nav-notif-badge[hidden] {
       display: none !important;
     }
+
+    .job-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      object-fit: contain;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .job-logo.placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .audience-tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      padding: 0.18rem 0.45rem;
+      border-radius: 6px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      font-weight: 600;
+      margin-top: 0.25rem;
+    }
   </style>
   <link rel="stylesheet" href="./css/student-ai-assistant.css">
 </head>
@@ -811,6 +845,7 @@
         <li><a href="./my-applications.html"><span class="nav-ico">→</span> My Applications</a></li>
         <li><a href="./profile.html"><span class="nav-ico">◎</span> Profile</a></li>
         <li><a href="./notifications.html"><span class="nav-ico">◆</span><span class="nav-text">Notifications</span><span class="nav-notif-badge" id="nav-notif-badge" hidden></span></a></li>
+        <li><a href="./career-events.html"><span class="nav-ico">◇</span> Career Events</a></li>
         <li>
           <a href="./student-ai.html">
             <span class="nav-ico">🤖</span>AI Assistant
@@ -916,9 +951,13 @@
             </select>
             <select id="dash-job-type" aria-label="Job type">
               <option value="">Job type</option>
-              <option value="Internship">Internship</option>
-              <option value="Part-time">Part-time</option>
-              <option value="Full-time">Full-time</option>
+              <option value="internship">Internship</option>
+              <option value="part-time">Part-time</option>
+              <option value="full-time">Full-time</option>
+            </select>
+            <select id="dash-audience" aria-label="Job audience">
+              <option value="mine">For me (my type)</option>
+              <option value="ALL">All student types</option>
             </select>
             <button id="dash-search-btn" type="button" class="btn btn-primary">Search</button>
             <a class="btn btn-ghost" href="./browse-jobs.html" style="text-decoration:none">Browse</a>
@@ -944,35 +983,19 @@
           </aside>
         </section>
 
-        <p class="footer-note">
-          Prototype note: bind dashboard metrics, lists, and recommendations to student APIs. Keep application status timeline aligned with `ApplicationStatusHistory`.
-        </p>
       </main>
     </div>
   </div>
+  <script src="./js/student-api.js"></script>
+  <script src="./js/student-notif-badge.js"></script>
   <script>
-    const API_BASE = "http://localhost:8080";
+    const API = window.StudentApi;
+    const API_BASE = API.API_BASE;
     const token = localStorage.getItem("token");
+    let profileStudentType = "UNDERGRADUATE";
 
     function authHeaders() {
-      return {
-        "Authorization": `Bearer ${token}`
-      };
-    }
-
-    function jobRecordPk(job) {
-      if (!job) return null;
-      const id = job.jobId != null ? job.jobId : job.id;
-      if (id === null || id === undefined || id === "") return null;
-      const n = Number(id);
-      return Number.isNaN(n) ? null : n;
-    }
-
-    function companyNameFromJob(job) {
-      if (!job) return "";
-      if (job.companyName) return job.companyName;
-      if (job.employerProfile && job.employerProfile.companyName) return job.employerProfile.companyName;
-      return "";
+      return API.authHeaders(token);
     }
 
     async function logout() {
@@ -992,12 +1015,28 @@
 
     async function loadDashboard() {
       try {
-        const jobRes = await fetch(`${API_BASE}/jobs`, {
+        const profile = await API.fetchStudentProfile(token);
+        if (profile) {
+          profileStudentType = profile.studentType || "UNDERGRADUATE";
+          const fields = ["university", "major", "degreeLevel", "graduationYear", "skills", "bio", "studentType"];
+          let filled = 0;
+          fields.forEach(function (k) {
+            if (profile[k]) filled++;
+          });
+          document.getElementById("stat-profile").textContent = Math.min(100, Math.round((filled / fields.length) * 100));
+        }
+
+        const audience = document.getElementById("dash-audience").value || "mine";
+        const studentType = API.resolveStudentTypeParam(audience, profileStudentType);
+        const jobUrl = API.buildJobsUrl({ studentType: studentType });
+
+        const jobRes = await fetch(jobUrl, {
           headers: authHeaders()
         });
 
         const jobResult = await jobRes.json();
-        const jobs = jobResult.data || jobResult || [];
+        const jobs = API.unwrapData(jobResult) || [];
+        const jobList = Array.isArray(jobs) ? jobs : [];
 
         const favRes = await fetch(`${API_BASE}/saved-jobs/my`, {
           headers: authHeaders()
@@ -1013,55 +1052,56 @@
         const appResult = await appRes.json();
         const applications = appResult.data || appResult || [];
 
-        document.getElementById("stat-total-jobs").textContent = jobs.length;
+        document.getElementById("stat-total-jobs").textContent = jobList.length;
         document.getElementById("stat-favorites").textContent = favorites.length;
-        document.getElementById("stat-new-matches").textContent = jobs.length;
-        document.getElementById("stat-profile").textContent = 80;
+        document.getElementById("stat-new-matches").textContent = jobList.length;
 
         const recommendList = document.getElementById("recommend-list");
-        recommendList.innerHTML = jobs.slice(0, 3).map(job => `
+        recommendList.innerHTML = jobList.slice(0, 3).map(job => {
+          const jid = API.jobRecordPk(job);
+          const company = API.companyNameFromJob(job);
+          return `
           <li>
             <div class="item-row">
               <div>
-                <strong>${job.title}</strong>
-                <span class="recommend-sub">${job.companyName}</span>
+                <strong>${job.title || "Job"}</strong>
+                <span class="recommend-sub">${company}</span>
               </div>
-              <button class="btn btn-ghost dash-favorite-btn" data-job-id="${job.id}">
-                Favorite
-              </button>
+              <button class="btn btn-ghost dash-favorite-btn" data-job-id="${jid}">Favorite</button>
             </div>
-          </li>
-        `).join("") || "<li>No recommendations</li>";
+          </li>`;
+        }).join("") || "<li>No recommendations</li>";
 
         const featuredContainer = document.getElementById("dashboard-featured-jobs");
-        featuredContainer.innerHTML = jobs.slice(0, 3).map((job, index) => `
+        featuredContainer.innerHTML = jobList.slice(0, 3).map((job, index) => {
+          const jid = API.jobRecordPk(job);
+          const company = API.companyNameFromJob(job);
+          const jtype = API.firstNonEmpty(job.jobType, job.employmentType, "");
+          const audienceLabel = API.labelForTargetStudentType(job.targetStudentType);
+          return `
           <article class="job-card">
-            <h4>
-              <a href="./job-detail.html?jobId=${job.id}">
-                ${job.title}
-              </a>
-            </h4>
-
-            <p>${job.companyName} · ${job.location} · ${job.jobType}</p>
-
+            <div style="display:flex;gap:0.6rem;align-items:flex-start;margin-bottom:0.35rem">
+              ${API.renderLogoHtml(job, "job-logo")}
+              <div style="flex:1;min-width:0">
+                <h4 style="margin:0"><a href="./job-detail.html?jobId=${jid}">${job.title || "Job"}</a></h4>
+                <p style="margin:0.25rem 0 0;font-size:0.82rem;color:var(--muted)">${company} · ${job.location || ""} · ${jtype}</p>
+                <span class="audience-tag">Open to: ${audienceLabel}</span>
+              </div>
+            </div>
             <div class="job-card-ft">
               <span>${index === 0 ? "Today" : "1 day ago"}</span>
               <div>
-                <a class="btn btn-ghost" href="./job-detail.html?jobId=${job.id}">
-                  View
-                </a>
-                <button class="btn btn-ghost dash-favorite-btn" data-job-id="${job.id}">
-                  Favorite
-                </button>
+                <a class="btn btn-ghost" href="./job-detail.html?jobId=${jid}">View</a>
+                <button class="btn btn-ghost dash-favorite-btn" data-job-id="${jid}">Favorite</button>
               </div>
             </div>
-          </article>
-        `).join("");
+          </article>`;
+        }).join("") || '<div class="loading-note">No jobs for your filters</div>';
 
         const recentApps = document.getElementById("recent-app-list");
         const jobById = new Map();
-        for (const job of jobs) {
-          const pk = jobRecordPk(job);
+        for (const job of jobList) {
+          const pk = API.jobRecordPk(job);
           if (pk != null) jobById.set(pk, job);
         }
 
@@ -1099,7 +1139,7 @@
                 item.jobTitle ||
                 (job && job.title) ||
                 (jid ? `Job #${jid}` : "Application");
-              const company = item.companyName || companyNameFromJob(job) || "";
+              const company = item.companyName || API.companyNameFromJob(job) || "";
               const status = item.status || "submitted";
               return `
             <li>
@@ -1179,6 +1219,8 @@
         if (location) params.set("location", location);
         if (industry) params.set("fieldOfStudy", industry);
         if (jobType) params.set("employmentType", jobType);
+        const audience = document.getElementById("dash-audience").value || "mine";
+        params.set("audience", audience);
 
         window.location.href = `./browse-jobs.html?${params.toString()}`;
       });
@@ -1190,6 +1232,13 @@
     } else {
       loadCurrentUser();
       loadDashboard();
+
+      const dashAudience = document.getElementById("dash-audience");
+      if (dashAudience) {
+        dashAudience.addEventListener("change", function () {
+          loadDashboard();
+        });
+      }
     }
 
     (function initHeroCarousel() {
@@ -1206,7 +1255,6 @@
       setInterval(() => go(index + 1), 5000);
     })();
   </script>
-  <script src="./js/student-notif-badge.js"></script>
   <script src="./js/student-ai-assistant.js"></script>
 </body>
 </html>

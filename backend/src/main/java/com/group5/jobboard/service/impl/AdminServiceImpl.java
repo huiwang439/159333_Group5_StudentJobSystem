@@ -4,6 +4,7 @@ import com.group5.jobboard.entity.*;
 import com.group5.jobboard.repository.*;
 import com.group5.jobboard.service.AdminService;
 import com.group5.jobboard.service.NotificationService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,6 +23,7 @@ public class AdminServiceImpl implements AdminService {
     private final ReportRepository reportRepository;
     private final ApplicationRepository applicationRepository;
     private final NotificationService notificationService;
+    private final PasswordEncoder passwordEncoder;
 
     public AdminServiceImpl(UserRepository userRepository,
                             EmployerProfileRepository employerProfileRepository,
@@ -31,7 +33,8 @@ public class AdminServiceImpl implements AdminService {
                             AnalyticsLogRepository analyticsLogRepository,
                             ReportRepository reportRepository,
                             ApplicationRepository applicationRepository,
-                            NotificationService notificationService) {
+                            NotificationService notificationService,
+                            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.employerProfileRepository = employerProfileRepository;
         this.studentProfileRepository = studentProfileRepository;
@@ -41,6 +44,7 @@ public class AdminServiceImpl implements AdminService {
         this.reportRepository = reportRepository;
         this.applicationRepository = applicationRepository;
         this.notificationService = notificationService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -82,8 +86,10 @@ public class AdminServiceImpl implements AdminService {
                 result.put("degreeLevel", profile.getDegreeLevel());
                 result.put("graduationYear", profile.getGraduationYear());
                 result.put("skills", profile.getSkills());
+                result.put("bio", profile.getBio());
                 result.put("preferredLocation", profile.getPreferredLocation());
                 result.put("preferredJobType", profile.getPreferredJobType());
+                result.put("studentType", profile.getStudentType());
             });
         }
 
@@ -98,6 +104,7 @@ public class AdminServiceImpl implements AdminService {
                 result.put("contactPerson", profile.getContactPerson());
                 result.put("contactEmail", profile.getContactEmail());
                 result.put("verificationStatus", profile.getVerificationStatus());
+                result.put("logoUrl", profile.getLogoUrl());
             });
         }
 
@@ -110,19 +117,20 @@ public class AdminServiceImpl implements AdminService {
             throw new RuntimeException("Invalid account status. Use active, banned, or disabled");
         }
 
-        User admin = getUser(adminId);
-        if (!"admin".equals(admin.getRole())) {
+        User operator = getUser(adminId);
+
+        if (!"admin".equals(operator.getRole())) {
             throw new RuntimeException("Only admin can update user status");
         }
 
         User user = getUser(userId);
 
         if ("admin".equals(user.getRole())) {
-            throw new RuntimeException("Admin account cannot be banned here");
+            throw new RuntimeException("Admin account cannot be updated here");
         }
 
         user.setAccountStatus(status);
-        userRepository.save(user);
+        User saved = userRepository.save(user);
 
         log(adminId, "UPDATE_USER_STATUS", "USER", userId);
 
@@ -133,7 +141,7 @@ public class AdminServiceImpl implements AdminService {
                 "Your account status has been changed to: " + status
         );
 
-        Map<String, Object> result = userToAdminMap(user);
+        Map<String, Object> result = userToAdminMap(saved);
         result.put("updated", true);
         return result;
     }
@@ -177,14 +185,15 @@ public class AdminServiceImpl implements AdminService {
             throw new RuntimeException("Invalid job status. Use pending, approved, rejected, removed, or closed");
         }
 
-        User admin = getUser(adminId);
-        if (!"admin".equals(admin.getRole())) {
-            throw new RuntimeException("Only admin can update job status");
+        User operator = getUser(adminId);
+
+        if (!"admin".equals(operator.getRole()) && !"staff".equals(operator.getRole())) {
+            throw new RuntimeException("Only admin or staff can update job status");
         }
 
         Job job = getJob(jobId);
         job.setStatus(status);
-        jobRepository.save(job);
+        Job saved = jobRepository.save(job);
 
         log(adminId, "UPDATE_JOB_STATUS", "JOB", jobId);
 
@@ -196,21 +205,22 @@ public class AdminServiceImpl implements AdminService {
                         + (reason == null || reason.isBlank() ? "" : ". Reason: " + reason)
         );
 
-        Map<String, Object> result = jobToAdminMap(job);
+        Map<String, Object> result = jobToAdminMap(saved);
         result.put("updated", true);
         return result;
     }
 
     @Override
     public Map<String, Object> removeJob(Long adminId, Long jobId) {
-        User admin = getUser(adminId);
-        if (!"admin".equals(admin.getRole())) {
+        User operator = getUser(adminId);
+
+        if (!"admin".equals(operator.getRole())) {
             throw new RuntimeException("Only admin can remove job");
         }
 
         Job job = getJob(jobId);
         job.setStatus("removed");
-        jobRepository.save(job);
+        Job saved = jobRepository.save(job);
 
         log(adminId, "REMOVE_JOB", "JOB", jobId);
 
@@ -221,7 +231,7 @@ public class AdminServiceImpl implements AdminService {
                 "Your job [" + job.getTitle() + "] has been removed by admin."
         );
 
-        Map<String, Object> result = jobToAdminMap(job);
+        Map<String, Object> result = jobToAdminMap(saved);
         result.put("removed", true);
         return result;
     }
@@ -308,6 +318,7 @@ public class AdminServiceImpl implements AdminService {
         Set<Long> activeUsers = new HashSet<>();
         Set<Long> activeStudents = new HashSet<>();
         Set<Long> activeEmployers = new HashSet<>();
+        Set<Long> activeStaff = new HashSet<>();
 
         for (AnalyticsLog log : logs) {
             if (log.getUserId() == null) {
@@ -324,6 +335,11 @@ public class AdminServiceImpl implements AdminService {
                     activeUsers.add(user.getId());
                     activeEmployers.add(user.getId());
                 }
+
+                if ("staff".equals(user.getRole())) {
+                    activeUsers.add(user.getId());
+                    activeStaff.add(user.getId());
+                }
             });
         }
 
@@ -332,6 +348,7 @@ public class AdminServiceImpl implements AdminService {
         result.put("activeUsers", activeUsers.size());
         result.put("activeStudents", activeStudents.size());
         result.put("activeEmployers", activeEmployers.size());
+        result.put("activeStaff", activeStaff.size());
 
         return result;
     }
@@ -373,10 +390,6 @@ public class AdminServiceImpl implements AdminService {
         return result;
     }
 
-    private boolean isBusinessUser(User user) {
-        return "student".equals(user.getRole()) || "employer".equals(user.getRole());
-    }
-
     @Override
     public List<Map<String, Object>> getTrend(int days) {
         if (days <= 0) {
@@ -414,6 +427,7 @@ public class AdminServiceImpl implements AdminService {
         users.put("student", userRepository.findByRole("student").size());
         users.put("employer", userRepository.findByRole("employer").size());
         users.put("admin", userRepository.findByRole("admin").size());
+        users.put("staff", userRepository.findByRole("staff").size());
 
         Map<String, Object> jobs = new HashMap<>();
         jobs.put("pending", jobRepository.countByStatus("pending"));
@@ -426,6 +440,115 @@ public class AdminServiceImpl implements AdminService {
         result.put("jobStatusDistribution", jobs);
 
         return result;
+    }
+
+    @Override
+    public Map<String, Object> createStaff(Long adminId,
+                                           String fullName,
+                                           String email,
+                                           String password,
+                                           String phone) {
+        User admin = getUser(adminId);
+
+        if (!"admin".equals(admin.getRole())) {
+            throw new RuntimeException("Only admin can create staff");
+        }
+
+        if (fullName == null || fullName.isBlank()) {
+            throw new RuntimeException("fullName is required");
+        }
+
+        if (email == null || email.isBlank()) {
+            throw new RuntimeException("email is required");
+        }
+
+        if (password == null || password.isBlank()) {
+            throw new RuntimeException("password is required");
+        }
+
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        User staff = new User();
+        staff.setFullName(fullName);
+        staff.setEmail(email);
+        staff.setPasswordHash(passwordEncoder.encode(password));
+        staff.setRole("staff");
+        staff.setPhone(phone);
+        staff.setAccountStatus("active");
+
+        User saved = userRepository.save(staff);
+
+        log(adminId, "CREATE_STAFF", "USER", saved.getId());
+
+        Map<String, Object> result = userToAdminMap(saved);
+        result.put("created", true);
+
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> getStaffUsers() {
+        List<User> staffUsers = userRepository.findByRole("staff");
+
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (User user : staffUsers) {
+            result.add(userToAdminMap(user));
+        }
+
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> updateStaff(Long adminId,
+                                           Long staffId,
+                                           String fullName,
+                                           String phone,
+                                           String status) {
+        User admin = getUser(adminId);
+
+        if (!"admin".equals(admin.getRole())) {
+            throw new RuntimeException("Only admin can update staff");
+        }
+
+        User staff = getUser(staffId);
+
+        if (!"staff".equals(staff.getRole())) {
+            throw new RuntimeException("Target user is not staff");
+        }
+
+        if (fullName != null && !fullName.isBlank()) {
+            staff.setFullName(fullName);
+        }
+
+        if (phone != null) {
+            staff.setPhone(phone);
+        }
+
+        if (status != null && !status.isBlank()) {
+            if (!isValidAccountStatus(status)) {
+                throw new RuntimeException("Invalid account status. Use active, banned, or disabled");
+            }
+
+            staff.setAccountStatus(status);
+        }
+
+        User saved = userRepository.save(staff);
+
+        log(adminId, "UPDATE_STAFF", "USER", saved.getId());
+
+        Map<String, Object> result = userToAdminMap(saved);
+        result.put("updated", true);
+
+        return result;
+    }
+
+    private boolean isBusinessUser(User user) {
+        return "student".equals(user.getRole())
+                || "employer".equals(user.getRole())
+                || "staff".equals(user.getRole());
     }
 
     private Map<String, Object> userToAdminMap(User user) {
@@ -444,6 +567,17 @@ public class AdminServiceImpl implements AdminService {
                 item.put("companyName", profile.getCompanyName());
                 item.put("industry", profile.getIndustry());
                 item.put("verificationStatus", profile.getVerificationStatus());
+                item.put("logoUrl", profile.getLogoUrl());
+            });
+        }
+
+        if ("student".equals(user.getRole())) {
+            studentProfileRepository.findByUserId(user.getId()).ifPresent(profile -> {
+                item.put("university", profile.getUniversity());
+                item.put("major", profile.getMajor());
+                item.put("degreeLevel", profile.getDegreeLevel());
+                item.put("graduationYear", profile.getGraduationYear());
+                item.put("studentType", profile.getStudentType());
             });
         }
 
@@ -466,11 +600,15 @@ public class AdminServiceImpl implements AdminService {
         item.put("salaryMax", job.getSalaryMax());
         item.put("deadline", job.getDeadline());
         item.put("status", job.getStatus());
+        item.put("targetStudentType", job.getTargetStudentType());
         item.put("createdAt", job.getCreatedAt());
         item.put("updatedAt", job.getUpdatedAt());
 
         employerProfileRepository.findByUserId(job.getEmployerId())
-                .ifPresent(profile -> item.put("companyName", profile.getCompanyName()));
+                .ifPresent(profile -> {
+                    item.put("companyName", profile.getCompanyName());
+                    item.put("companyLogoUrl", profile.getLogoUrl());
+                });
 
         if (job.getCategoryId() != null) {
             jobCategoryRepository.findById(job.getCategoryId())
@@ -494,6 +632,7 @@ public class AdminServiceImpl implements AdminService {
         item.put("contactPerson", profile.getContactPerson());
         item.put("contactEmail", profile.getContactEmail());
         item.put("verificationStatus", profile.getVerificationStatus());
+        item.put("logoUrl", profile.getLogoUrl());
         item.put("createdAt", profile.getCreatedAt());
         item.put("updatedAt", profile.getUpdatedAt());
 

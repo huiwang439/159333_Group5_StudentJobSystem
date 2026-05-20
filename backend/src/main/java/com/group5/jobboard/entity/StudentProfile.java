@@ -39,6 +39,14 @@ public class StudentProfile {
     @Column(name = "preferred_job_type", length = 50)
     private String preferredJobType;
 
+    /**
+     * UNDERGRADUATE
+     * GRADUATE
+     * RECENT_GRADUATE
+     */
+    @Column(name = "student_type", nullable = false, length = 30)
+    private String studentType = "UNDERGRADUATE";
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -127,6 +135,14 @@ public class StudentProfile {
 
     public void setPreferredJobType(String preferredJobType) {
         this.preferredJobType = preferredJobType;
+    }
+
+    public String getStudentType() {
+        return studentType;
+    }
+
+    public void setStudentType(String studentType) {
+        this.studentType = studentType;
     }
 
     public LocalDateTime getCreatedAt() {

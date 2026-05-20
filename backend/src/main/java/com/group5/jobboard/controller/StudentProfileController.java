@@ -25,15 +25,8 @@ public class StudentProfileController {
     @PutMapping("/profile")
     public ApiResponse<Map<String, Object>> saveProfile(@Valid @RequestBody StudentProfileRequest request,
                                                         HttpServletRequest httpServletRequest) {
-
-        String authHeader = httpServletRequest.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing or invalid Authorization header");
-        }
-
-        String token = authHeader.substring(7);
-        Long userId = jwtUtil.getUserId(token);
-        String role = jwtUtil.getRole(token);
+        Long userId = getUserId(httpServletRequest);
+        String role = getRole(httpServletRequest);
 
         if (!"student".equals(role)) {
             throw new RuntimeException("Only student can access student profile");
@@ -45,15 +38,8 @@ public class StudentProfileController {
 
     @GetMapping("/profile")
     public ApiResponse<Map<String, Object>> getProfile(HttpServletRequest httpServletRequest) {
-
-        String authHeader = httpServletRequest.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing or invalid Authorization header");
-        }
-
-        String token = authHeader.substring(7);
-        Long userId = jwtUtil.getUserId(token);
-        String role = jwtUtil.getRole(token);
+        Long userId = getUserId(httpServletRequest);
+        String role = getRole(httpServletRequest);
 
         if (!"student".equals(role)) {
             throw new RuntimeException("Only student can access student profile");
@@ -61,5 +47,23 @@ public class StudentProfileController {
 
         Map<String, Object> result = studentProfileService.getProfile(userId);
         return ApiResponse.success(result);
+    }
+
+    private String getToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+
+        return authHeader.substring(7);
+    }
+
+    private Long getUserId(HttpServletRequest request) {
+        return jwtUtil.getUserId(getToken(request));
+    }
+
+    private String getRole(HttpServletRequest request) {
+        return jwtUtil.getRole(getToken(request));
     }
 }

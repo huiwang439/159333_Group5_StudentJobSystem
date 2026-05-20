@@ -21,7 +21,6 @@
     textarea { min-height:150px; resize:vertical; }
     .btn-row { display:flex; justify-content:flex-end; gap:.5rem; margin-top:.9rem; }
     .btn { border:none; border-radius:8px; padding:.6rem .85rem; font-weight:600; cursor:pointer; }
-    .btn-primary { background:var(--accent); color:#fff; }
     .btn-ghost { background:#fff; border:1px solid var(--border); }
     .doc-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
     .upload-card { border:1px solid var(--border); border-radius:10px; padding:.85rem; }
@@ -52,6 +51,7 @@
       <li><a href="./my-applications.html"><span class="nav-ico">→</span> My Applications</a></li>
       <li><a class="active" href="./profile.html"><span class="nav-ico">◎</span> Profile</a></li>
       <li><a href="./notifications.html"><span class="nav-ico">◆</span><span class="nav-text">Notifications</span><span class="nav-notif-badge" id="nav-notif-badge" hidden></span></a></li>
+      <li><a href="./career-events.html"><span class="nav-ico">◇</span> Career Events</a></li>
       <li>
         <a href="./student-ai.html">
           <span class="nav-ico">🤖</span>AI Assistant
@@ -78,6 +78,14 @@
           <div class="field"><label>University</label><input id="university" /></div>
           <div class="field"><label>Degree Level</label><input id="degreeLevel" placeholder="e.g. Bachelor" /></div>
           <div class="field"><label>Graduation Year</label><input id="graduationYear" type="number" min="2000" max="2100" /></div>
+          <div class="field">
+            <label>Student type</label>
+            <select id="studentType">
+              <option value="UNDERGRADUATE">University Student (enrolled)</option>
+              <option value="GRADUATE">Graduate Student (enrolled)</option>
+              <option value="RECENT_GRADUATE">Recent Graduate</option>
+            </select>
+          </div>
           <div class="field"><label>Skills</label><input id="skills" placeholder="e.g. Java, SQL, React" /></div>
           <div class="field"><label>Major</label><input id="major" /></div>
           <div class="field"><label>Preferred Location</label><input id="preferredLocation" /></div>
@@ -120,6 +128,7 @@
   </div>
 </div>
 
+<script src="./js/student-api.js"></script>
 <script src="./js/student-shell.js"></script>
 <script src="./js/student-notif-badge.js"></script>
 <script>
@@ -172,6 +181,8 @@
       const el = document.getElementById(key);
       if (el) el.value = data[key] ?? "";
     });
+    const stEl = document.getElementById("studentType");
+    if (stEl && data.studentType) stEl.value = data.studentType;
   }
 
   async function saveProfile() {
@@ -184,7 +195,8 @@
       skills: document.getElementById("skills").value.trim(),
       bio: document.getElementById("bio").value.trim(),
       preferredLocation: document.getElementById("preferredLocation").value.trim(),
-      preferredJobType: document.getElementById("preferredJobType").value.trim()
+      preferredJobType: document.getElementById("preferredJobType").value.trim(),
+      studentType: document.getElementById("studentType").value
     };
 
     const response = await fetch(PROFILE_API, {

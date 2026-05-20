@@ -63,10 +63,12 @@
             saveHistory();
 
         } catch (error) {
-            loading.textContent =
+            loading.remove();
+            addMessage(
                 "Connection failed: " + error.message +
-                "\n\nPlease check: 1) Spring Boot is running; 2) Qwen API key is correct; 3) you are logged in as student.";
-            saveHistory();
+                "\n\nPlease check: 1) Spring Boot is running; 2) Qwen API key is correct; 3) you are logged in as student.",
+                "bot"
+            );
         }
     }
 
@@ -80,13 +82,23 @@
         return div;
     }
 
+    function isTransientMessage(text, sender) {
+        if (sender !== "bot") return false;
+        if (text === "Qwen is thinking...") return true;
+        return text.indexOf("Connection failed:") === 0;
+    }
+
     function saveHistory() {
-        const messages = Array.from(aiMessages.querySelectorAll(".ai-message")).map(function (el) {
-            return {
-                sender: el.classList.contains("user") ? "user" : "bot",
-                text: el.textContent
-            };
-        });
+        const messages = Array.from(aiMessages.querySelectorAll(".ai-message"))
+            .map(function (el) {
+                return {
+                    sender: el.classList.contains("user") ? "user" : "bot",
+                    text: el.textContent
+                };
+            })
+            .filter(function (item) {
+                return !isTransientMessage(item.text, item.sender);
+            });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
     }
 
@@ -99,7 +111,15 @@
         }
 
         try {
-            JSON.parse(saved).forEach(function (item) {
+            const messages = JSON.parse(saved).filter(function (item) {
+                return !isTransientMessage(item.text, item.sender);
+            });
+            if (!messages.length) {
+                localStorage.removeItem(STORAGE_KEY);
+                addMessage("Hi! I am your Qwen AI assistant. You can ask me about jobs, resumes, applications, and interviews.", "bot");
+                return;
+            }
+            messages.forEach(function (item) {
                 addMessage(item.text, item.sender);
             });
         } catch (e) {

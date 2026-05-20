@@ -10,6 +10,7 @@ import com.group5.jobboard.repository.AnalyticsLogRepository;
 import com.group5.jobboard.repository.ApplicationRepository;
 import com.group5.jobboard.repository.JobRepository;
 import com.group5.jobboard.repository.StudentDocumentRepository;
+import com.group5.jobboard.repository.StudentProfileRepository;
 import com.group5.jobboard.repository.UserRepository;
 import com.group5.jobboard.service.ApplicationService;
 import com.group5.jobboard.service.NotificationService;
@@ -25,6 +26,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final AnalyticsLogRepository analyticsLogRepository;
     private final NotificationService notificationService;
     private final StudentDocumentRepository studentDocumentRepository;
+    private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
 
     public ApplicationServiceImpl(ApplicationRepository applicationRepository,
@@ -32,12 +34,14 @@ public class ApplicationServiceImpl implements ApplicationService {
                                   AnalyticsLogRepository analyticsLogRepository,
                                   NotificationService notificationService,
                                   StudentDocumentRepository studentDocumentRepository,
+                                  StudentProfileRepository studentProfileRepository,
                                   UserRepository userRepository) {
         this.applicationRepository = applicationRepository;
         this.jobRepository = jobRepository;
         this.analyticsLogRepository = analyticsLogRepository;
         this.notificationService = notificationService;
         this.studentDocumentRepository = studentDocumentRepository;
+        this.studentProfileRepository = studentProfileRepository;
         this.userRepository = userRepository;
     }
 
@@ -59,7 +63,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .findByIdAndStudentId(request.getResumeDocumentId(), studentId)
                 .orElseThrow(() -> new RuntimeException("Resume document not found"));
 
-        if (!"resume".equals(resume.getDocumentType())) {
+        if (!"resume".equalsIgnoreCase(resume.getDocumentType())) {
             throw new RuntimeException("resumeDocumentId must be a resume document");
         }
 
@@ -68,7 +72,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     .findByIdAndStudentId(request.getPortfolioDocumentId(), studentId)
                     .orElseThrow(() -> new RuntimeException("Portfolio document not found"));
 
-            if (!"portfolio".equals(portfolio.getDocumentType())) {
+            if (!"portfolio".equalsIgnoreCase(portfolio.getDocumentType())) {
                 throw new RuntimeException("portfolioDocumentId must be a portfolio document");
             }
         }
@@ -81,9 +85,9 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setPortfolioDocumentId(request.getPortfolioDocumentId());
         application.setStatus("submitted");
 
-        applicationRepository.save(application);
+        Application saved = applicationRepository.save(application);
 
-        log(studentId, "SUBMIT_APPLICATION", "APPLICATION", application.getId());
+        log(studentId, "SUBMIT_APPLICATION", "APPLICATION", saved.getId());
 
         notificationService.createNotification(
                 job.getEmployerId(),
@@ -92,19 +96,15 @@ public class ApplicationServiceImpl implements ApplicationService {
                 "A student has applied for your job: " + job.getTitle()
         );
 
-        return applicationToMap(application);
+        return applicationToMap(saved);
     }
 
     @Override
     public List<Map<String, Object>> getMyApplications(Long studentId) {
-        List<Application> applications = applicationRepository.findByStudentId(studentId);
-        List<Map<String, Object>> result = new ArrayList<>();
-
-        for (Application application : applications) {
-            result.add(applicationToMap(application));
-        }
-
-        return result;
+        return applicationRepository.findByStudentId(studentId)
+                .stream()
+                .map(this::applicationToMap)
+                .toList();
     }
 
     @Override
@@ -129,13 +129,9 @@ public class ApplicationServiceImpl implements ApplicationService {
             applications = applicationRepository.findByJobIdAndStatus(jobId, status);
         }
 
-        List<Map<String, Object>> result = new ArrayList<>();
-
-        for (Application application : applications) {
-            result.add(applicationToMap(application));
-        }
-
-        return result;
+        return applications.stream()
+                .map(this::applicationToMap)
+                .toList();
     }
 
     @Override
@@ -157,6 +153,9 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         Map<String, Object> result = applicationToMap(application);
         result.put("jobTitle", job.getTitle());
+        result.put("jobLocation", job.getLocation());
+        result.put("employmentType", job.getEmploymentType());
+        result.put("targetStudentType", job.getTargetStudentType());
 
         return result;
     }
@@ -182,9 +181,9 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
 
         application.setStatus(status);
-        applicationRepository.save(application);
+        Application saved = applicationRepository.save(application);
 
-        log(employerId, "UPDATE_APPLICATION_STATUS", "APPLICATION", application.getId());
+        log(employerId, "UPDATE_APPLICATION_STATUS", "APPLICATION", saved.getId());
 
         notificationService.createNotification(
                 application.getStudentId(),
@@ -193,7 +192,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 "Your application is now: " + status
         );
 
-        Map<String, Object> result = applicationToMap(application);
+        Map<String, Object> result = applicationToMap(saved);
         result.put("updated", true);
 
         return result;
@@ -201,8 +200,8 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     public Map<String, Object> getApplicationResume(Long employerId, String role, Long applicationId) {
-        if (!"employer".equals(role)) {
-            throw new RuntimeException("Only employer can view student resume");
+        if (!"employer".equals(role) && !"admin".equals(role)) {
+            throw new RuntimeException("Only employer or admin can view student resume");
         }
 
         Application application = applicationRepository.findById(applicationId)
@@ -211,7 +210,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         Job job = jobRepository.findById(application.getJobId())
                 .orElseThrow(() -> new RuntimeException("Job not found"));
 
-        if (!job.getEmployerId().equals(employerId)) {
+        if ("employer".equals(role) && !job.getEmployerId().equals(employerId)) {
             throw new RuntimeException("You can only view resumes for your own job applications");
         }
 
@@ -237,22 +236,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         item.put("updatedAt", application.getUpdatedAt());
 
         addStudentInfo(item, application.getStudentId());
-
-        if (application.getResumeDocumentId() != null) {
-            studentDocumentRepository.findById(application.getResumeDocumentId()).ifPresent(resume -> {
-                item.put("resumeFileName", resume.getFileName());
-                item.put("resumeFileUrl", resume.getFileUrl());
-                item.put("resumeUploadedAt", resume.getUploadedAt());
-            });
-        }
-
-        if (application.getPortfolioDocumentId() != null) {
-            studentDocumentRepository.findById(application.getPortfolioDocumentId()).ifPresent(portfolio -> {
-                item.put("portfolioFileName", portfolio.getFileName());
-                item.put("portfolioFileUrl", portfolio.getFileUrl());
-                item.put("portfolioUploadedAt", portfolio.getUploadedAt());
-            });
-        }
+        addDocumentInfo(item, application);
 
         return item;
     }
@@ -261,7 +245,42 @@ public class ApplicationServiceImpl implements ApplicationService {
         userRepository.findById(studentId).ifPresent(user -> {
             item.put("studentName", user.getFullName());
             item.put("studentEmail", user.getEmail());
+            item.put("studentPhone", user.getPhone());
+            item.put("studentAccountStatus", user.getAccountStatus());
         });
+
+        studentProfileRepository.findByUserId(studentId).ifPresent(profile -> {
+            item.put("studentProfileId", profile.getId());
+            item.put("studentUniversity", profile.getUniversity());
+            item.put("studentMajor", profile.getMajor());
+            item.put("studentDegreeLevel", profile.getDegreeLevel());
+            item.put("studentGraduationYear", profile.getGraduationYear());
+            item.put("studentSkills", profile.getSkills());
+            item.put("studentBio", profile.getBio());
+            item.put("studentPreferredLocation", profile.getPreferredLocation());
+            item.put("studentPreferredJobType", profile.getPreferredJobType());
+            item.put("studentType", profile.getStudentType());
+        });
+    }
+
+    private void addDocumentInfo(Map<String, Object> item, Application application) {
+        if (application.getResumeDocumentId() != null) {
+            studentDocumentRepository.findById(application.getResumeDocumentId()).ifPresent(resume -> {
+                item.put("resumeFileName", resume.getFileName());
+                item.put("resumeFileUrl", resume.getFileUrl());
+                item.put("resumeUrl", resume.getFileUrl());
+                item.put("resumeUploadedAt", resume.getUploadedAt());
+            });
+        }
+
+        if (application.getPortfolioDocumentId() != null) {
+            studentDocumentRepository.findById(application.getPortfolioDocumentId()).ifPresent(portfolio -> {
+                item.put("portfolioFileName", portfolio.getFileName());
+                item.put("portfolioFileUrl", portfolio.getFileUrl());
+                item.put("portfolioUrl", portfolio.getFileUrl());
+                item.put("portfolioUploadedAt", portfolio.getUploadedAt());
+            });
+        }
     }
 
     private void log(Long userId, String actionType, String targetType, Long targetId) {

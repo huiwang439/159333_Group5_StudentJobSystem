@@ -34,4 +34,18 @@ public interface AdminService {
     List<Map<String, Object>> getTrend(int days);
 
     Map<String, Object> getDistribution();
+
+    Map<String, Object> createStaff(Long adminId,
+                                    String fullName,
+                                    String email,
+                                    String password,
+                                    String phone);
+
+    List<Map<String, Object>> getStaffUsers();
+
+    Map<String, Object> updateStaff(Long adminId,
+                                    Long staffId,
+                                    String fullName,
+                                    String phone,
+                                    String status);
 }

@@ -26,52 +26,34 @@ public class ReportController {
                                                          @RequestParam(required = false) Long relatedJobId,
                                                          @RequestParam String reason,
                                                          @RequestParam(required = false) String description,
-                                                         HttpServletRequest httpServletRequest) {
+                                                         HttpServletRequest request) {
 
-        String authHeader = httpServletRequest.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing or invalid Authorization header");
-        }
-
-        String token = authHeader.substring(7);
-        Long reporterUserId = jwtUtil.getUserId(token);
+        Long reporterUserId = getUserId(request);
 
         Map<String, Object> result = reportService.createReport(
-                reporterUserId, reportedUserId, relatedJobId, reason, description
+                reporterUserId,
+                reportedUserId,
+                relatedJobId,
+                reason,
+                description
         );
+
         return ApiResponse.success("report submitted", result);
     }
 
     @GetMapping("/my")
-    public ApiResponse<List<Map<String, Object>>> getMyReports(HttpServletRequest httpServletRequest) {
+    public ApiResponse<List<Map<String, Object>>> getMyReports(HttpServletRequest request) {
 
-        String authHeader = httpServletRequest.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing or invalid Authorization header");
-        }
+        Long reporterUserId = getUserId(request);
 
-        String token = authHeader.substring(7);
-        Long reporterUserId = jwtUtil.getUserId(token);
-
-        List<Map<String, Object>> result = reportService.getMyReports(reporterUserId);
-        return ApiResponse.success(result);
+        return ApiResponse.success(reportService.getMyReports(reporterUserId));
     }
 
     @GetMapping("/admin")
     public ApiResponse<List<Map<String, Object>>> getAllReports(@RequestParam(required = false) String status,
-                                                                HttpServletRequest httpServletRequest) {
+                                                                HttpServletRequest request) {
 
-        String authHeader = httpServletRequest.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing or invalid Authorization header");
-        }
-
-        String token = authHeader.substring(7);
-        String role = jwtUtil.getRole(token);
-
-        if (!"admin".equals(role)) {
-            throw new RuntimeException("Only admin can view reports");
-        }
+        requireAdminOrStaff(request);
 
         return ApiResponse.success(reportService.getAllReports(status));
     }
@@ -79,22 +61,40 @@ public class ReportController {
     @PatchMapping("/admin/{reportId}/handle")
     public ApiResponse<Map<String, Object>> handleReport(@PathVariable Long reportId,
                                                          @RequestParam String status,
-                                                         HttpServletRequest httpServletRequest) {
+                                                         HttpServletRequest request) {
 
-        String authHeader = httpServletRequest.getHeader("Authorization");
+        Long operatorId = getUserId(request);
+
+        requireAdminOrStaff(request);
+
+        Map<String, Object> result = reportService.handleReport(reportId, status, operatorId);
+
+        return ApiResponse.success("report handled", result);
+    }
+
+    private String getToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new RuntimeException("Missing or invalid Authorization header");
         }
 
-        String token = authHeader.substring(7);
-        Long adminId = jwtUtil.getUserId(token);
-        String role = jwtUtil.getRole(token);
+        return authHeader.substring(7);
+    }
 
-        if (!"admin".equals(role)) {
-            throw new RuntimeException("Only admin can handle reports");
+    private Long getUserId(HttpServletRequest request) {
+        return jwtUtil.getUserId(getToken(request));
+    }
+
+    private String getRole(HttpServletRequest request) {
+        return jwtUtil.getRole(getToken(request));
+    }
+
+    private void requireAdminOrStaff(HttpServletRequest request) {
+        String role = getRole(request);
+
+        if (!"admin".equals(role) && !"staff".equals(role)) {
+            throw new RuntimeException("Only admin or staff can access this API");
         }
-
-        Map<String, Object> result = reportService.handleReport(reportId, status, adminId);
-        return ApiResponse.success("report handled", result);
     }
 }
