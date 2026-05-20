@@ -130,9 +130,9 @@ function requireCareerStaff() {
     const token = getToken();
     const role = getRole();
 
-    if (!token || (role !== "career_staff" && role !== "admin")) {
+    if (!token || (role !== "staff" && role !== "admin")) {
         clearAuth();
-        window.location.href = "/admin/login.html";
+        window.location.href = "/admin/login-staff.html";
         return false;
     }
 

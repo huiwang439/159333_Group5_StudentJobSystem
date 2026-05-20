@@ -3,12 +3,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!logoutBtn) return;
 
-    logoutBtn.addEventListener("click", () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        localStorage.removeItem("userId");
-        localStorage.removeItem("fullName");
-
-        window.location.href = "/admin/login.html";
+    logoutBtn.addEventListener("click", async () => {
+        try {
+            await apiPost("/auth/logout", {});
+        } catch (error) {
+            console.warn("Logout request failed:", error.message);
+        } finally {
+            clearAuth();
+            window.location.href = "/index/index.html";
+        }
     });
 });
