@@ -125,3 +125,16 @@ function showText(elementId, text, isError = false) {
     el.textContent = text || "";
     el.style.color = isError ? "#d93025" : "#2b7a0b";
 }
+
+function requireCareerStaff() {
+    const token = getToken();
+    const role = getRole();
+
+    if (!token || (role !== "career_staff" && role !== "admin")) {
+        clearAuth();
+        window.location.href = "/admin/login.html";
+        return false;
+    }
+
+    return true;
+}

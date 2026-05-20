@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Career Services Staff - Analytics</title>
+
+    <link rel="stylesheet" href="./css/admin-common.css">
+    <link rel="stylesheet" href="./css/admin-platform.css">
+    <link rel="stylesheet" href="./css/admin-ai-assistant.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body data-page="career-analytics">
+
+<div class="topbar">
+    <div class="topbar-left">
+        <button id="menuToggleBtn" class="menu-toggle-btn">▶</button>
+        <div class="topbar-title">Career Services Staff Panel</div>
+    </div>
+
+    <button id="adminLogoutBtn" class="logout-btn">Logout</button>
+</div>
+
+<div class="layout">
+
+    <aside id="sidebar" class="sidebar hidden">
+        <div class="sidebar-menu">
+            <div class="menu-item" onclick="location.href='./career-dashboard.html'">Dashboard</div>
+            <div class="menu-item" onclick="location.href='./career-jobs.html'">Job Management</div>
+            <div class="menu-item" onclick="location.href='./career-company-info.html'">Company Information</div>
+            <div class="menu-item active" onclick="location.href='./career-analytics.html'">Analytics</div>
+            <div class="menu-item" onclick="location.href='./career-events.html'">Career Events</div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <div class="container">
+
+            <h1>Analytics</h1>
+
+            <div class="toolbar">
+
+                <label for="daysInput">Days:</label>
+
+                <input
+                        id="daysInput"
+                        type="number"
+                        value="7"
+                        min="1"
+                        max="30"
+                >
+
+                <button id="loadAnalyticsBtn">
+                    Load
+                </button>
+
+            </div>
+
+            <div
+                    style="
+                    display:grid;
+                    grid-template-columns:repeat(2,1fr);
+                    gap:20px;
+                    margin-top:20px;
+            "
+            >
+
+                <div class="chart-card">
+                    <h3>Job Growth Trend</h3>
+                    <canvas id="jobGrowthTrendChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <h3>Position Distribution</h3>
+                    <canvas id="positionDistributionChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <h3>Application Trend</h3>
+                    <canvas id="applicationTrendChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <h3>Jobs Awaiting Review</h3>
+                    <canvas id="jobsAwaitingReviewChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <h3>Application Success Metrics</h3>
+                    <canvas id="applicationSuccessMetricsChart"></canvas>
+                </div>
+
+            </div>
+
+            <pre id="analyticsMessage"></pre>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="./js/api-client.js"></script>
+<script src="./js/admin-sidebar.js"></script>
+<script src="./js/career-analytics.js"></script>
+<script src="./js/admin-ai-assistant.js"></script>
+<script src="./js/admin-logout.js"></script>
+
+</body>
+</html>
