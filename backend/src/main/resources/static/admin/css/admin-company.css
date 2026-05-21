@@ -271,3 +271,31 @@ button {
     margin-top: 16px;
     white-space: pre-wrap;
 }
+
+.company-logo-detail {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.company-logo-detail img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    background: #f5f7fb;
+}
+
+.company-logo-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 12px;
+    border: 1px dashed #bbb;
+    background: #f5f7fb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #777;
+    font-size: 14px;
+}

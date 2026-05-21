@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    if (!requireRole("admin")) return;
+    if (!requireCareerStaff()) return;
 
     const searchInput = document.getElementById("companysearchInput");
     const searchBtn = document.getElementById("companysearchBtn");
@@ -33,10 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function formatValue(value) {
-        if (value === null || value === undefined || value === "") {
-            return "-";
-        }
-
+        if (value === null || value === undefined || value === "") return "-";
         return value;
     }
 
@@ -73,7 +70,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td>${formatValue(company.contactEmail)}</td>
                 <td>${formatValue(company.verificationStatus)}</td>
                 <td>${formatValue(company.accountStatus)}</td>
-                <td><button class="detail-btn" data-id="${company.userId}">View</button></td>
+                <td>
+                    <button class="detail-btn" data-id="${company.userId}">View</button>
+                </td>
             `;
 
             companyInfoBody.appendChild(tr);
@@ -188,7 +187,9 @@ document.addEventListener("DOMContentLoaded", () => {
     async function loadCompanies() {
         try {
             showMessage("Loading companies...");
+
             const companies = await apiGet(buildPath());
+
             renderCompanies(companies);
             showMessage("Companies loaded.");
         } catch (error) {
@@ -200,7 +201,9 @@ document.addEventListener("DOMContentLoaded", () => {
     async function loadCompanyDetail(userId) {
         try {
             showMessage("Loading company details...");
+
             const detail = await apiGet(`/admin/employers/${userId}`);
+
             renderCompanyDetail(detail);
             showDetailView();
         } catch (error) {
@@ -215,11 +218,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     searchBtn.addEventListener("click", loadCompanies);
+
     resetBtn.addEventListener("click", resetFilters);
+
     industryFilter.addEventListener("change", loadCompanies);
 
     searchInput.addEventListener("keydown", e => {
-        if (e.key === "Enter") loadCompanies();
+        if (e.key === "Enter") {
+            loadCompanies();
+        }
     });
 
     backToCompaniesBtn.addEventListener("click", showListView);

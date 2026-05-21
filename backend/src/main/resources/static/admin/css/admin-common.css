@@ -136,3 +136,23 @@ body {
 .logout-btn:hover {
     background: #e9eefb;
 }
+
+.menu-item,
+.sub-menu-item {
+    position: relative;
+}
+
+.sidebar-badge {
+    margin-left: auto;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #d93025;
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 20px;
+    text-align: center;
+    display: inline-block;
+}

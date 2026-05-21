@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Career Services Staff - Dashboard</title>
+    <link rel="stylesheet" href="./css/admin-common.css">
+    <link rel="stylesheet" href="./css/admin-dashboard.css">
+    <link rel="stylesheet" href="./css/admin-ai-assistant.css">
+</head>
+
+<body data-page="career-dashboard">
+
+<div class="topbar">
+    <div class="topbar-left">
+        <button id="menuToggleBtn" class="menu-toggle-btn">▶</button>
+        <div class="topbar-title">Career Services Staff Panel</div>
+    </div>
+
+    <button id="adminLogoutBtn" class="logout-btn">Logout</button>
+</div>
+
+<div class="layout">
+    <aside id="sidebar" class="sidebar hidden">
+        <div class="sidebar-menu">
+            <div class="menu-item active" onclick="location.href='./career-dashboard.html'">Dashboard</div>
+            <div class="menu-item" onclick="location.href='./career-jobs.html'">Job Management</div>
+            <div class="menu-item" onclick="location.href='./career-company-info.html'">Company Information</div>
+            <div class="menu-item" onclick="location.href='./career-analytics.html'">Analytics</div>
+            <div class="menu-item" onclick="location.href='./career-events.html'">Career Events</div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Dashboard</h1>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <div class="card-title">Registered Students</div>
+                <div class="card-value" id="activeStudents">0</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-title">Participating Employers</div>
+                <div class="card-value" id="participatingEmployers">0</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-title">Total Jobs</div>
+                <div class="card-value" id="totalJobs">0</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-title">Pending Jobs</div>
+                <div class="card-value" id="pendingJobs">0</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-title">Approved Jobs</div>
+                <div class="card-value" id="approvedJobs">0</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-title">Total Applications</div>
+                <div class="card-value" id="totalApplications">0</div>
+            </div>
+        </div>
+
+        <p id="dashboardMessage" style="margin-top: 16px;"></p>
+    </main>
+</div>
+
+<script src="./js/api-client.js"></script>
+<script src="./js/admin-sidebar.js"></script>
+<script src="./js/career-dashboard.js"></script>
+<script src="./js/admin-ai-assistant.js"></script>
+<script src="./js/admin-logout.js"></script>
+
+</body>
+</html>

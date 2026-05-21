@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const todayActiveUsers = document.getElementById("todayActiveUsers");
     const studentActiveUsers = document.getElementById("studentActiveUsers");
     const employerActiveUsers = document.getElementById("employerActiveUsers");
+    const staffActiveUsers = document.getElementById("staffActiveUsers");
     const dailyActiveTableBody = document.getElementById("dailyActiveTableBody");
     const messageBox = document.getElementById("messageBox");
 
@@ -41,6 +42,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         todayActiveUsers.textContent = activeToday.activeUsers ?? 0;
         studentActiveUsers.textContent = activeToday.activeStudents ?? 0;
         employerActiveUsers.textContent = activeToday.activeEmployers ?? 0;
+        staffActiveUsers.textContent = activeToday.activeStaff ?? 0;
 
         renderHourly(hourly);
         showMessage("Daily active data loaded.");

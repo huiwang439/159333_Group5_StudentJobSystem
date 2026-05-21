@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Career Services Staff - Company Information</title>
+
+    <link rel="stylesheet" href="./css/admin-common.css">
+    <link rel="stylesheet" href="./css/admin-company.css">
+    <link rel="stylesheet" href="./css/admin-ai-assistant.css">
+</head>
+
+<body data-page="career-company-info">
+
+<div class="topbar">
+    <div class="topbar-left">
+        <button id="menuToggleBtn" class="menu-toggle-btn">▶</button>
+        <div class="topbar-title">Career Services Staff Panel</div>
+    </div>
+
+    <button id="adminLogoutBtn" class="logout-btn">Logout</button>
+</div>
+
+<div class="layout">
+
+    <aside id="sidebar" class="sidebar hidden">
+        <div class="sidebar-menu">
+            <div class="menu-item" onclick="location.href='./career-dashboard.html'">Dashboard</div>
+            <div class="menu-item" onclick="location.href='./career-jobs.html'">Job Management</div>
+            <div class="menu-item active" onclick="location.href='./career-company-info.html'">Company Information</div>
+            <div class="menu-item" onclick="location.href='./career-analytics.html'">Analytics</div>
+            <div class="menu-item" onclick="location.href='./career-events.html'">Career Events</div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <div class="container">
+
+            <section id="companyListView">
+
+                <h1>Company Information</h1>
+
+                <div class="toolbar">
+
+                    <input
+                            id="companysearchInput"
+                            type="text"
+                            placeholder="Search company name, email, industry"
+                    >
+
+                    <select id="industryFilter">
+                        <option value="">All Industries</option>
+                        <option value="IT">IT</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Education">Education</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Other">Other</option>
+                    </select>
+
+                    <button id="companysearchBtn">Search</button>
+                    <button id="companyresetBtn">Reset</button>
+
+                </div>
+
+                <table>
+
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Company Name</th>
+                        <th>Industry</th>
+                        <th>Size</th>
+                        <th>Location</th>
+                        <th>Contact Person</th>
+                        <th>Contact Email</th>
+                        <th>Verification</th>
+                        <th>Account</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+
+                    <tbody id="companyInfoBody"></tbody>
+
+                </table>
+
+            </section>
+
+            <section id="companyDetailView" class="hidden">
+
+                <button id="backToCompaniesBtn" class="back-btn">
+                    Back
+                </button>
+
+                <h1>Company Details</h1>
+
+                <div id="companyDetailCard" class="detail-card"></div>
+
+            </section>
+
+            <pre id="messageBox"></pre>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="./js/api-client.js"></script>
+<script src="./js/admin-sidebar.js"></script>
+<script src="./js/career-company-info.js"></script>
+<script src="./js/admin-ai-assistant.js"></script>
+<script src="./js/admin-logout.js"></script>
+
+</body>
+</html>

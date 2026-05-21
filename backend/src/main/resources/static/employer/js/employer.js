@@ -1852,8 +1852,17 @@ if (loginBtn) {
   loginBtn.textContent = "Log Out";
 
   loginBtn.addEventListener("click", () => {
-    localStorage.removeItem("employerToken");
-  window.location.href = "/admin/login-employer.html";
+    const token =
+      localStorage.getItem("employerToken") || localStorage.getItem("token");
+    fetch("/auth/logout", {
+      method: "POST",
+      headers: token ? { Authorization: "Bearer " + token } : {}
+    })
+      .catch(() => {})
+      .finally(() => {
+        localStorage.clear();
+        window.location.replace("/admin/login.html");
+      });
   });
 }
 // Initialization

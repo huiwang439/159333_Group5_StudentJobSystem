@@ -18,9 +18,11 @@
     .search {
       padding: 0.9rem;
       display: grid;
-      grid-template-columns: 1.7fr 1fr 1fr 1fr auto auto;
+      grid-template-columns: 1.4fr 1fr 1fr 1fr 1.1fr auto auto;
       gap: 0.5rem;
     }
+    .job-card-hd { display: flex; gap: 0.65rem; align-items: flex-start; }
+    .job-card-body { flex: 1; min-width: 0; }
     .search input, .search select {
       width: 100%;
       border: 1px solid var(--border);
@@ -36,7 +38,6 @@
       cursor: pointer;
       font-weight: 600;
     }
-    .btn-primary { background: var(--accent); color: #fff; }
     .btn-ghost { background: #fff; border: 1px solid var(--border); }
     .head {
       margin: 1rem 0 0.7rem;
@@ -69,7 +70,7 @@
     .page button {
       width: 32px; height: 32px; border: 1px solid var(--border); background: #fff; border-radius: 8px; cursor: pointer;
     }
-    .page button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .page button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
     .status { color: var(--muted); font-size: 0.85rem; }
     @media (max-width: 1024px) {
       .jobs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -94,9 +95,10 @@
         <li><a href="./my-favorites.html"><span class="nav-ico">★</span> My Favorites</a></li>
         <li><a href="./my-applications.html"><span class="nav-ico">→</span> My Applications</a></li>
         <li><a href="./profile.html"><span class="nav-ico">◎</span> Profile</a></li>
-        <li><a href="./notifications.html"><span class="nav-ico">◆</span><span class="nav-text">Notifications</span><span class="nav-notif-badge" id="nav-notif-badge" hidden></span></a></li>
-        <li>
-          <a href="./student-ai.html">
+      <li><a href="./notifications.html"><span class="nav-ico">◆</span><span class="nav-text">Notifications</span><span class="nav-notif-badge" id="nav-notif-badge" hidden></span></a></li>
+      <li><a href="./career-events.html"><span class="nav-ico">◇</span> Career Events</a></li>
+      <li>
+        <a href="./student-ai.html">
             <span class="nav-ico">🤖</span>AI Assistant
           </a>
         </li>
@@ -140,9 +142,16 @@
           </select>
           <select id="jobType">
             <option value="">Job Type</option>
-            <option value="Internship">Internship</option>
-            <option value="Part-time">Part-time</option>
-            <option value="Full-time">Full-time</option>
+            <option value="internship">Internship</option>
+            <option value="part-time">Part-time</option>
+            <option value="full-time">Full-time</option>
+          </select>
+          <select id="audience-filter" aria-label="Student audience">
+            <option value="mine">For me (my type)</option>
+            <option value="ALL">All student types</option>
+            <option value="UNDERGRADUATE">University students</option>
+            <option value="RECENT_GRADUATE">Recent graduates</option>
+            <option value="GRADUATE">Graduate students</option>
           </select>
           <button class="btn btn-primary" type="submit">Search</button>
           <button class="btn btn-ghost" id="reset-btn" type="button">Reset</button>
@@ -160,15 +169,16 @@
     </div>
   </div>
 
+  <script src="./js/student-api.js"></script>
   <script src="./js/student-shell.js"></script>
   <script src="./js/student-notif-badge.js"></script>
   <script>
-    const API_BASE = "http://localhost:8080";
+    const API = window.StudentApi;
+    const API_BASE = API.API_BASE;
     const token = localStorage.getItem("token");
 
     const state = {
-      page: 0,
-      size: 6,
+      profileStudentType: "UNDERGRADUATE",
       favoriteIds: new Set()
     };
 
@@ -176,11 +186,10 @@
     const pagination = document.getElementById("pagination");
     const resultInfo = document.getElementById("result-info");
     const industrySelect = document.getElementById("industry");
+    const audienceSelect = document.getElementById("audience-filter");
 
     function authHeaders() {
-      return {
-        "Authorization": `Bearer ${token}`
-      };
+      return API.authHeaders(token);
     }
 
     function getFilters() {
@@ -188,19 +197,24 @@
         keyword: document.getElementById("keyword").value.trim(),
         location: document.getElementById("location").value,
         industry: document.getElementById("industry").value,
-        jobType: document.getElementById("jobType").value
+        jobType: document.getElementById("jobType").value,
+        audience: audienceSelect.value
       };
     }
 
-    function buildParams() {
-      const params = new URLSearchParams();
-
+    function buildJobsRequestUrl() {
       const filters = getFilters();
-      if (filters.keyword) params.set("keyword", filters.keyword);
-      if (filters.location) params.set("location", filters.location);
-      if (filters.jobType) params.set("employmentType", filters.jobType);
-
-      return params.toString();
+      const studentType = API.resolveStudentTypeParam(
+        filters.audience,
+        state.profileStudentType
+      );
+      return API.buildJobsUrl({
+        keyword: filters.keyword,
+        location: filters.location,
+        employmentType: filters.jobType,
+        fieldOfStudy: filters.industry,
+        studentType: studentType
+      });
     }
 
     async function populateIndustryOptions(preferredIndustry = "") {
@@ -209,7 +223,7 @@
       );
 
       try {
-        const response = await fetch(`${API_BASE}/jobs`, {
+        const response = await fetch(API.buildJobsUrl({ studentType: "ALL" }), {
           headers: authHeaders()
         });
         if (!response.ok) return;
@@ -220,7 +234,7 @@
         const industries = new Set();
 
         jobs.forEach(job => {
-          const val = firstNonEmpty(job.industry, job.categoryName, job.fieldOfStudy);
+          const val = API.firstNonEmpty(job.industry, job.categoryName, job.fieldOfStudy);
           if (val) industries.add(val);
         });
 
@@ -249,49 +263,42 @@
       }
     }
 
-  function firstNonEmpty(...values) {
-    for (const value of values) {
-      if (value !== null && value !== undefined) {
-        const text = String(value).trim();
-        if (text) return text;
-      }
-    }
-    return "";
-  }
-
   function renderJobs(items) {
-  jobsContainer.innerHTML = items.map(job => {
-    const jobId = job.id || job.jobId;
-    const companyName = firstNonEmpty(job.companyName, job.employerProfile && job.employerProfile.companyName, "Unknown company");
-    const jobType = firstNonEmpty(job.jobType, job.employmentType, "-");
-    const industry = firstNonEmpty(job.industry, job.categoryName, job.fieldOfStudy, "-");
-    const location = firstNonEmpty(job.location, "-");
-    const description = firstNonEmpty(job.description, "No description provided.");
+    if (!items.length) {
+      jobsContainer.innerHTML = '<p class="status">No jobs match your filters.</p>';
+      return;
+    }
 
-    return `
+    jobsContainer.innerHTML = items.map(job => {
+      const jobId = API.jobRecordPk(job);
+      const companyName = API.companyNameFromJob(job);
+      const jobType = API.firstNonEmpty(job.jobType, job.employmentType, "-");
+      const industry = API.firstNonEmpty(job.industry, job.categoryName, job.fieldOfStudy, "-");
+      const location = API.firstNonEmpty(job.location, "-");
+      const description = API.firstNonEmpty(job.description, "No description provided.");
+      const audience = API.labelForTargetStudentType(job.targetStudentType);
+      const descShort = description.length > 160 ? description.slice(0, 160) + "…" : description;
+
+      return `
       <article class="job-card">
-        <h3>${job.title}</h3>
-
-        <p class="job-meta">
-          ${companyName} · ${location} · ${jobType}
-        </p>
-
+        <div class="job-card-hd">
+          ${API.renderLogoHtml(job)}
+          <div class="job-card-body">
+            <h3>${job.title || "Job"}</h3>
+            <p class="job-meta">${companyName} · ${location} · ${jobType}</p>
+            <span class="audience-tag">Open to: ${audience}</span>
+          </div>
+        </div>
         <p class="job-meta">Industry: ${industry}</p>
-        <p class="job-desc">${description}</p>
-
+        <p class="job-desc">${descShort}</p>
         <div class="job-ft">
-          <a class="btn btn-primary" href="./job-detail.html?jobId=${jobId}">
-            View
-          </a>
-
-          <button class="btn btn-ghost favorite-btn" data-job-id="${jobId}">
-            Favorite
-          </button>
+          <a class="btn btn-primary" href="./job-detail.html?jobId=${jobId}">View</a>
+          <button class="btn btn-ghost favorite-btn" data-job-id="${jobId}">Favorite</button>
         </div>
       </article>
     `;
-  }).join("");
-}
+    }).join("");
+  }
 
     function renderPagination() {
       pagination.innerHTML = "";
@@ -333,17 +340,16 @@
   });
 
   if (!res.ok) {
-    alert("收藏失败 ❌");
+    alert("Failed to save job ❌");
     return;
   }
 
-  alert("收藏成功 ✅");
+  alert("Job saved successfully ✅");
 }
     async function fetchJobs() {
       resultInfo.textContent = "Loading...";
 
-      const query = buildParams();
-      const url = query ? `${API_BASE}/jobs?${query}` : `${API_BASE}/jobs`;
+      const url = buildJobsRequestUrl();
 
       const response = await fetch(url, {
         headers: authHeaders()
@@ -357,14 +363,14 @@
       }
 
       const result = await response.json();
-      const data = result.data || result;
+      const data = API.unwrapData(result);
 
       let jobs = Array.isArray(data) ? data : (data.content || []);
       const selectedIndustry = document.getElementById("industry").value;
       if (selectedIndustry) {
         const target = selectedIndustry.trim().toLowerCase();
         jobs = jobs.filter(job => {
-          const industryText = firstNonEmpty(job.industry, job.categoryName, job.fieldOfStudy).toLowerCase();
+          const industryText = API.firstNonEmpty(job.industry, job.categoryName, job.fieldOfStudy).toLowerCase();
           return industryText === target;
         });
       }
@@ -372,7 +378,11 @@
       renderJobs(jobs);
       renderPagination();
 
-      resultInfo.textContent = `Total ${jobs.length} jobs`;
+      const audienceLabel =
+        audienceSelect.value === "mine"
+          ? API.labelForStudentType(state.profileStudentType)
+          : API.labelForTargetStudentType(API.resolveStudentTypeParam(audienceSelect.value, state.profileStudentType));
+      resultInfo.textContent = `${jobs.length} jobs · ${audienceLabel}`;
     }
 
     document.getElementById("search-form").addEventListener("submit", (event) => {
@@ -385,6 +395,7 @@
       document.getElementById("location").value = "";
       document.getElementById("industry").value = "";
       document.getElementById("jobType").value = "";
+      audienceSelect.value = "mine";
       fetchJobs();
     });
 
@@ -393,7 +404,7 @@
   if (!btn) return;
 
   const jobId = Number(btn.dataset.jobId);
-  console.log("点击收藏 jobId =", jobId);
+  console.log("Save job clicked, jobId =", jobId);
 
   toggleFavorite(jobId);
 });
@@ -410,10 +421,17 @@
       const location = urlParams.get("location") || "";
       const industry = urlParams.get("fieldOfStudy") || urlParams.get("industry") || "";
       const jobType = urlParams.get("employmentType") || urlParams.get("jobType") || "";
+      const audience = urlParams.get("audience") || "mine";
 
       document.getElementById("keyword").value = keyword;
       document.getElementById("location").value = location;
       document.getElementById("jobType").value = jobType;
+      if (audience) audienceSelect.value = audience;
+
+      const profile = await API.fetchStudentProfile(token);
+      if (profile && profile.studentType) {
+        state.profileStudentType = profile.studentType;
+      }
 
       await populateIndustryOptions(industry);
 

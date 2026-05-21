@@ -18,9 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function destroyChart(chart) {
-        if (chart) {
-            chart.destroy();
-        }
+        if (chart) chart.destroy();
     }
 
     function createLineChart(canvasId, labels, values, label) {
@@ -29,9 +27,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return new Chart(ctx, {
             type: "line",
             data: {
-                labels: labels,
+                labels,
                 datasets: [{
-                    label: label,
+                    label,
                     data: values,
                     tension: 0.3,
                     fill: false
@@ -39,11 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             options: {
                 responsive: true,
-                plugins: {
-                    legend: {
-                        display: true
-                    }
-                }
+                plugins: { legend: { display: true } }
             }
         });
     }
@@ -54,19 +48,15 @@ document.addEventListener("DOMContentLoaded", () => {
         return new Chart(ctx, {
             type: "bar",
             data: {
-                labels: labels,
+                labels,
                 datasets: [{
-                    label: label,
+                    label,
                     data: values
                 }]
             },
             options: {
                 responsive: true,
-                plugins: {
-                    legend: {
-                        display: true
-                    }
-                }
+                plugins: { legend: { display: true } }
             }
         });
     }
@@ -77,9 +67,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return new Chart(ctx, {
             type: "pie",
             data: {
-                labels: labels,
+                labels,
                 datasets: [{
-                    label: label,
+                    label,
                     data: values
                 }]
             },
@@ -89,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function renderCharts(data) {
+    function renderCharts(overviewData, trendData, distributionData) {
         destroyChart(jobGrowthTrendChart);
         destroyChart(positionDistributionChart);
         destroyChart(applicationTrendChart);
@@ -97,7 +87,8 @@ document.addEventListener("DOMContentLoaded", () => {
         destroyChart(reportStatisticsChart);
         destroyChart(conversionRateChart);
 
-        const jobGrowthTrend = data.jobGrowthTrend || [];
+        const jobGrowthTrend = overviewData.jobGrowthTrend || [];
+
         jobGrowthTrendChart = createLineChart(
             "jobGrowthTrendChart",
             jobGrowthTrend.map(item => item.date),
@@ -105,23 +96,22 @@ document.addEventListener("DOMContentLoaded", () => {
             "Jobs"
         );
 
-        const positionDistribution = data.positionDistribution || [];
+        const userRoleDistribution = distributionData.userRoleDistribution || {};
         positionDistributionChart = createPieChart(
             "positionDistributionChart",
-            positionDistribution.map(item => item.name),
-            positionDistribution.map(item => item.value),
-            "Positions"
+            Object.keys(userRoleDistribution),
+            Object.values(userRoleDistribution),
+            "User Role Distribution"
         );
 
-        const applicationTrend = data.applicationTrend || [];
         applicationTrendChart = createLineChart(
             "applicationTrendChart",
-            applicationTrend.map(item => item.date),
-            applicationTrend.map(item => item.count),
-            "Applications"
+            trendData.map(item => item.date),
+            trendData.map(item => item.count),
+            "Activity Trend"
         );
 
-        const pendingReviewCount = data.pendingReviewCount || {};
+        const pendingReviewCount = overviewData.pendingReviewCount || {};
         pendingReviewCountChart = createBarChart(
             "pendingReviewCountChart",
             Object.keys(pendingReviewCount),
@@ -129,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
             "Pending Review"
         );
 
-        const reportStatistics = data.reportStatistics || [];
+        const reportStatistics = overviewData.reportStatistics || [];
         reportStatisticsChart = createBarChart(
             "reportStatisticsChart",
             reportStatistics.map(item => item.name),
@@ -137,12 +127,12 @@ document.addEventListener("DOMContentLoaded", () => {
             "Reports"
         );
 
-        const conversionRate = data.conversionRate || {};
+        const jobStatusDistribution = distributionData.jobStatusDistribution || {};
         conversionRateChart = createBarChart(
             "conversionRateChart",
-            Object.keys(conversionRate),
-            Object.values(conversionRate),
-            "Conversion Rate"
+            Object.keys(jobStatusDistribution),
+            Object.values(jobStatusDistribution),
+            "Job Status Distribution"
         );
     }
 
@@ -151,9 +141,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const days = daysInput.value || 7;
             showMessage("Loading analytics...");
 
-            const data = await apiGet(`/admin/analytics/overview?days=${days}`);
+            const [overviewData, trendData, distributionData] = await Promise.all([
+                apiGet(`/admin/analytics/overview?days=${days}`),
+                apiGet(`/admin/analytics/trend?days=${days}`),
+                apiGet("/admin/analytics/distribution")
+            ]);
 
-            renderCharts(data);
+            renderCharts(overviewData, trendData, distributionData);
 
             showMessage("Analytics loaded.");
         } catch (error) {

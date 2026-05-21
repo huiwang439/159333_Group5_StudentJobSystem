@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
         abnormalTableBody.innerHTML = "";
 
         if (!data || data.length === 0) {
-            abnormalTableBody.innerHTML = `<tr><td colspan="5">No abnormal records found</td></tr>`;
+            abnormalTableBody.innerHTML = `<tr><td colspan="6">No abnormal records found</td></tr>`;
             return;
         }
 
@@ -32,9 +32,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     Reasons: ${(item.reasons || []).join("; ") || "-"}
                 </td>
                 <td>${item.riskLevel ?? "-"}</td>
+                <td>
+                    <button class="detail-btn" data-id="${item.userId}">View Detail</button>
+                </td>
             `;
 
             abnormalTableBody.appendChild(tr);
+        });
+
+        abnormalTableBody.querySelectorAll(".detail-btn").forEach(btn => {
+            btn.addEventListener("click", () => loadDetail(btn.dataset.id));
         });
     }
 
@@ -47,6 +54,28 @@ document.addEventListener("DOMContentLoaded", () => {
             showMessage("Abnormal monitoring data loaded.");
         } catch (error) {
             renderData([]);
+            showMessage(error.message, true);
+        }
+    }
+
+    async function loadDetail(userId) {
+        try {
+            const detail = await apiGet(`/admin/abnormal/${userId}`);
+
+            const logs = detail.logs || [];
+
+            alert(
+                `User ID: ${detail.userId ?? "-"}\n` +
+                `Name: ${detail.fullName ?? "-"}\n` +
+                `Role: ${detail.role ?? "-"}\n` +
+                `Risk Level: ${detail.riskLevel ?? "-"}\n` +
+                `Actions Today: ${detail.actionCountToday ?? 0}\n` +
+                `Reports Today: ${detail.reportCountToday ?? 0}\n` +
+                `Reports Made Today: ${detail.reportsMadeToday ?? 0}\n` +
+                `Reasons: ${(detail.reasons || []).join("; ") || "-"}\n\n` +
+                `Log Count: ${logs.length}`
+            );
+        } catch (error) {
             showMessage(error.message, true);
         }
     }

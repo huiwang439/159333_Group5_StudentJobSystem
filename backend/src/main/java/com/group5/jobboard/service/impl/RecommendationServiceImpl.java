@@ -150,17 +150,14 @@ public class RecommendationServiceImpl implements RecommendationService {
     private boolean isUndergraduate(String degree) {
         return degree.contains("bachelor")
                 || degree.contains("undergraduate")
-                || degree.contains("ug")
-                || degree.contains("本科");
+                || degree.contains("ug");
     }
 
     private boolean isGraduate(String degree) {
         return degree.contains("master")
                 || degree.contains("graduate")
                 || degree.contains("postgraduate")
-                || degree.contains("pg")
-                || degree.contains("硕士")
-                || degree.contains("研究生");
+                || degree.contains("pg");
     }
 
     private boolean isSuitableForUndergraduate(Job job) {

@@ -63,7 +63,7 @@ public class SavedJobController {
         return ApiResponse.success("saved job removed", result);
     }
 
-    // ⭐ 查看我的收藏
+    // View my saved jobs
     @GetMapping("/my")
     public ApiResponse<List<Map<String, Object>>> getMySavedJobs(HttpServletRequest httpServletRequest) {
 
