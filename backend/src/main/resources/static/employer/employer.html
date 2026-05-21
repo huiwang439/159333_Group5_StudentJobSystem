@@ -218,6 +218,7 @@
                             <th>Job ID</th>
                             <th>Title</th>
                             <th>Field of Study</th>
+                            <th>Target Student Type</th>
                             <th>Employment Type</th>
                             <th>Work Mode</th>
                             <th>Salary</th>
@@ -382,7 +383,17 @@
                         <input class="form-input" id="jobLocation" />
                     </div>
                 </div>
-
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Target Student Type</label>
+                        <select class="form-select" id="jobTargetStudentType">
+                            <option value="ALL">All Students</option>
+                            <option value="UNDERGRADUATE">Undergraduate Students</option>
+                            <option value="GRADUATE">Graduate Students</option>
+                            <option value="RECENT_GRADUATE">Recent Graduates</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="form-grid-3">
                     <div class="form-group">
                         <label class="form-label">Field of Study</label>
@@ -438,19 +449,40 @@
         </div>
 
         <div class="detail-grid">
-            <div><b>Application ID:</b> <span id="detailApplicationId">-</span></div>
-            <div><b>Job ID:</b> <span id="detailJobId">-</span></div>
-            <div><b>Job Title:</b> <span id="detailJobTitle">-</span></div>
-            <div><b>Student ID:</b> <span id="detailStudentId">-</span></div>
-            <div><b>Student:</b> <span id="detailStudentName">-</span></div>
-            <div><b>Student Email:</b> <span id="detailStudentEmail">-</span></div>
-            <div><b>Status:</b> <span id="detailStatus">-</span></div>
-            <div><b>Applied At:</b> <span id="detailAppliedAt">-</span></div>
-        </div>
+        <div><b>Application ID:</b> <span id="detailApplicationId">-</span></div>
+        <div><b>Job ID:</b> <span id="detailJobId">-</span></div>
+        <div><b>Job Title:</b> <span id="detailJobTitle">-</span></div>
+        <div><b>Student ID:</b> <span id="detailStudentId">-</span></div>
+        <div><b>Student:</b> <span id="detailStudentName">-</span></div>
+        <div><b>Student Email:</b> <span id="detailStudentEmail">-</span></div>
+        <div><b>Student Phone:</b> <span id="detailStudentPhone">-</span></div>
+        <div><b>Student Major:</b> <span id="detailStudentMajor">-</span></div>
+        <div><b>Student Type:</b> <span id="detailStudentType">-</span></div>
+        <div><b>Status:</b> <span id="detailStatus">-</span></div>
+        <div><b>Applied At:</b> <span id="detailAppliedAt">-</span></div>
+    </div>
 
+        <div class="detail-cover">
+            <h4>Student Bio</h4>
+            <p id="detailStudentBio">-</p>
+        </div>
         <div class="detail-cover">
             <h4>Cover Letter</h4>
             <p id="detailCoverLetter">-</p>
+        </div>
+
+        <div class="detail-cover">
+            <h4>Student Documents</h4>
+
+            <p>
+                <b>Resume:</b>
+                <a id="detailResumeLink" href="#" target="_blank">No resume provided</a>
+            </p>
+
+            <p>
+                <b>Portfolio:</b>
+                <a id="detailPortfolioLink" href="#" target="_blank">No portfolio provided</a>
+            </p>
         </div>
     </div>
 </div>
@@ -466,6 +498,7 @@
             <div><b>Job ID:</b> <span id="jobDetailId">-</span></div>
             <div><b>Title:</b> <span id="jobDetailTitle">-</span></div>
             <div><b>Field of Study:</b> <span id="jobDetailField">-</span></div>
+            <div><b>Target Student Type:</b> <span id="jobDetailTargetStudentType">-</span></div>
             <div><b>Employment Type:</b> <span id="jobDetailEmploymentType">-</span></div>
             <div><b>Work Mode:</b> <span id="jobDetailWorkMode">-</span></div>
             <div><b>Location:</b> <span id="jobDetailLocation">-</span></div>

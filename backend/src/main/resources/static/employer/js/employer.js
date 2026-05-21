@@ -279,6 +279,7 @@ function getJobFormPayload() {
   const workMode = document.getElementById("jobWorkMode")?.value || "";
   const location = document.getElementById("jobLocation")?.value.trim() || "";
   const fieldOfStudy = document.getElementById("jobFieldOfStudy")?.value.trim() || "";
+  const targetStudentType = document.getElementById("jobTargetStudentType")?.value || "ALL";
   const salaryMin = Number(document.getElementById("jobSalaryMin")?.value);
   const salaryMax = Number(document.getElementById("jobSalaryMax")?.value);
   const deadlineInput = document.getElementById("jobDeadline")?.value || "";
@@ -314,10 +315,10 @@ function getJobFormPayload() {
     fieldOfStudy,
     salaryMin,
     salaryMax,
-    deadline: formatDeadlineForBackend(deadlineInput)
+    deadline: formatDeadlineForBackend(deadlineInput),
+    targetStudentType
   };
 }
-
 // Company profile and verification
 
 function fillProfileForm(profile, verification) {
@@ -619,7 +620,7 @@ function renderJobs(list) {
   if (!list.length) {
     jobTableBody.innerHTML = `
       <tr>
-        <td colspan="9" class="empty-state">
+        <td colspan="10" class="empty-state">
           <div>No matching jobs found</div>
           <small>Try changing the keyword or status filter.</small>
         </td>
@@ -628,32 +629,36 @@ function renderJobs(list) {
     return;
   }
 
-  jobTableBody.innerHTML = list.map(job => `
-    <tr>
-      <td>${formatValue(job.jobId)}</td>
-      <td>${formatValue(job.title)}</td>
-      <td>${formatValue(job.fieldOfStudy)}</td>
-      <td>${formatValue(job.employmentType)}</td>
-      <td>${formatValue(job.workMode)}</td>
-      <td>${formatSalary(job.salaryMin, job.salaryMax)}</td>
-      <td>${formatValue(job.location)}</td>
-      <td>
-        <span class="status-pill ${getJobStatusClass(job.status)}">
-          ${getJobStatusText(job.status)}
-        </span>
-      </td>
-      <td>
-        <div class="action-cell">
-          <button class="mini-btn" onclick="viewJobDetail(${job.jobId})">View</button>
-          <button class="mini-btn" onclick="editJob(${job.jobId})">Edit</button>
-          <button class="mini-btn" onclick="closeJob(${job.jobId})">Close</button>
-          <button class="mini-btn" onclick="deleteJob(${job.jobId})">Delete</button>
-        </div>
-      </td>
-    </tr>
-  `).join("");
-}
+  jobTableBody.innerHTML = list.map(job => {
+    const jobId = job.jobId ?? job.id;
 
+    return `
+      <tr>
+        <td>${formatValue(jobId)}</td>
+        <td>${formatValue(job.title)}</td>
+        <td>${formatValue(job.fieldOfStudy)}</td>
+        <td>${formatValue(job.targetStudentType || "ALL")}</td>
+        <td>${formatValue(job.employmentType)}</td>
+        <td>${formatValue(job.workMode)}</td>
+        <td>${formatSalary(job.salaryMin, job.salaryMax)}</td>
+        <td>${formatValue(job.location)}</td>
+        <td>
+          <span class="status-pill ${getJobStatusClass(job.status)}">
+            ${getJobStatusText(job.status)}
+          </span>
+        </td>
+        <td>
+          <div class="action-cell">
+            <button class="mini-btn" onclick="viewJobDetail(${jobId})">View</button>
+            <button class="mini-btn" onclick="editJob(${jobId})">Edit</button>
+            <button class="mini-btn" onclick="closeJob(${jobId})">Close</button>
+            <button class="mini-btn" onclick="deleteJob(${jobId})">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
 function loadJobOptions() {
   if (!applicationJobSelect) return;
 
@@ -671,6 +676,7 @@ function fillCreateFormDefault() {
   const jobEmploymentType = document.getElementById("jobEmploymentType");
   const jobWorkMode = document.getElementById("jobWorkMode");
   const jobLocation = document.getElementById("jobLocation");
+  const jobTargetStudentType = document.getElementById("jobTargetStudentType");
   const jobFieldOfStudy = document.getElementById("jobFieldOfStudy");
   const jobSalaryMin = document.getElementById("jobSalaryMin");
   const jobSalaryMax = document.getElementById("jobSalaryMax");
@@ -682,13 +688,13 @@ function fillCreateFormDefault() {
   if (jobEmploymentType) jobEmploymentType.value = "internship";
   if (jobWorkMode) jobWorkMode.value = "hybrid";
   if (jobLocation) jobLocation.value = "";
+  if (jobTargetStudentType) jobTargetStudentType.value = "ALL";
   if (jobFieldOfStudy) jobFieldOfStudy.value = "";
   if (jobSalaryMin) jobSalaryMin.value = "";
   if (jobSalaryMax) jobSalaryMax.value = "";
   if (jobDeadline) jobDeadline.value = "";
   if (jobDescription) jobDescription.value = "";
 }
-
 function fillEditJobForm(job) {
   if (!job) job = {};
 
@@ -697,6 +703,7 @@ function fillEditJobForm(job) {
   const jobEmploymentType = document.getElementById("jobEmploymentType");
   const jobWorkMode = document.getElementById("jobWorkMode");
   const jobLocation = document.getElementById("jobLocation");
+  const jobTargetStudentType = document.getElementById("jobTargetStudentType");
   const jobFieldOfStudy = document.getElementById("jobFieldOfStudy");
   const jobSalaryMin = document.getElementById("jobSalaryMin");
   const jobSalaryMax = document.getElementById("jobSalaryMax");
@@ -708,6 +715,7 @@ function fillEditJobForm(job) {
   if (jobEmploymentType) jobEmploymentType.value = job.employmentType || "internship";
   if (jobWorkMode) jobWorkMode.value = job.workMode || "hybrid";
   if (jobLocation) jobLocation.value = job.location || "";
+  if (jobTargetStudentType) jobTargetStudentType.value = job.targetStudentType || "ALL";
   if (jobFieldOfStudy) jobFieldOfStudy.value = job.fieldOfStudy || "";
   if (jobSalaryMin) jobSalaryMin.value = job.salaryMin ?? "";
   if (jobSalaryMax) jobSalaryMax.value = job.salaryMax ?? "";
@@ -718,7 +726,6 @@ function fillEditJobForm(job) {
   }
   if (jobDescription) jobDescription.value = job.description || "";
 }
-
 function setCreateMode() {
   editingJobId = null;
   if (publishJobBtn) publishJobBtn.classList.remove("hidden");
@@ -867,6 +874,7 @@ window.viewJobDetail = async function(id) {
   const jobDetailId = document.getElementById("jobDetailId");
   const jobDetailTitle = document.getElementById("jobDetailTitle");
   const jobDetailField = document.getElementById("jobDetailField");
+  const jobDetailTargetStudentType = document.getElementById("jobDetailTargetStudentType");
   const jobDetailEmploymentType = document.getElementById("jobDetailEmploymentType");
   const jobDetailWorkMode = document.getElementById("jobDetailWorkMode");
   const jobDetailLocation = document.getElementById("jobDetailLocation");
@@ -878,6 +886,7 @@ window.viewJobDetail = async function(id) {
   if (jobDetailId) jobDetailId.textContent = formatValue(j.jobId);
   if (jobDetailTitle) jobDetailTitle.textContent = formatValue(j.title);
   if (jobDetailField) jobDetailField.textContent = formatValue(j.fieldOfStudy);
+  if (jobDetailTargetStudentType) jobDetailTargetStudentType.textContent = formatValue(j.targetStudentType || "ALL");
   if (jobDetailEmploymentType) jobDetailEmploymentType.textContent = formatValue(j.employmentType);
   if (jobDetailWorkMode) jobDetailWorkMode.textContent = formatValue(j.workMode);
   if (jobDetailLocation) jobDetailLocation.textContent = formatValue(j.location);
@@ -893,7 +902,6 @@ window.viewJobDetail = async function(id) {
     jobDetailModal.classList.remove("hidden");
   }
 };
-
 window.closeJob = function(id) {
   resetConfirmState();
 
@@ -1158,11 +1166,17 @@ window.viewApplicationDetail = async function(applicationId) {
   const detailJobId = document.getElementById("detailJobId");
   const detailJobTitle = document.getElementById("detailJobTitle");
   const detailStudentId = document.getElementById("detailStudentId");
-  const detailStudentName = document.getElementById("detailStudentName");
-  const detailStudentEmail = document.getElementById("detailStudentEmail");
+ const detailStudentName = document.getElementById("detailStudentName");
+ const detailStudentEmail = document.getElementById("detailStudentEmail");
+ const detailStudentPhone = document.getElementById("detailStudentPhone");
+ const detailStudentMajor = document.getElementById("detailStudentMajor");
+ const detailStudentType = document.getElementById("detailStudentType");
+ const detailStudentBio = document.getElementById("detailStudentBio");
   const detailStatus = document.getElementById("detailStatus");
   const detailAppliedAt = document.getElementById("detailAppliedAt");
   const detailCoverLetter = document.getElementById("detailCoverLetter");
+  const detailResumeLink = document.getElementById("detailResumeLink");
+  const detailPortfolioLink = document.getElementById("detailPortfolioLink");
 
   if (detailApplicationId) detailApplicationId.textContent = d.applicationId ?? "-";
   if (detailJobId) detailJobId.textContent = d.jobId ?? "-";
@@ -1170,8 +1184,28 @@ window.viewApplicationDetail = async function(applicationId) {
   if (detailStudentId) detailStudentId.textContent = d.studentId ?? "-";
   if (detailStudentName) detailStudentName.textContent = d.studentName || "-";
   if (detailStudentEmail) detailStudentEmail.textContent = d.studentEmail || "-";
-  if (detailStatus) detailStatus.textContent = d.status ?? "-";
 
+  if (detailStudentPhone) {
+    detailStudentPhone.textContent = d.studentPhone || "-";
+  }
+
+  if (detailStudentMajor) {
+    detailStudentMajor.textContent = d.studentMajor || "-";
+  }
+
+  if (detailStudentType) {
+    detailStudentType.textContent =
+      d.studentType ||
+      d.student_type ||
+      d.studentProfile?.studentType ||
+      "-";
+  }
+
+  if (detailStudentBio) {
+    detailStudentBio.textContent = d.studentBio || "No student bio provided.";
+  }
+
+  if (detailStatus) detailStatus.textContent = d.status ?? "-";
   if (detailAppliedAt) {
     detailAppliedAt.textContent = d.appliedAt
       ? String(d.appliedAt).replace("T", " ")
@@ -1181,6 +1215,39 @@ window.viewApplicationDetail = async function(applicationId) {
   if (detailCoverLetter) {
     detailCoverLetter.textContent =
       d.coverLetterText || "No cover letter provided";
+  }
+  if (detailResumeLink) {
+    if (d.resumeFileUrl) {
+      detailResumeLink.href = d.resumeFileUrl.startsWith("/")
+        ? d.resumeFileUrl
+        : "/" + d.resumeFileUrl;
+
+      detailResumeLink.textContent = d.resumeFileName || "View Resume";
+      detailResumeLink.style.pointerEvents = "auto";
+      detailResumeLink.style.color = "";
+    } else {
+      detailResumeLink.href = "#";
+      detailResumeLink.textContent = "No resume provided";
+      detailResumeLink.style.pointerEvents = "none";
+      detailResumeLink.style.color = "#9ca3af";
+    }
+  }
+
+  if (detailPortfolioLink) {
+    if (d.portfolioFileUrl) {
+      detailPortfolioLink.href = d.portfolioFileUrl.startsWith("/")
+        ? d.portfolioFileUrl
+        : "/" + d.portfolioFileUrl;
+
+      detailPortfolioLink.textContent = d.portfolioFileName || "View Portfolio";
+      detailPortfolioLink.style.pointerEvents = "auto";
+      detailPortfolioLink.style.color = "";
+    } else {
+      detailPortfolioLink.href = "#";
+      detailPortfolioLink.textContent = "No portfolio provided";
+      detailPortfolioLink.style.pointerEvents = "none";
+      detailPortfolioLink.style.color = "#9ca3af";
+    }
   }
 
   if (applicationDetailModal) {
