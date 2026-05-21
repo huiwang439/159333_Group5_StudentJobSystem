@@ -120,7 +120,9 @@ public class VerificationRequestServiceImpl implements VerificationRequestServic
                                              Long reviewerId,
                                              String reviewStatus,
                                              String reviewNote) {
-        if (!"approved".equals(reviewStatus) && !"rejected".equals(reviewStatus)) {
+        if (!"reviewed".equals(reviewStatus)
+                && !"approved".equals(reviewStatus)
+                && !"rejected".equals(reviewStatus)) {
             throw new RuntimeException("Invalid review status");
         }
 

@@ -1,39 +1,26 @@
 document.addEventListener("DOMContentLoaded", async () => {
     if (!requireCareerStaff()) return;
 
-    const activeStudents = document.getElementById("activeStudents");
-    const participatingEmployers = document.getElementById("participatingEmployers");
-    const totalJobs = document.getElementById("totalJobs");
-    const pendingJobs = document.getElementById("pendingJobs");
-    const approvedJobs = document.getElementById("approvedJobs");
-    const totalApplications = document.getElementById("totalApplications");
-
-    function setSafeText(element, value) {
-        if (!element) return;
-        element.textContent = value ?? 0;
+    function setText(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value ?? 0;
     }
 
-    async function loadDashboard() {
-        try {
-            showText("dashboardMessage", "Loading dashboard...");
+    try {
+        showText("dashboardMessage", "Loading dashboard...");
 
-            const [summaryData, jobsData] = await Promise.all([
-                apiGet("/admin/dashboard"),
-                apiGet("/admin/dashboard/jobs")
-            ]);
+        const summary = await apiGet("/admin/dashboard");
+        const jobs = await apiGet("/admin/dashboard/jobs");
 
-            setSafeText(activeStudents, summaryData.totalStudents);
-            setSafeText(participatingEmployers, summaryData.totalEmployers);
-            setSafeText(totalJobs, summaryData.totalJobs);
-            setSafeText(totalApplications, summaryData.totalApplications);
-            setSafeText(pendingJobs, jobsData.pendingJobs);
-            setSafeText(approvedJobs, jobsData.approvedJobs);
+        setText("activeStudents", summary.totalStudents);
+        setText("participatingEmployers", summary.totalEmployers);
+        setText("totalJobs", summary.totalJobs);
+        setText("totalApplications", summary.totalApplications);
+        setText("pendingJobs", jobs.pendingJobs);
+        setText("approvedJobs", jobs.approvedJobs);
 
-            showText("dashboardMessage", "Dashboard loaded.");
-        } catch (error) {
-            showText("dashboardMessage", error.message, true);
-        }
+        showText("dashboardMessage", "Dashboard loaded.");
+    } catch (error) {
+        showText("dashboardMessage", error.message, true);
     }
-
-    loadDashboard();
 });

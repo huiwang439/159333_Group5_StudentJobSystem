@@ -84,7 +84,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderCompanyDetail(company) {
+        const logoUrl = company.logoUrl;
+
         companyDetailCard.innerHTML = `
+            <div class="company-logo-detail">
+                ${
+                    logoUrl
+                        ? `<img src="${logoUrl}" alt="Company Logo">`
+                        : `<div class="company-logo-placeholder">No Logo</div>`
+                }
+            </div>
+
             <div class="detail-grid">
                 <div class="detail-item">
                     <span class="detail-label">Employer Profile ID</span>

@@ -52,30 +52,40 @@
 
     <main class="main-content">
         <div class="container">
-            <h1>Abnormal Data / Behavior</h1>
+            <section id="abnormalListView">
+                <h1>Abnormal Data / Behavior</h1>
 
-            <div class="toolbar">
-                <label for="levelFilter">Risk Level:</label>
-                <select id="levelFilter">
-                    <option value="">All</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                </select>
-                <button id="loadBtn">Load</button>
-            </div>
+                <div class="toolbar">
+                    <label for="levelFilter">Risk Level:</label>
+                    <select id="levelFilter">
+                        <option value="">All</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                    <button id="loadBtn">Load</button>
+                </div>
 
-            <table>
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Object</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                    <th>Risk Level</th>
-                </tr>
-                </thead>
-                <tbody id="abnormalTableBody"></tbody>
-            </table>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Object</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Risk Level</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="abnormalTableBody"></tbody>
+                </table>
+            </section>
+
+            <section id="abnormalDetailView" class="hidden">
+                <button id="backToAbnormalBtn" class="back-btn">Back</button>
+                <h1>Abnormal Behavior Details</h1>
+
+                <div id="abnormalDetailCard" class="detail-card"></div>
+            </section>
 
             <pre id="messageBox"></pre>
         </div>

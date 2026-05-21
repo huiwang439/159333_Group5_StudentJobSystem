@@ -36,109 +36,123 @@
 
         <div class="events-page">
 
-            <div class="events-header">
-                <div>
-                    <p class="page-label">Career Services</p>
-                    <h1>Career Events</h1>
-                    <p class="page-subtitle">
-                        Create and manage career fairs, workshops, employer talks, and internship sessions.
-                    </p>
+            <section id="eventListView">
+
+                <div class="events-header">
+                    <div>
+                        <p class="page-label">Career Services</p>
+                        <h1>Career Events</h1>
+                        <p class="page-subtitle">
+                            Create and manage career fairs, workshops, employer talks, and internship sessions.
+                        </p>
+                    </div>
                 </div>
-            </div>
 
-            <div class="events-layout">
+                <div class="events-layout">
 
-                <section class="event-form-card">
-                    <div class="card-header">
-                        <div>
-                            <h2 id="formTitle">Create Event</h2>
-                            <p>Add a new career service event for students.</p>
-                        </div>
-                    </div>
-
-                    <input type="hidden" id="eventId">
-
-                    <div class="form-grid">
-
-                        <div class="form-field full-width">
-                            <label for="eventTitle">Event Title</label>
-                            <input id="eventTitle" type="text" placeholder="e.g. Graduate Recruitment Talk">
+                    <section class="event-form-card">
+                        <div class="card-header">
+                            <div>
+                                <h2 id="formTitle">Create Event</h2>
+                                <p>Add a new career service event for students.</p>
+                            </div>
                         </div>
 
-                        <div class="form-field">
-                            <label for="eventType">Event Type</label>
-                            <select id="eventType">
-                                <option value="Career Fair">Career Fair</option>
-                                <option value="Workshop">Workshop</option>
-                                <option value="Employer Talk">Employer Talk</option>
-                                <option value="Internship Session">Internship Session</option>
-                                <option value="Interview Preparation">Interview Preparation</option>
-                            </select>
+                        <input type="hidden" id="eventId">
+
+                        <div class="form-grid">
+
+                            <div class="form-field full-width">
+                                <label for="eventTitle">Event Title</label>
+                                <input id="eventTitle" type="text" placeholder="e.g. Graduate Recruitment Talk">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="eventType">Event Type</label>
+                                <select id="eventType">
+                                    <option value="Career Fair">Career Fair</option>
+                                    <option value="Workshop">Workshop</option>
+                                    <option value="Employer Talk">Employer Talk</option>
+                                    <option value="Internship Session">Internship Session</option>
+                                    <option value="Interview Preparation">Interview Preparation</option>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="eventOrganizer">Organizer</label>
+                                <input id="eventOrganizer" type="text" placeholder="Career Services Office">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="eventDate">Date</label>
+                                <input id="eventDate" type="date">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="eventTime">Time</label>
+                                <input id="eventTime" type="time">
+                            </div>
+
+                            <div class="form-field full-width">
+                                <label for="eventLocation">Location / Online Link</label>
+                                <input id="eventLocation" type="text" placeholder="Room A101 or online meeting link">
+                            </div>
+
+                            <div class="form-field full-width">
+                                <label for="eventDescription">Description</label>
+                                <textarea id="eventDescription" rows="5" placeholder="Describe the event purpose, target students, and key details."></textarea>
+                            </div>
+
                         </div>
 
-                        <div class="form-field">
-                            <label for="eventOrganizer">Organizer</label>
-                            <input id="eventOrganizer" type="text" placeholder="Career Services Office">
+                        <div class="form-actions">
+                            <button id="saveEventBtn" class="primary-btn">Create Event</button>
+                            <button id="cancelEditBtn" class="secondary-btn" type="button">Cancel</button>
                         </div>
 
-                        <div class="form-field">
-                            <label for="eventDate">Date</label>
-                            <input id="eventDate" type="date">
+                        <pre id="eventsMessage"></pre>
+                    </section>
+
+                    <section class="event-list-card">
+                        <div class="card-header">
+                            <div>
+                                <h2>Event List</h2>
+                                <p>View, edit, or delete existing career events.</p>
+                            </div>
                         </div>
 
-                        <div class="form-field">
-                            <label for="eventTime">Time</label>
-                            <input id="eventTime" type="time">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>Event</th>
+                                    <th>Type</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Location</th>
+                                    <th>Organizer</th>
+                                    <th>Actions</th>
+                                </tr>
+                                </thead>
+
+                                <tbody id="eventsTableBody"></tbody>
+                            </table>
                         </div>
+                    </section>
 
-                        <div class="form-field full-width">
-                            <label for="eventLocation">Location / Online Link</label>
-                            <input id="eventLocation" type="text" placeholder="Room A101 or online meeting link">
-                        </div>
+                </div>
 
-                        <div class="form-field full-width">
-                            <label for="eventDescription">Description</label>
-                            <textarea id="eventDescription" rows="5" placeholder="Describe the event purpose, target students, and key details."></textarea>
-                        </div>
+            </section>
 
-                    </div>
+            <section id="eventDetailView" class="hidden">
 
-                    <div class="form-actions">
-                        <button id="saveEventBtn" class="primary-btn">Create Event</button>
-                        <button id="cancelEditBtn" class="secondary-btn" type="button">Cancel</button>
-                    </div>
+                <button id="backToEventsBtn" class="back-btn">Back</button>
 
-                    <pre id="eventsMessage"></pre>
-                </section>
+                <h1>Event Details</h1>
 
-                <section class="event-list-card">
-                    <div class="card-header">
-                        <div>
-                            <h2>Event List</h2>
-                            <p>View, edit, or delete existing career events.</p>
-                        </div>
-                    </div>
+                <div id="eventDetailCard" class="detail-card"></div>
 
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                            <tr>
-                                <th>Event</th>
-                                <th>Type</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Location</th>
-                                <th>Organizer</th>
-                                <th>Actions</th>
-                            </tr>
-                            </thead>
-
-                            <tbody id="eventsTableBody"></tbody>
-                        </table>
-                    </div>
-                </section>
-
-            </div>
+            </section>
 
         </div>
 

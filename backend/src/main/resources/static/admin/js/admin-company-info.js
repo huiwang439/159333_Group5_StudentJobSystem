@@ -36,8 +36,61 @@ document.addEventListener("DOMContentLoaded", () => {
         if (value === null || value === undefined || value === "") {
             return "-";
         }
-
         return value;
+    }
+
+    function escapeHtml(value) {
+        return String(formatValue(value))
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function resolveLogoUrl(logoUrl) {
+        if (!logoUrl) return "";
+
+        let url = String(logoUrl).trim();
+
+        if (!url) return "";
+
+        if (
+            url.startsWith("http://") ||
+            url.startsWith("https://") ||
+            url.startsWith("data:") ||
+            url.startsWith("blob:")
+        ) {
+            return url;
+        }
+
+        if (url.startsWith("/uploads/")) {
+            url = url.replace(/^\/uploads\//, "/");
+        } else if (url.startsWith("uploads/")) {
+            url = "/" + url.replace(/^uploads\//, "");
+        } else if (!url.startsWith("/")) {
+            url = "/" + url;
+        }
+
+        return url;
+    }
+
+    function logoBlock(company) {
+        const logoUrl = resolveLogoUrl(company.logoUrl);
+        const name = company.companyName || "Company";
+        const initial = name.trim().charAt(0).toUpperCase() || "C";
+
+        if (!logoUrl) {
+            return `<div class="company-logo-placeholder">${escapeHtml(initial)}</div>`;
+        }
+
+        return `
+            <img
+                src="${escapeHtml(logoUrl)}"
+                alt="Company Logo"
+                onerror="this.outerHTML='<div class=&quot;company-logo-placeholder&quot;>${escapeHtml(initial)}</div>'"
+            >
+        `;
     }
 
     function showListView() {
@@ -64,16 +117,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const tr = document.createElement("tr");
 
             tr.innerHTML = `
-                <td>${formatValue(company.employerProfileId)}</td>
-                <td>${formatValue(company.companyName)}</td>
-                <td>${formatValue(company.industry)}</td>
-                <td>${formatValue(company.companySize)}</td>
-                <td>${formatValue(company.location)}</td>
-                <td>${formatValue(company.contactPerson)}</td>
-                <td>${formatValue(company.contactEmail)}</td>
-                <td>${formatValue(company.verificationStatus)}</td>
-                <td>${formatValue(company.accountStatus)}</td>
-                <td><button class="detail-btn" data-id="${company.userId}">View</button></td>
+                <td>${escapeHtml(company.employerProfileId)}</td>
+                <td>${escapeHtml(company.companyName)}</td>
+                <td>${escapeHtml(company.industry)}</td>
+                <td>${escapeHtml(company.companySize)}</td>
+                <td>${escapeHtml(company.location)}</td>
+                <td>${escapeHtml(company.contactPerson)}</td>
+                <td>${escapeHtml(company.contactEmail)}</td>
+                <td>${escapeHtml(company.verificationStatus)}</td>
+                <td>${escapeHtml(company.accountStatus)}</td>
+                <td><button class="detail-btn" data-id="${escapeHtml(company.userId)}">View</button></td>
             `;
 
             companyInfoBody.appendChild(tr);
@@ -86,90 +139,94 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderCompanyDetail(company) {
         companyDetailCard.innerHTML = `
+            <div class="company-logo-detail">
+                ${logoBlock(company)}
+            </div>
+
             <div class="detail-grid">
                 <div class="detail-item">
                     <span class="detail-label">Employer Profile ID</span>
-                    <span class="detail-value">${formatValue(company.employerProfileId)}</span>
+                    <span class="detail-value">${escapeHtml(company.employerProfileId)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">User ID</span>
-                    <span class="detail-value">${formatValue(company.userId)}</span>
+                    <span class="detail-value">${escapeHtml(company.userId)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Company Name</span>
-                    <span class="detail-value">${formatValue(company.companyName)}</span>
+                    <span class="detail-value">${escapeHtml(company.companyName)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Industry</span>
-                    <span class="detail-value">${formatValue(company.industry)}</span>
+                    <span class="detail-value">${escapeHtml(company.industry)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Company Size</span>
-                    <span class="detail-value">${formatValue(company.companySize)}</span>
+                    <span class="detail-value">${escapeHtml(company.companySize)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Location</span>
-                    <span class="detail-value">${formatValue(company.location)}</span>
+                    <span class="detail-value">${escapeHtml(company.location)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Contact Person</span>
-                    <span class="detail-value">${formatValue(company.contactPerson)}</span>
+                    <span class="detail-value">${escapeHtml(company.contactPerson)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Contact Email</span>
-                    <span class="detail-value">${formatValue(company.contactEmail)}</span>
+                    <span class="detail-value">${escapeHtml(company.contactEmail)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Email</span>
-                    <span class="detail-value">${formatValue(company.email)}</span>
+                    <span class="detail-value">${escapeHtml(company.email)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Phone</span>
-                    <span class="detail-value">${formatValue(company.phone)}</span>
+                    <span class="detail-value">${escapeHtml(company.phone)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Website</span>
-                    <span class="detail-value">${formatValue(company.website)}</span>
+                    <span class="detail-value">${escapeHtml(company.website)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Verification Status</span>
-                    <span class="detail-value">${formatValue(company.verificationStatus)}</span>
+                    <span class="detail-value">${escapeHtml(company.verificationStatus)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Account Status</span>
-                    <span class="detail-value">${formatValue(company.accountStatus)}</span>
+                    <span class="detail-value">${escapeHtml(company.accountStatus)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Full Name</span>
-                    <span class="detail-value">${formatValue(company.fullName)}</span>
+                    <span class="detail-value">${escapeHtml(company.fullName)}</span>
                 </div>
 
                 <div class="detail-item full-width">
                     <span class="detail-label">Company Description</span>
-                    <span class="detail-value">${formatValue(company.companyDescription)}</span>
+                    <span class="detail-value">${escapeHtml(company.companyDescription)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Created At</span>
-                    <span class="detail-value">${formatValue(company.createdAt)}</span>
+                    <span class="detail-value">${escapeHtml(company.createdAt)}</span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Updated At</span>
-                    <span class="detail-value">${formatValue(company.updatedAt)}</span>
+                    <span class="detail-value">${escapeHtml(company.updatedAt)}</span>
                 </div>
             </div>
         `;

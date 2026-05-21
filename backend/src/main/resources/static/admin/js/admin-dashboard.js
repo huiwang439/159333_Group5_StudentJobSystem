@@ -1,23 +1,9 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    if (!requireRole("admin")) {
-        return;
-    }
+    if (!requireRole("admin")) return;
 
-    const totalUsers = document.getElementById("totalUsers");
-    const totalStudents = document.getElementById("totalStudents");
-    const totalEmployers = document.getElementById("totalEmployers");
-    const totalAdmins = document.getElementById("totalAdmins");
-
-    const totalJobs = document.getElementById("totalJobs");
-    const pendingJobs = document.getElementById("pendingJobs");
-    const approvedJobs = document.getElementById("approvedJobs");
-    const rejectedJobs = document.getElementById("rejectedJobs");
-
-    const totalApplications = document.getElementById("totalApplications");
-
-    function setSafeText(element, value) {
-        if (!element) return;
-        element.textContent = value ?? 0;
+    function setText(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value ?? 0;
     }
 
     async function loadDashboard() {
@@ -27,24 +13,29 @@ document.addEventListener("DOMContentLoaded", async () => {
             const [
                 summaryData,
                 jobsData,
-                usersData
+                usersData,
+                applicationsData
             ] = await Promise.all([
                 apiGet("/admin/dashboard"),
                 apiGet("/admin/dashboard/jobs"),
-                apiGet("/admin/dashboard/users")
+                apiGet("/admin/dashboard/users"),
+                apiGet("/admin/dashboard/applications")
             ]);
 
-            setSafeText(totalUsers, summaryData.totalUsers);
-            setSafeText(totalStudents, summaryData.totalStudents);
-            setSafeText(totalEmployers, summaryData.totalEmployers);
-            setSafeText(totalAdmins, usersData.adminUsers);
+            setText("totalUsers", summaryData.totalUsers);
+            setText("totalStudents", summaryData.totalStudents);
+            setText("totalEmployers", summaryData.totalEmployers);
+            setText("totalJobs", summaryData.totalJobs);
+            setText("totalApplications", summaryData.totalApplications);
 
-            setSafeText(totalJobs, summaryData.totalJobs);
-            setSafeText(totalApplications, summaryData.totalApplications);
+            setText("totalAdmins", usersData.adminUsers);
+            setText("totalStaff", usersData.staffUsers);
 
-            setSafeText(pendingJobs, jobsData.pendingJobs);
-            setSafeText(approvedJobs, jobsData.approvedJobs);
-            setSafeText(rejectedJobs, jobsData.rejectedJobs);
+            setText("pendingJobs", jobsData.pendingJobs);
+            setText("approvedJobs", jobsData.approvedJobs);
+            setText("rejectedJobs", jobsData.rejectedJobs);
+
+            setText("submittedApplications", applicationsData.submittedApplications);
 
             showText("dashboardMessage", "Dashboard loaded.");
         } catch (error) {
