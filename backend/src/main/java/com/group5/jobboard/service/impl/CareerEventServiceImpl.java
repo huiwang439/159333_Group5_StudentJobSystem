@@ -68,7 +68,7 @@ public class CareerEventServiceImpl implements CareerEventService {
 
     @Override
     public List<Map<String, Object>> getAllEvents() {
-        return careerEventRepository.findAll()
+        return careerEventRepository.findByStatusOrderByEventDateAsc("active")
                 .stream()
                 .map(this::toMap)
                 .toList();
