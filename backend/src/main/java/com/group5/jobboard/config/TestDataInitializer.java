@@ -125,7 +125,7 @@ public class TestDataInitializer implements CommandLineRunner {
 
         for (int i = 1; i <= count; i++) {
             String fullName = firstNames[(i - 1) % firstNames.length] + " " + lastNames[(i - 1) % lastNames.length] + " " + i;
-            String email = "demo.student" + String.format("%03d", i) + "@student.test";
+            String email = "student" + String.format("%03d", i) + "@student.test";
 
             User user = createUserIfNotExists(
                     fullName,
@@ -200,7 +200,7 @@ public class TestDataInitializer implements CommandLineRunner {
 
         for (int i = 1; i <= employerCount; i++) {
             String companyName = companies[(i - 1) % companies.length];
-            String email = "demo.employer" + String.format("%03d", i) + "@company.test";
+            String email = "employer" + String.format("%03d", i) + "@company.test";
             String[] employerFirstNames = {
                     "Michael", "Sarah", "David", "Emily", "James",
                     "Jessica", "Daniel", "Sophia", "Matthew", "Olivia",
