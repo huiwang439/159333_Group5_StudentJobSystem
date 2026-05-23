@@ -13,7 +13,7 @@
       .catch(function () {})
       .finally(function () {
         localStorage.clear();
-        window.location.replace("../admin/login.html");
+        window.location.replace("/index/index.html");
       });
   });
 })();

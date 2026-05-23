@@ -16,6 +16,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const eventsMessage = document.getElementById("eventsMessage");
     const formTitle = document.getElementById("formTitle");
 
+    const eventListView = document.getElementById("eventListView");
+    const eventDetailView = document.getElementById("eventDetailView");
+    const eventDetailCard = document.getElementById("eventDetailCard");
+    const backToEventsBtn = document.getElementById("backToEventsBtn");
+
     function showMessage(message, isError = false) {
         eventsMessage.textContent = message || "";
         eventsMessage.style.color = isError ? "#d93025" : "#2b7a0b";
@@ -74,6 +79,19 @@ document.addEventListener("DOMContentLoaded", () => {
         return description.replace(/^\[Type:\s*.*?\]\n?/, "").trim();
     }
 
+    function showListView() {
+        eventDetailView.classList.add("hidden");
+        eventListView.classList.remove("hidden");
+        showMessage("");
+    }
+
+    function showDetailView() {
+        eventListView.classList.add("hidden");
+        eventDetailView.classList.remove("hidden");
+        showMessage("");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
     function clearForm() {
         eventId.value = "";
         eventTitle.value = "";
@@ -86,6 +104,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
         formTitle.textContent = "Create Event";
         saveEventBtn.textContent = "Create Event";
+    }
+
+    function renderEventDetail(event) {
+        const dateTime = formatDateTime(event.eventDate);
+
+        eventDetailCard.innerHTML = `
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Event ID</span>
+                    <span class="detail-value">${formatValue(event.id)}</span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Event Title</span>
+                    <span class="detail-value">${formatValue(event.title)}</span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Event Type</span>
+                    <span class="detail-value">${formatValue(extractType(event.description))}</span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Date</span>
+                    <span class="detail-value">${dateTime.date}</span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Time</span>
+                    <span class="detail-value">${dateTime.time}</span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Location / Online Link</span>
+                    <span class="detail-value">${formatValue(event.location)}</span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Organizer</span>
+                    <span class="detail-value">${formatValue(event.organizer)}</span>
+                </div>
+
+                <div class="detail-item full-width">
+                    <span class="detail-label">Description</span>
+                    <span class="detail-value">${formatValue(extractDescription(event.description))}</span>
+                </div>
+            </div>
+        `;
     }
 
     function renderEvents(events) {
@@ -114,24 +180,24 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td>${formatValue(event.location)}</td>
                 <td>${formatValue(event.organizer)}</td>
                 <td>
-                    <button class="secondary-btn view-btn" data-id="${event.id}">View</button>
-                    <button class="secondary-btn edit-btn" data-id="${event.id}">Edit</button>
-                    <button class="danger-btn delete-btn" data-id="${event.id}">Delete</button>
+                    <button class="view-event-btn" data-id="${event.id}">View</button>
+                    <button class="edit-event-btn" data-id="${event.id}">Edit</button>
+                    <button class="delete-event-btn" data-id="${event.id}">Delete</button>
                 </td>
             `;
 
             eventsTableBody.appendChild(tr);
         });
 
-        eventsTableBody.querySelectorAll(".view-btn").forEach(btn => {
+        eventsTableBody.querySelectorAll(".view-event-btn").forEach(btn => {
             btn.addEventListener("click", () => viewEvent(btn.dataset.id));
         });
 
-        eventsTableBody.querySelectorAll(".edit-btn").forEach(btn => {
+        eventsTableBody.querySelectorAll(".edit-event-btn").forEach(btn => {
             btn.addEventListener("click", () => editEvent(btn.dataset.id));
         });
 
-        eventsTableBody.querySelectorAll(".delete-btn").forEach(btn => {
+        eventsTableBody.querySelectorAll(".delete-event-btn").forEach(btn => {
             btn.addEventListener("click", () => deleteEvent(btn.dataset.id));
         });
     }
@@ -179,18 +245,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function viewEvent(id) {
         try {
-            const event = await apiGet(`/career-events/${id}`);
-            const dateTime = formatDateTime(event.eventDate);
+            showMessage("Loading event details...");
 
-            alert(
-                `Title: ${formatValue(event.title)}\n` +
-                `Type: ${extractType(event.description)}\n` +
-                `Date: ${dateTime.date}\n` +
-                `Time: ${dateTime.time}\n` +
-                `Location: ${formatValue(event.location)}\n` +
-                `Organizer: ${formatValue(event.organizer)}\n\n` +
-                `Description:\n${extractDescription(event.description) || "-"}`
-            );
+            const event = await apiGet(`/career-events/${id}`);
+
+            renderEventDetail(event);
+            showDetailView();
         } catch (error) {
             showMessage(error.message, true);
         }
@@ -237,6 +297,8 @@ document.addEventListener("DOMContentLoaded", () => {
         clearForm();
         showMessage("");
     });
+
+    backToEventsBtn.addEventListener("click", showListView);
 
     loadEvents();
 });
