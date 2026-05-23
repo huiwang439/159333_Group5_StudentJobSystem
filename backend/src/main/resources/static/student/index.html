@@ -585,7 +585,7 @@
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
       align-items: stretch;
-      min-height: 330px;
+      min-height: 380px;
     }
 
     @media (max-width: 980px) {
@@ -607,13 +607,17 @@
       margin-top: 0;
       display: flex;
       flex-direction: column;
-      height: 330px;
+      min-height: 380px;
+      height: auto;
+      max-height: 520px;
     }
 
     .dashboard-lower .panel-box {
       display: flex;
       flex-direction: column;
-      height: 330px;
+      min-height: 380px;
+      height: auto;
+      max-height: 520px;
     }
 
     .dashboard-lower .recommend-list {
@@ -879,7 +883,7 @@
           <div class="stat-card">
             <div class="stat-label">Total Jobs</div>
             <div class="stat-value" id="stat-total-jobs">0</div>
-            <div class="stat-hint">Available now</div>
+            <div class="stat-hint">All approved on platform</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">My Favorites</div>
@@ -889,7 +893,7 @@
           <div class="stat-card">
             <div class="stat-label">New Matches</div>
             <div class="stat-value" id="stat-new-matches">0</div>
-            <div class="stat-hint">Based on your profile</div>
+            <div class="stat-hint">Open to your student type</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Profile completeness</div>
@@ -1010,8 +1014,11 @@
 
   localStorage.clear();
 
-  window.location.replace("../admin/login.html");
+  window.location.replace("/index/index.html");
 }
+
+    const DASH_RECOMMEND_LIMIT = 6;
+    const DASH_FEATURED_LIMIT = 6;
 
     async function loadDashboard() {
       try {
@@ -1029,14 +1036,20 @@
         const audience = document.getElementById("dash-audience").value || "mine";
         const studentType = API.resolveStudentTypeParam(audience, profileStudentType);
         const jobUrl = API.buildJobsUrl({ studentType: studentType });
+        const allJobsUrl = API.buildJobsUrl({ studentType: "ALL" });
 
-        const jobRes = await fetch(jobUrl, {
-          headers: authHeaders()
-        });
+        const [jobRes, allJobRes] = await Promise.all([
+          fetch(jobUrl, { headers: authHeaders() }),
+          fetch(allJobsUrl, { headers: authHeaders() })
+        ]);
 
         const jobResult = await jobRes.json();
         const jobs = API.unwrapData(jobResult) || [];
         const jobList = Array.isArray(jobs) ? jobs : [];
+
+        const allJobResult = await allJobRes.json();
+        const allJobs = API.unwrapData(allJobResult) || [];
+        const allJobList = Array.isArray(allJobs) ? allJobs : [];
 
         const favRes = await fetch(`${API_BASE}/saved-jobs/my`, {
           headers: authHeaders()
@@ -1052,12 +1065,13 @@
         const appResult = await appRes.json();
         const applications = appResult.data || appResult || [];
 
-        document.getElementById("stat-total-jobs").textContent = jobList.length;
+        document.getElementById("stat-total-jobs").textContent = allJobList.length;
         document.getElementById("stat-favorites").textContent = favorites.length;
         document.getElementById("stat-new-matches").textContent = jobList.length;
 
         const recommendList = document.getElementById("recommend-list");
-        recommendList.innerHTML = jobList.slice(0, 3).map(job => {
+        const recommendJobs = jobList.slice(0, DASH_RECOMMEND_LIMIT);
+        recommendList.innerHTML = recommendJobs.map(job => {
           const jid = API.jobRecordPk(job);
           const company = API.companyNameFromJob(job);
           return `
@@ -1072,8 +1086,15 @@
           </li>`;
         }).join("") || "<li>No recommendations</li>";
 
+        if (jobList.length > DASH_RECOMMEND_LIMIT) {
+          recommendList.innerHTML +=
+            '<li style="border-bottom:none;padding-top:0.5rem">' +
+            '<a class="link" href="./browse-jobs.html" style="font-size:0.85rem">View all ' +
+            jobList.length + " matching jobs →</a></li>";
+        }
+
         const featuredContainer = document.getElementById("dashboard-featured-jobs");
-        featuredContainer.innerHTML = jobList.slice(0, 3).map((job, index) => {
+        featuredContainer.innerHTML = jobList.slice(0, DASH_FEATURED_LIMIT).map((job, index) => {
           const jid = API.jobRecordPk(job);
           const company = API.companyNameFromJob(job);
           const jtype = API.firstNonEmpty(job.jobType, job.employmentType, "");
