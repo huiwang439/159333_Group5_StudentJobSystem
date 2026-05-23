@@ -1336,6 +1336,7 @@ function destroyChart(chart) {
   return null;
 }
 
+
 function renderStatusPieChart() {
   statusPieChart = destroyChart(statusPieChart);
 
