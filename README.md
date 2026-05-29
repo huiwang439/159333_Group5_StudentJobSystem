@@ -80,12 +80,16 @@ backend/
 
 How to Run the Project
 1. Clone the Repository
-git clone https://github.com/huiwang439/jobboard.git
+git clone https://github.com/huiwang439/159333_Group5_StudentJobSystem.git
 2. Open the Project
 Open the project using: IntelliJ IDEA (recommended)
 3. Configure MySQL
 Start MySQL service 
 Create the database
+   CREATE DATABASE jobboard
+   CHARACTER SET utf8mb4
+   COLLATE utf8mb4_unicode_ci;
+   SHOW DATABASES;
 Update database credentials in `application.properties`
 4. Run Spring Boot
 Run the main application class: JobBoardApplication.java
