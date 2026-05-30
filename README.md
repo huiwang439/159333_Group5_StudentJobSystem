@@ -44,7 +44,6 @@ Technology Stack
 * HTML5
 * CSS3
 * JavaScript
-* Bootstrap
 2. Backend
 * Java
 * Spring Boot
@@ -67,22 +66,23 @@ backend/
 │   ├── entity
 │   ├── dto
 │   ├── config
-│   └── common
-│
+│   ├── common
+│   └── JobboardApplication.java
 └── src/main/resources
     ├── static
-    │      ├── application.properties
     │      ├── student
     │      ├── employer
     │      ├── admin
     │      └── index
-    └── sql
+    ├── sql
+    └── application.properties
 
 How to Run the Project
 1. Clone the Repository
 git clone https://github.com/huiwang439/159333_Group5_StudentJobSystem.git
 2. Open the Project
 Open the project using: IntelliJ IDEA (recommended)
+Switch to the 'develop' branch
 3. Configure MySQL
 Start MySQL service 
 Create the database
@@ -92,9 +92,14 @@ Create the database
    SHOW DATABASES;
 Update database credentials in `application.properties`
 4. Run Spring Boot
-Run the main application class: JobBoardApplication.java
+Run the main application class: backend/src/main/java/com/group5/jobboard/JobboardApplication.java
 5. Open in Browser
-http://localhost:8080
+   http://localhost:8080/index/index.html
+6. The test accounts are as follows:
+   Admin: admin@test.com / A123456
+   Staff: staff@test.com / S123456
+   Student: student001@student.test /Student123
+   Employer: employer001@company.test /Employer123
 
 Team Collaboration
 This project uses Git and GitHub for version control and collaborative development.
