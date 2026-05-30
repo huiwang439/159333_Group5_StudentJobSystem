@@ -19,7 +19,7 @@ Features
 * Upload resumes and portfolios
 * Track application status
 * Receive notifications
-* AI assistant support
+* AI Career Assistant for students
 2. Employer Features
 * Employer registration and login
 * Create and manage job postings
@@ -78,24 +78,30 @@ backend/
     └── application.properties
 
 How to Run the Project
-1. Clone the Repository
+1. Requirements:
+- Java 17
+- Maven
+- MySQL 8.0 or above
+- IntelliJ IDEA
+2. Clone the Repository
 git clone https://github.com/huiwang439/159333_Group5_StudentJobSystem.git
-2. Open the Project
+3. Open the Project
 Open the project using: IntelliJ IDEA (recommended)
 Switch to the 'develop' branch
-3. Configure MySQL
+4. Configure MySQL
 Start MySQL service 
 Create the database
    CREATE DATABASE jobboard
    CHARACTER SET utf8mb4
    COLLATE utf8mb4_unicode_ci;
    SHOW DATABASES;
-Update database credentials in `application.properties`
-4. Run Spring Boot
-Run the main application class: backend/src/main/java/com/group5/jobboard/JobboardApplication.java
-5. Open in Browser
+   USE jobboard;
+Change the database username and password in `backend/src/main/resources/application.properties`
+5. Run Spring Boot
+Run backend/src/main/java/com/group5/jobboard/JobboardApplication.java in IntelliJ IDEA.
+6. Open in Browser
    http://localhost:8080/index/index.html
-6. The test accounts are as follows:
+7. The test accounts are as follows:
    Admin: admin@test.com / A123456
    Staff: staff@test.com / S123456
    Student: student001@student.test /Student123
